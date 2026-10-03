@@ -4,6 +4,12 @@ A Python scaffold for the agent flight recorder described in
 [PROBLEM_STATEMENT.md](PROBLEM_STATEMENT.md) and [APPROACH.md](APPROACH.md).
 Requires Python 3.11+. The scaffold has no runtime dependencies or API keys.
 
+For development, run `make setup` (requires `uv`), then `make check`.
+This installs a local `.venv` from `uv.lock` and runs linting, formatting checks,
+tests, and an installed-CLI smoke check. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for formatting, packaging, and dependency updates. GitHub Actions runs these
+checks on Python 3.11–3.14 after pushing the workflow to GitHub.
+
 ## Quick start
 
 Run directly from the repository:

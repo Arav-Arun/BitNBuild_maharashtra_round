@@ -1,4 +1,5 @@
 """Shared trace contract. Indices are zero-based; timestamps use ISO 8601."""
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Literal
@@ -10,6 +11,7 @@ Outcome = Literal["success", "fail"]
 @dataclass
 class Labels:
     """Supervision only: never pass these fields to feature extraction."""
+
     run_outcome: Outcome
     is_culprit: bool | None = None
 
@@ -95,8 +97,10 @@ class Run:
     @classmethod
     def from_dict(cls, data):
         data = dict(data)
-        data["steps"] = [Step(**{**s, "label": Labels(**s["label"]) if s.get("label") else None})
-                         for s in data.get("steps", [])]
+        data["steps"] = [
+            Step(**{**s, "label": Labels(**s["label"]) if s.get("label") else None})
+            for s in data.get("steps", [])
+        ]
         run = cls(**data)
         run.validate()
         return run

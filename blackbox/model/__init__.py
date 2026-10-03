@@ -4,7 +4,9 @@ Features must use an explicit allowlist of observable step fields. Never feed
 labels, fault_type, culprit_step_index, run_id, or checkpoint hashes to a model.
 Fit contrast references and preprocessing on training runs only.
 """
+
 from typing import Protocol
+
 from blackbox.schema import Run
 
 

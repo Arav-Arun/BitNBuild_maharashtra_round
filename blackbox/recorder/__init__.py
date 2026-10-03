@@ -1,4 +1,5 @@
 """Local immutable checkpoint and trace storage."""
+
 import hashlib
 import json
 import re
@@ -42,8 +43,9 @@ class Store:
 
     def save_run(self, run: Run):
         payload = run.to_dict()
-        for ref in {run.initial_state_ref} | {r for s in run.steps
-                                             for r in (s.state_before_ref, s.state_after_ref)}:
+        for ref in {run.initial_state_ref} | {
+            r for s in run.steps for r in (s.state_before_ref, s.state_after_ref)
+        }:
             self.load_checkpoint(ref)
         with self._run_path(run.run_id).open("x") as stream:
             json.dump(payload, stream, indent=2, allow_nan=False)

@@ -13,5 +13,4 @@ def localization_metrics(rankings: list[list[int]], culprits: list[int]) -> dict
         top3 += rank is not None and rank <= 3
         reciprocal.append(1 / rank if rank else 0)
     count = len(rankings)
-    return {"recall@1": top1 / count, "recall@3": top3 / count,
-            "mrr": sum(reciprocal) / count}
+    return {"recall@1": top1 / count, "recall@3": top3 / count, "mrr": sum(reciprocal) / count}

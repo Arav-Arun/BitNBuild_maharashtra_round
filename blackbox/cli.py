@@ -1,4 +1,5 @@
 """Local scaffold smoke path: record, inspect, and restore a checkpoint."""
+
 import argparse
 import json
 
@@ -9,7 +10,9 @@ from blackbox.replay import load_before
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", default="blackbox/data", help="local generated-data directory")
+    parser.add_argument(
+        "--data-dir", default="blackbox/data", help="local generated-data directory"
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("sample", help="record a synthetic successful eight-step trace")
     show = commands.add_parser("show", help="validate and print a stored trace")

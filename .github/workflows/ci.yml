@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.9.21"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install locked dependencies
+        run: make setup
+      - name: Lint, test, and exercise CLI
+        run: make check
+      - name: Build distributions
+        run: make build
+      - name: Check wheel outside the source tree
+        shell: bash
+        run: |
+          uv venv /tmp/blackbox-wheel
+          uv pip install --python /tmp/blackbox-wheel/bin/python dist/*.whl
+          cd /tmp
+          /tmp/blackbox-wheel/bin/blackbox --help

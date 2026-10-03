@@ -1,4 +1,5 @@
 """Fault registry; injectors are implemented with the agent loop in Phase 1."""
+
 from enum import Enum
 
 
@@ -10,5 +11,7 @@ class FaultType(str, Enum):
     OVERWRITE_STATE = "overwrite_state"
 
 
-TRAIN_FAULTS = frozenset({FaultType.WRONG_TOOL, FaultType.CORRUPT_ARGUMENTS, FaultType.SWAP_RETRIEVAL})
+TRAIN_FAULTS = frozenset(
+    {FaultType.WRONG_TOOL, FaultType.CORRUPT_ARGUMENTS, FaultType.SWAP_RETRIEVAL}
+)
 HELD_OUT_FAULTS = frozenset({FaultType.ALTER_RESULT, FaultType.OVERWRITE_STATE})
