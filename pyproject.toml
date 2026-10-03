@@ -8,14 +8,23 @@ version = "0.1.0"
 description = "A flight recorder and failure-localization toolkit for AI agents"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "httpx>=0.28,<1",
+    "pydantic>=2.10,<3",
+]
 
 [project.optional-dependencies]
 ml = ["scikit-learn>=1.5,<2"]
 dev = ["ruff>=0.9,<1"]
 
+[project.scripts]
+blackbox = "blackbox.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["blackbox*"]
+
+[tool.setuptools.package-data]
+"blackbox.store" = ["schema.sql"]
 
 [tool.ruff]
 target-version = "py311"

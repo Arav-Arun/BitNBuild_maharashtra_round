@@ -34,4 +34,19 @@ jobs:
           uv venv /tmp/blackbox-wheel
           uv pip install --python /tmp/blackbox-wheel/bin/python dist/*.whl
           cd /tmp
-          /tmp/blackbox-wheel/bin/python -c "import blackbox.recorder, blackbox.eval"
+          /tmp/blackbox-wheel/bin/python -c "from blackbox.store import SQLiteDatabase; SQLiteDatabase('/tmp/wheel.db').close(); import blackbox.sdk, blackbox.replay, blackbox.eval"
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm --prefix web ci
+      - name: Type-check and build web shell
+        run: npm --prefix web run check && npm --prefix web run build

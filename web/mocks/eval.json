@@ -1,0 +1,20 @@
+{
+  "sample_size": 405,
+  "metrics": {
+    "s1_top1": 0.48,
+    "s4_top1": 0.31,
+    "replay_savings": 0.55
+  },
+  "ablations": {
+    "edges": {
+      "full": 0.48,
+      "protocol_only": 0.41,
+      "none": 0.36
+    },
+    "observability": {
+      "full": 0.48,
+      "otel": 0.29,
+      "outputs_only": 0.24
+    }
+  }
+}

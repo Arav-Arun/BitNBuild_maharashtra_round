@@ -15,5 +15,6 @@ data/
 *.db-shm
 node_modules/
 .next/
+*.tsbuildinfo
 .env.local
 artifacts/

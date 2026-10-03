@@ -12,10 +12,15 @@ affects.
 
 | Module | Status |
 | --- | --- |
-| `blackbox/recorder/` | Content-addressed checkpoint store (SHA-256 of canonical JSON, integrity-checked) |
+| `blackbox/config.py`, `blackbox/llm.py` | `.env` configuration and rate-limit-aware OpenAI-compatible async client |
+| `blackbox/store/` | WAL-mode SQLite schema with serialized access |
+| `blackbox/recorder/` | Content-addressed blobs and Merkle state checkpoints |
+| `blackbox/sdk/` | Run/step recording, LLM and tool wrappers, versioned state, redaction and provenance |
+| `blackbox/replay/` | Immutable cone/prefix/full replay, exact caching, controls and verdict intervals |
 | `blackbox/eval/` | Localization metrics: Recall@1, Recall@3, MRR |
+| `server/models.py`, `web/` | Typed API contract fixtures and the first Next.js recorded-runs shell |
 
-Everything else is still to be built, following [PLAN.md](PLAN.md).
+Tasks 1–3 are implemented. Tasks 4 onward follow [PLAN.md](PLAN.md).
 
 ## Development
 
@@ -25,6 +30,31 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 make setup   # install the locked dev environment into .venv
 make check   # ruff lint + format check, unit tests
 make format  # apply ruff formatting and import sorting
+npm --prefix web ci
+npm --prefix web run check
+npm --prefix web run build
+```
+
+Minimal recorder usage:
+
+```python
+import asyncio
+import blackbox as bb
+
+
+async def main():
+    recorder = bb.configure("data", mode="live")
+    try:
+        with bb.run("my-agent", "task-1", seed=7) as run:
+            with bb.step("lookup/tool#1", "tool"):
+                result = await bb.tool(lookup, query="example")
+                run.state["result"] = result
+            run.set_outcome(True)
+    finally:
+        recorder.close()
+
+
+asyncio.run(main())
 ```
 
 After editing `pyproject.toml`, run `uv lock` and commit `uv.lock`. Use

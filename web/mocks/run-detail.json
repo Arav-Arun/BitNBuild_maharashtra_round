@@ -1,0 +1,45 @@
+{
+  "run": {
+    "run_id": "TC-0412",
+    "status": "failed",
+    "agent": "TripCrew",
+    "task": "Mumbai to Singapore under ₹1,20,000",
+    "steps": 2,
+    "duration_ms": 8420,
+    "risk": 0.82,
+    "top_suspect": "fx/tool#1 · 82%"
+  },
+  "steps": [
+    {
+      "addr": "fx/tool#1",
+      "seq": 0,
+      "kind": "tool",
+      "name": "fx_rate",
+      "input": { "from": "SGD", "to": "INR" },
+      "output": { "rate": 61.2, "as_of": "2026-03-01" },
+      "state_before": {},
+      "state_after": { "fx_rate": 61.2 },
+      "cache_status": "live"
+    },
+    {
+      "addr": "budget/tool#1",
+      "seq": 1,
+      "kind": "tool",
+      "name": "budget",
+      "input": { "rate": 61.2 },
+      "output": { "total_inr": 131400 },
+      "state_before": { "fx_rate": 61.2 },
+      "state_after": { "fx_rate": 61.2, "total_inr": 131400 },
+      "cache_status": "live"
+    }
+  ],
+  "edges": [
+    {
+      "src_addr": "fx/tool#1",
+      "src_pointer": "/output/rate",
+      "dst_addr": "budget/tool#1",
+      "dst_pointer": "/input/rate",
+      "kind": "state"
+    }
+  ]
+}

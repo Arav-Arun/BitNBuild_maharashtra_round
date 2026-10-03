@@ -1,0 +1,22 @@
+[
+  {
+    "run_id": "TC-0412",
+    "status": "failed",
+    "agent": "TripCrew",
+    "task": "Mumbai to Singapore under ₹1,20,000",
+    "steps": 18,
+    "duration_ms": 8420,
+    "risk": 0.82,
+    "top_suspect": "fx/tool#1 · 82%"
+  },
+  {
+    "run_id": "TC-0411",
+    "status": "passed",
+    "agent": "TripCrew",
+    "task": "Pune to Bangkok under ₹95,000",
+    "steps": 17,
+    "duration_ms": 7310,
+    "risk": 0.08,
+    "top_suspect": null
+  }
+]
