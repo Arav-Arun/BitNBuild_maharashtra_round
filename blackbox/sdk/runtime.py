@@ -308,6 +308,10 @@ def _normalize_tool_call_ids(value: Any, addr: str) -> Any:
     return visit(value)
 
 
+def chat_request_key(request: dict[str, Any], addr: str) -> str:
+    return content_hash({"kind": "llm", "request": _normalize_tool_call_ids(request, addr)})
+
+
 class RunSession:
     def __init__(
         self,
@@ -486,8 +490,7 @@ class RunSession:
             request["response_format"] = dict(response_format)
         if self.replay_policy is not None:
             request = self.replay_policy.transform_chat(scope.addr, request)
-        normalized = _normalize_tool_call_ids(request, scope.addr)
-        request_key = content_hash({"kind": "llm", "request": normalized})
+        request_key = chat_request_key(request, scope.addr)
 
         async def live() -> dict[str, Any]:
             if self.recorder.mode == "recorded":

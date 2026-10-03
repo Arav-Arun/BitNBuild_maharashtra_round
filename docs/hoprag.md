@@ -102,8 +102,8 @@ decompose/chat#1
 
 With the default one paragraph per hop, there are 9–15 steps. Each hop substitutes
 earlier predicted answers into its `#1`, `#2` references. Search retrieves rankings;
-read prefers the highest-ranked paragraph not read yet, falling back to a previously
-read paragraph when the corpus is exhausted. A larger `--read-k` adds separately
+read takes the highest-ranked paragraph even if an earlier hop already read it.
+Deduplication applies only to multiple reads within the same hop. A larger `--read-k` adds separately
 recorded reads. Intermediate answers may only cite documents read during that hop;
 the final answer may cite any document read in the run. Unknown or missing citations
 on a nonempty answer fail validation. Empty answers represent abstention.
@@ -139,6 +139,10 @@ requires running `--client groq`; the offline run establishes recording, scoring
 and replay behavior on real data. The unit tests also validate 2-, 3- and 4-hop
 scripted executions, gold-data isolation, deterministic sampling, exact/F1 scoring,
 corpus isolation, invalid citations, and a network-disabled scored CLI suite.
+After correcting cross-hop paragraph exclusion, the same 50-question sample was
+rerun in `data/hoprag/task5-retrieval-fix.json`: scores remain 2/50 and mean F1
+0.064, with all 50 unchanged replays fully cached. A regression fixture also
+checks that two successive hops can use the same supporting paragraph.
 
 Task 5's mandatory HopRAG path is implemented. ShopDesk remains the explicitly
 optional stretch goal; no tau2-bench runs or rewards are claimed. Repeated

@@ -117,14 +117,11 @@ class HopRAG:
 
             for number in range(1, self.read_k + 1):
                 with run.step(f"hop{hop}/read#{number}", "tool", "read", agent_role="reader"):
+                    # A paragraph can support several hops. Deduplicate only
+                    # within this hop so the next reader receives its best evidence.
                     already_read = {
-                        run.state[f"hop{i}_doc{j}"]["doc_id"]
-                        for i in range(1, hop)
-                        for j in range(1, self.read_k + 1)
-                    }
-                    already_read.update(
                         run.state[f"hop{hop}_doc{j}"]["doc_id"] for j in range(1, number)
-                    )
+                    }
                     hits = run.state[f"hop{hop}_hits"]
                     unseen = [hit for hit in hits if hit["doc_id"] not in already_read]
                     candidates = unseen or hits

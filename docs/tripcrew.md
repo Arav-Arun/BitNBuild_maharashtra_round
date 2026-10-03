@@ -34,6 +34,13 @@ Invalid model output is recorded as a failed run, never replaced with an oracle
 answer. Reports name the client and model to distinguish fixture results from
 real model measurements. Do not commit reports or credentials.
 
+Reports are saved atomically before execution, after each run, and on interruption.
+The suite and each row carry a `status`; a timeout or cancellation retains the
+completed results and identifies the interrupted run. `count` is the number of
+attempted runs, while `completed_count` is the pass-rate denominator. Interrupted
+infrastructure calls are excluded from model accuracy. Network errors still stop
+the command with a nonzero exit status.
+
 ## Implementation
 
 - `scenarios.py`: 300 seeded templates across five Indian origins, six destinations,
@@ -74,6 +81,11 @@ model calls. The SDK currently labels these steps `live`, so distinguish them
 from call counts. Independent travel calls are cached. Unchanged replay makes
 zero new model/tool calls and preserves the final snapshot.
 
+Repeated replay samples preserve the original seed when that produces an exact
+match to a recorded model request. Changed model calls and forced controls retain
+their paired sample seeds; explicit seed edits are respected. The regression suite
+covers five unchanged replays and five edited/control pairs without prefix drift.
+
 ## Validation and five worked checks
 
 The automated suite validates all 300 scenarios, runs 20 end to end, checks the
@@ -113,5 +125,6 @@ The stale-FX demo reports 130,949.18 INR, fails the checker, and repairs to
   selected IDs, catalog arithmetic and checker verdict. Reports include all those
   fields and retain `manual_review_status: pending human review of five runs`.
 - The demo is a single deterministic repair, not a statistical VERIFIED claim.
-  Task 3's cross-sample cache reuse and seed handling need separate correction
-  before this agent is used for repeated stochastic verification.
+  The seed-induced prefix divergence is fixed. Task 3's general cross-sample cache
+  reuse still needs separate correction before claiming independent stochastic
+  verification for all agents and edit types.

@@ -3,11 +3,17 @@ import json
 import tempfile
 import unittest
 from dataclasses import replace
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+import httpx
 
 from agents.tripcrew import TravelAPI, TripCrew, check_plan, generate_scenarios
+from agents.tripcrew.__main__ import run_suite
 from agents.tripcrew.fixture_client import FixtureClient
 from agents.tripcrew.scenarios import catalog, solve
-from blackbox.replay import ReplayDivergence, ReplayEngine, patch_tool_args
+from blackbox.replay import ReplayDivergence, ReplayEngine, patch_prompt, patch_tool_args
 from blackbox.sdk import Recorder
 
 
@@ -186,6 +192,151 @@ class TripCrewTests(unittest.IsolatedAsyncioTestCase):
             original,
             self.recorder.database.query("SELECT * FROM steps WHERE run_id=?", (run.run_id,)),
         )
+
+    async def test_repeated_unchanged_replay_preserves_all_request_keys(self):
+        api = TravelAPI([self.scenarios[0]])
+        agent, run = await self.record(self.scenarios[0], api)
+        calls, chats = dict(api.calls), len(self.client.requests)
+        batch = await ReplayEngine(self.recorder).replay(run.run_id, agent, samples=5)
+        for replay in batch.edited:
+            self.assertEqual(replay.outcome, "passed")
+            self.assertTrue(
+                all(
+                    status == "cached"
+                    for addr, status in replay.statuses.items()
+                    if "/state#" not in addr
+                )
+            )
+        self.assertEqual(dict(api.calls), calls)
+        self.assertEqual(len(self.client.requests), chats)
+
+    async def test_five_fx_repairs_keep_prefix_cached_and_pair_live_model_seeds(self):
+        scenario = self.scenarios[0]
+        agent, run = await self.record(scenario, TravelAPI([scenario], stale_fx=True))
+        before = len(self.client.requests)
+        batch = await ReplayEngine(self.recorder).replay(
+            run.run_id,
+            agent,
+            edits=[patch_tool_args("fx/tool#1", {"fresh": True})],
+            samples=5,
+            control=True,
+        )
+        self.assertEqual(batch.fix_pass_rate, 1)
+        self.assertEqual(batch.control_pass_rate, 0)
+        for replay in [*batch.edited, *batch.controls]:
+            for addr in (
+                "planner/chat#1",
+                "flight/chat#1",
+                "hotel/chat#1",
+                "flight/chat#2",
+                "hotel/chat#2",
+            ):
+                self.assertEqual(replay.statuses[addr], "cached")
+        writer_seeds = [
+            request["seed"]
+            for request in self.client.requests[before:]
+            if json.loads(request["messages"][-1]["content"])["role"] == "writer"
+        ]
+        self.assertEqual(writer_seeds, [seed for seed in range(7, 12) for _ in range(2)])
+
+    async def test_seed_normalization_does_not_hide_other_request_drift(self):
+        agent, run = await self.record(self.scenarios[0])
+
+        async def drifting(replay_run):
+            if replay_run.seed != 7:
+                agent.model = "unexpected-model-change"
+            await agent(replay_run)
+
+        with self.assertRaisesRegex(ReplayDivergence, "request hash changed before the edit"):
+            await ReplayEngine(self.recorder).replay(run.run_id, drifting, samples=2)
+
+    async def test_explicit_seed_edit_is_not_normalized_back_to_the_base_seed(self):
+        agent, run = await self.record(self.scenarios[0])
+        batch = await ReplayEngine(self.recorder).replay(
+            run.run_id,
+            agent,
+            edits=[patch_prompt("planner/chat#1", {"seed": 8})],
+            samples=2,
+        )
+        for replay in batch.edited:
+            step = self.recorder.database.one(
+                "SELECT input_hash FROM steps WHERE run_id=? AND addr='planner/chat#1'",
+                (replay.run_id,),
+            )
+            self.assertEqual(self.recorder.store.load_json(step["input_hash"])["seed"], 8)
+
+    async def test_report_survives_timeout_after_a_completed_run(self):
+        original_chat = self.client.chat
+
+        async def failing(**request):
+            task = json.loads(request["messages"][-1]["content"])
+            if task["role"] == "planner" and "TC-7-0002" in task["task"]["request"]:
+                raise httpx.ReadTimeout("simulated timeout")
+            return await original_chat(**request)
+
+        self.client.chat = failing
+        root = Path(self.directory.name)
+        args = SimpleNamespace(
+            client="fixture",
+            count=2,
+            seed=7,
+            command="run",
+            stale_fx=False,
+            data_dir=root / "suite",
+            report=root / "report.json",
+        )
+        with patch("agents.tripcrew.__main__.FixtureClient", return_value=self.client):
+            with self.assertRaises(httpx.ReadTimeout):
+                await run_suite(args)
+        report = json.loads(args.report.read_text())
+        self.assertEqual(report["status"], "interrupted")
+        self.assertEqual(report["count"], 2)
+        self.assertEqual(report["completed_count"], 1)
+        self.assertEqual(report["passed"], 1)
+        self.assertEqual(report["pass_rate"], 1)
+        self.assertTrue(report["runs"][0]["passed"])
+        self.assertEqual(report["runs"][1]["error_type"], "ReadTimeout")
+        self.assertFalse(args.report.with_suffix(".json.tmp").exists())
+
+    async def test_first_run_cancellation_saves_a_valid_interrupted_report(self):
+        async def cancelled(**request):
+            raise asyncio.CancelledError()
+
+        self.client.chat = cancelled
+        root = Path(self.directory.name)
+        args = SimpleNamespace(
+            client="fixture",
+            count=1,
+            seed=7,
+            command="run",
+            stale_fx=False,
+            data_dir=root / "cancelled",
+            report=root / "cancelled.json",
+        )
+        with patch("agents.tripcrew.__main__.FixtureClient", return_value=self.client):
+            with self.assertRaises(asyncio.CancelledError):
+                await run_suite(args)
+        report = json.loads(args.report.read_text())
+        self.assertEqual(report["status"], "interrupted")
+        self.assertEqual(report["completed_count"], 0)
+        self.assertEqual(report["pass_rate"], 0)
+        self.assertEqual(report["runs"][0]["status"], "interrupted")
+
+    async def test_successful_suite_report_is_marked_complete(self):
+        root = Path(self.directory.name)
+        args = SimpleNamespace(
+            client="fixture",
+            count=1,
+            seed=7,
+            command="run",
+            stale_fx=False,
+            data_dir=root / "complete",
+            report=root / "complete.json",
+        )
+        report = await run_suite(args)
+        self.assertEqual(report["status"], "complete")
+        self.assertEqual(report["completed_count"], 1)
+        self.assertEqual(report, json.loads(args.report.read_text()))
 
     async def test_malformed_parallel_worker_fails_without_deadlock(self):
         original_chat = self.client.chat

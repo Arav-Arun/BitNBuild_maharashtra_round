@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 
 from blackbox.sdk import Recorder, RunSession
+from blackbox.sdk.runtime import chat_request_key
 
 ReplayMode = Literal["cone", "prefix", "full"]
 Verdict = Literal["VERIFIED", "REFUTED", "INCONCLUSIVE"]
@@ -140,6 +141,8 @@ class _ReplayPolicy:
     event_callback: Callable[[dict[str, Any]], None] | None = None
     statuses: dict[str, str] = field(default_factory=dict)
     last_state_after: str | None = None
+    base_seed: int | None = None
+    sample_seed: int | None = None
     first_edit_seq: float = field(init=False)
 
     def __post_init__(self) -> None:
@@ -192,12 +195,39 @@ class _ReplayPolicy:
 
     def transform_chat(self, addr: str, request: dict[str, Any]) -> dict[str, Any]:
         edit = self.edits.get(addr)
-        if edit is None:
-            return request
-        if edit.kind == "patch_prompt":
-            return _apply_prompt_patch(request, edit.value)
-        if edit.kind == "swap_model":
-            return {**request, "model": str(edit.value)}
+        if edit is not None:
+            if edit.kind == "patch_prompt":
+                request = _apply_prompt_patch(request, edit.value)
+            elif edit.kind == "swap_model":
+                request = {**request, "model": str(edit.value)}
+
+        # Sampling must not change otherwise identical cached prefix or sibling
+        # requests. Only normalize the automatic run.seed, and only when doing
+        # so recovers the exact base request key. Changed/live requests retain
+        # their sample seed; explicit custom seeds and other drift stay visible.
+        base = self.base_steps.get(addr)
+        explicit_seed_edit = (
+            edit is not None
+            and edit.kind == "patch_prompt"
+            and isinstance(edit.value, Mapping)
+            and "seed" in edit.value
+        )
+        forced = (
+            self.mode == "full"
+            or addr in self.force_live
+            or (self.mode == "prefix" and base is not None and base["seq"] >= self.first_edit_seq)
+        )
+        if (
+            not forced
+            and not explicit_seed_edit
+            and base is not None
+            and self.base_seed is not None
+            and self.sample_seed is not None
+            and request.get("seed") == self.sample_seed
+        ):
+            original_seed_request = {**request, "seed": self.base_seed}
+            if chat_request_key(original_seed_request, addr) == base["request_key"]:
+                return original_seed_request
         return request
 
     def transform_tool(self, addr: str, request: dict[str, Any]) -> dict[str, Any]:
@@ -304,6 +334,8 @@ class ReplayEngine:
     ) -> ReplayRun:
         run_id = f"{fork_id}-{branch}-{sample_index}"
         seed = int(base.get("seed") or 0) + sample_index
+        policy.base_seed = int(base.get("seed") or 0)
+        policy.sample_seed = seed
         with self.recorder.run(
             base["agent"],
             base["task_id"],

@@ -186,6 +186,49 @@ class DataAndScoringTests(unittest.TestCase):
 
 
 class HopRAGTests(unittest.IsolatedAsyncioTestCase):
+    async def test_later_hop_can_read_the_same_top_ranked_document(self):
+        raw = raw_example()
+        raw["paragraphs"][0]["paragraph_text"] = (
+            "Mira Vale founded Lumen observatory. Lumen observatory launch code is ORION."
+        )
+        raw["paragraphs"][1].update(title="Unrelated", paragraph_text="Irrelevant filler.")
+        raw["question_decomposition"][1]["paragraph_support_idx"] = 0
+        example = parse_example(raw)
+
+        class SharedDocumentClient:
+            async def chat(self, **request):
+                envelope = json.loads(request["messages"][-1]["content"])
+                role, task = envelope["role"], envelope["task"]
+                if role == "decompose":
+                    result = {"questions": ["Mira Vale observatory", "#1 launch code"]}
+                elif any("ORION" in doc["text"] for doc in task["documents"]):
+                    result = {
+                        "text": "Lumen"
+                        if role == "hop" and task["question"] == "Mira Vale observatory"
+                        else "ORION",
+                        "doc_ids": [0],
+                    }
+                else:
+                    result = {"text": "", "doc_ids": []}
+                return {"choices": [{"message": {"content": json.dumps(result)}}]}
+
+        with tempfile.TemporaryDirectory() as directory:
+            recorder = Recorder(directory, mode="offline", llm_client=SharedDocumentClient())
+            try:
+                agent = evaluated_agent(example, RetrievalTools(example.question))
+                with recorder.run("hoprag", example.question.question_id, 7) as run:
+                    await agent(run)
+                self.assertEqual(run.outcome, "passed")
+                state = run.state.as_dict()
+                self.assertEqual(state["hop1_doc1"]["doc_id"], 0)
+                self.assertEqual(state["hop2_hits"][0]["doc_id"], 0)
+                self.assertEqual(state["hop2_doc1"]["doc_id"], 0)
+                batch = await ReplayEngine(recorder).replay(run.run_id, agent)
+                self.assertEqual(batch.reexecuted_steps, 0)
+                self.assertEqual(batch.edited[0].outcome, "passed")
+            finally:
+                recorder.close()
+
     async def test_two_three_four_hops_and_fully_cached_unchanged_replay(self):
         for hops in (2, 3, 4):
             with self.subTest(hops=hops), tempfile.TemporaryDirectory() as directory:

@@ -8,6 +8,8 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+import httpx
+
 from agents.tripcrew import TravelAPI, TripCrew, generate_scenarios
 from agents.tripcrew.fixture_client import FixtureClient
 from agents.tripcrew.scenarios import catalog
@@ -15,6 +17,13 @@ from blackbox.config import Settings
 from blackbox.llm import AsyncLLMClient
 from blackbox.replay import ReplayEngine, patch_tool_args
 from blackbox.sdk import Recorder
+
+
+def _write_report(path: Path, report: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
 
 
 async def run_suite(args):
@@ -36,24 +45,64 @@ async def run_suite(args):
     )
     api = TravelAPI(scenarios, stale_fx=args.stale_fx or args.command == "demo")
     results = []
+    report = {
+        "client": args.client,
+        "model": model,
+        "seed": args.seed,
+        "stale_fx": args.stale_fx or args.command == "demo",
+        "requested_count": args.count,
+        "status": "running",
+        "manual_review_status": "pending human review of five runs",
+        "runs": results,
+    }
+
+    def save():
+        completed = [row for row in results if row["status"] == "complete"]
+        passed = sum(row["passed"] for row in completed)
+        report.update(
+            count=len(results),
+            completed_count=len(completed),
+            passed=passed,
+            pass_rate=passed / len(completed) if completed else 0,
+        )
+        _write_report(args.report, report)
+
     try:
+        save()
         for scenario in scenarios:
             agent = TripCrew(scenario, api, model=model)
-            with recorder.run("tripcrew", scenario.scenario_id, args.seed, model=model) as run:
-                try:
-                    await agent(run)
-                except (ValueError, KeyError, TypeError, IndexError) as error:
-                    run.set_outcome(False, score=0, reason=str(error))
-            state = run.state.as_dict()
+            run = recorder.run("tripcrew", scenario.scenario_id, args.seed, model=model)
             result = {
                 "run_id": run.run_id,
                 "task_id": scenario.scenario_id,
-                "passed": run.outcome == "passed",
-                "reason": run.checker_reason,
-                "plan": state.get("final_plan"),
+                "status": "running",
+                "passed": False,
+                "reason": None,
+                "plan": None,
                 "scenario": asdict(scenario),
                 "catalog": catalog(scenario),
             }
+            results.append(result)
+            save()
+            try:
+                with run:
+                    try:
+                        await agent(run)
+                    except (ValueError, KeyError, TypeError, IndexError) as error:
+                        run.set_outcome(False, score=0, reason=str(error))
+            except BaseException as error:
+                result.update(status="interrupted", error_type=type(error).__name__)
+                raise
+            else:
+                result["status"] = "complete"
+            finally:
+                result.update(
+                    passed=run.outcome == "passed",
+                    reason=run.checker_reason,
+                    plan=run.state.as_dict().get("final_plan"),
+                )
+                save()
+
             if args.command == "demo":
                 batch = await ReplayEngine(recorder).replay(
                     run.run_id,
@@ -71,7 +120,7 @@ async def run_suite(args):
                     "statuses": batch.edited[0].statuses,
                     "note": "Single deterministic demonstration, not a K-sample causal verdict",
                 }
-            results.append(result)
+            save()
             print(
                 f"{scenario.scenario_id}: {'PASS' if result['passed'] else 'FAIL'} — {run.checker_reason}"
             )
@@ -79,21 +128,15 @@ async def run_suite(args):
                 print(
                     f"  Fresh FX replay: {result['repair']['outcome']} — {result['repair']['reason']}"
                 )
+        report["status"] = "complete"
+    except BaseException as error:
+        report.update(status="interrupted", error_type=type(error).__name__)
+        raise
     finally:
-        await recorder.aclose()
-    report = {
-        "client": args.client,
-        "model": model,
-        "seed": args.seed,
-        "stale_fx": args.stale_fx or args.command == "demo",
-        "count": len(results),
-        "passed": sum(r["passed"] for r in results),
-        "pass_rate": sum(r["passed"] for r in results) / len(results),
-        "manual_review_status": "pending human review of five runs",
-        "runs": results,
-    }
-    args.report.parent.mkdir(parents=True, exist_ok=True)
-    args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        try:
+            save()
+        finally:
+            await recorder.aclose()
     print(
         f"{report['passed']}/{report['count']} passed ({report['pass_rate']:.0%}); report: {args.report}"
     )
@@ -125,7 +168,7 @@ def main():
             print(f"Wrote {args.count} scenarios to {args.report}")
         else:
             asyncio.run(run_suite(args))
-    except (ValueError, RuntimeError) as error:
+    except (ValueError, RuntimeError, OSError, httpx.HTTPError) as error:
         parser.exit(1, f"tripcrew: {error}\n")
 
 
