@@ -2,7 +2,7 @@ UV ?= uv
 RUN = $(UV) run --locked --extra dev
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag
+.PHONY: hoprag-data hoprag forge
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -62,3 +62,7 @@ hoprag-data:
 
 hoprag:
 	$(RUN) python -m agents.hoprag run --count 50 --verify-replay
+
+forge:
+	$(RUN) python -m blackbox.forge --target 360 --concurrency 4
+
