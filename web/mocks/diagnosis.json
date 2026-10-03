@@ -1,0 +1,9 @@
+{
+  "run_id": "TC-0412",
+  "suspects": [
+    { "addr": "fx/tool#1", "probability": 0.82, "reason": "Exchange rate is stale" }
+  ],
+  "conformal_set": ["fx/tool#1"],
+  "abstain": false,
+  "verdict": null
+}

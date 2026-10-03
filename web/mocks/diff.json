@@ -1,0 +1,19 @@
+{
+  "left_run_id": "TC-0412",
+  "right_run_id": "TC-0412-fix-1",
+  "first_divergence": "fx/tool#1",
+  "rows": [
+    {
+      "addr": "fx/tool#1",
+      "status": "changed",
+      "left": { "rate": 61.2 },
+      "right": { "rate": 53.5 }
+    },
+    {
+      "addr": "weather/tool#1",
+      "status": "cached",
+      "left": { "summary": "rain" },
+      "right": { "summary": "rain" }
+    }
+  ]
+}
