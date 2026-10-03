@@ -721,6 +721,8 @@ class TestForkResult(unittest.TestCase):
         self.assertEqual(result.label, ForkLabel.POSITIVE)
         self.assertEqual(result.target_addr, "fx/tool#1")
         self.assertIsNotNone(result.manifest_addr)
+        self.assertEqual(result.confidence, "high")
+
 
 
 class TestForgeProgress(unittest.TestCase):
@@ -884,6 +886,8 @@ class TestDatasetFreezeContract(unittest.TestCase):
                 self.assertEqual(item["seed_id"], 7)
                 self.assertGreaterEqual(item["reproduction_count"], 1)
                 self.assertGreaterEqual(item["control_count"], 1)
+                self.assertEqual(item["confidence"], "high")
+
 
                 # Verify parquet file export
                 try:

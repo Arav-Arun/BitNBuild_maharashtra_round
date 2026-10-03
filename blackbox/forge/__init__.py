@@ -23,6 +23,7 @@ from blackbox.forge.operators import (
     held_out_operators,
     seen_operators,
 )
+from blackbox.forge.natural_label import NaturalLabel, NaturalLabeler
 from blackbox.forge.runner import ForgeRunner
 
 __all__ = [
@@ -40,6 +41,8 @@ __all__ = [
     "ForkResult",
     "ForgeRunner",
     "Labeler",
+    "NaturalLabel",
+    "NaturalLabeler",
     "R1IrrelevantDocuments",
     "R2PoisonedFact",
     "T1WrongValue",

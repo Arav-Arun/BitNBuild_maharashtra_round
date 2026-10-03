@@ -41,6 +41,7 @@ class ForkResult:
     samples: int
     held_out: bool
     created_at: str
+    confidence: str = "high"
 
 
 class Labeler:
@@ -92,6 +93,7 @@ class Labeler:
             samples=len(batch.edited),
             held_out=held_out,
             created_at=datetime.now(UTC).isoformat(),
+            confidence="high" if len(batch.edited) >= 3 else "low",
         )
 
         # Persist label to the labels table for each edited run

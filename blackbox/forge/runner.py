@@ -327,6 +327,7 @@ class ForgeRunner:
             item["control_count"] = ctrl_count
             item["fix_pass_rate"] = fix_rate
             item["control_pass_rate"] = ctrl_rate
+            item["confidence"] = "high" if repro_count >= 3 else "low"
             enriched_labels.append(item)
 
         labels_path = output_dir / "labels.json"
