@@ -1,0 +1,199 @@
+{
+  "run_id": "sample-0c4654ef389e",
+  "task_id": "purchase-01",
+  "outcome": "success",
+  "checker_reason": "answer matches expected total",
+  "model_name": "synthetic-fixture",
+  "seed": 0,
+  "initial_state_ref": "e2d9cdc37b77c8cb5fe48fe81ecb49dfbac7fc69b66b067d2e0826c224e249f2",
+  "steps": [
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 0,
+      "parent_step_index": null,
+      "step_type": "model_call",
+      "input": {
+        "question": "Find the total cost of 2 items at 10 each."
+      },
+      "output": {
+        "action": "retrieve"
+      },
+      "tool_name": null,
+      "retrieved_context": [],
+      "state_before_ref": "e2d9cdc37b77c8cb5fe48fe81ecb49dfbac7fc69b66b067d2e0826c224e249f2",
+      "state_after_ref": "9b894de15193abae15bf1dc5ac0ba991b0b309af97a333c2b91776b48dd6ea11",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.661539+00:00",
+      "ended_at": "2026-10-03T13:51:02.662055+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 1,
+      "parent_step_index": 0,
+      "step_type": "retrieval",
+      "input": {
+        "task_id": "purchase-01"
+      },
+      "output": {
+        "quantity": 2,
+        "unit_price": 10
+      },
+      "tool_name": "retrieve",
+      "retrieved_context": [
+        "{'quantity': 2, 'unit_price': 10}"
+      ],
+      "state_before_ref": "9b894de15193abae15bf1dc5ac0ba991b0b309af97a333c2b91776b48dd6ea11",
+      "state_after_ref": "29cec7bfaec4074072e49d18e835dbb6f305d92546b3f5a56cc3ecf7c3f06b1e",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662079+00:00",
+      "ended_at": "2026-10-03T13:51:02.662209+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 2,
+      "parent_step_index": 1,
+      "step_type": "state_update",
+      "input": {},
+      "output": {
+        "quantity": 2,
+        "unit_price": 10
+      },
+      "tool_name": null,
+      "retrieved_context": [],
+      "state_before_ref": "29cec7bfaec4074072e49d18e835dbb6f305d92546b3f5a56cc3ecf7c3f06b1e",
+      "state_after_ref": "79f874be87473e020a7749b4bc23f7466b82eebc4b7c31fdcd0e92d59900e36d",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662223+00:00",
+      "ended_at": "2026-10-03T13:51:02.662338+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 3,
+      "parent_step_index": 2,
+      "step_type": "model_call",
+      "input": {
+        "operation": "multiply"
+      },
+      "output": {
+        "action": "calculate"
+      },
+      "tool_name": null,
+      "retrieved_context": [],
+      "state_before_ref": "79f874be87473e020a7749b4bc23f7466b82eebc4b7c31fdcd0e92d59900e36d",
+      "state_after_ref": "bb4ad34a4cf52acc87cac8a1d032abf352622548dc90a2d402ccb9362792f1e3",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662349+00:00",
+      "ended_at": "2026-10-03T13:51:02.662453+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 4,
+      "parent_step_index": 3,
+      "step_type": "tool_call",
+      "input": {
+        "left": 2,
+        "right": 10
+      },
+      "output": {
+        "total": 20
+      },
+      "tool_name": "calculate",
+      "retrieved_context": [],
+      "state_before_ref": "bb4ad34a4cf52acc87cac8a1d032abf352622548dc90a2d402ccb9362792f1e3",
+      "state_after_ref": "42266546b320fe78c33589c1156f1bca98751cae2044d82e4048df494e9f663b",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662463+00:00",
+      "ended_at": "2026-10-03T13:51:02.662565+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 5,
+      "parent_step_index": 4,
+      "step_type": "state_update",
+      "input": {},
+      "output": {
+        "total": 20
+      },
+      "tool_name": null,
+      "retrieved_context": [],
+      "state_before_ref": "42266546b320fe78c33589c1156f1bca98751cae2044d82e4048df494e9f663b",
+      "state_after_ref": "297cae69d940b7866caa3292b7a482b0d722005dff2aef8a4ab62493eedd33f3",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662575+00:00",
+      "ended_at": "2026-10-03T13:51:02.662689+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 6,
+      "parent_step_index": 5,
+      "step_type": "model_call",
+      "input": {
+        "format": "json"
+      },
+      "output": {
+        "total": 20
+      },
+      "tool_name": null,
+      "retrieved_context": [],
+      "state_before_ref": "297cae69d940b7866caa3292b7a482b0d722005dff2aef8a4ab62493eedd33f3",
+      "state_after_ref": "17b19b2f3e3cbe155823ff98c1f8c8d0aed35e6316edb5f3dcd94a94b1dd10fb",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662698+00:00",
+      "ended_at": "2026-10-03T13:51:02.662808+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    },
+    {
+      "run_id": "sample-0c4654ef389e",
+      "step_index": 7,
+      "parent_step_index": 6,
+      "step_type": "tool_call",
+      "input": {
+        "total": 20
+      },
+      "output": {
+        "total": 20
+      },
+      "tool_name": "write_answer",
+      "retrieved_context": [],
+      "state_before_ref": "17b19b2f3e3cbe155823ff98c1f8c8d0aed35e6316edb5f3dcd94a94b1dd10fb",
+      "state_after_ref": "a3d88b918dc3e894fece7c81df2e5e3750b0fd7529e1757e016f6590e597d873",
+      "status": "ok",
+      "started_at": "2026-10-03T13:51:02.662817+00:00",
+      "ended_at": "2026-10-03T13:51:02.662927+00:00",
+      "label": {
+        "run_outcome": "success",
+        "is_culprit": false
+      }
+    }
+  ],
+  "fault_type": null,
+  "culprit_step_index": null,
+  "schema_version": 1
+}

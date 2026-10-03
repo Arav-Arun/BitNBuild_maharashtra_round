@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blackbox-agent-debugger"
+version = "0.1.0"
+description = "A flight recorder and failure-localization toolkit for AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+ml = ["scikit-learn>=1.5,<2"]
+dev = ["ruff>=0.9,<1"]
+
+[project.scripts]
+blackbox = "blackbox.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["blackbox*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
