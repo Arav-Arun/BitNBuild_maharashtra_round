@@ -16,7 +16,7 @@ from typing import Any
 
 from blackbox.forge.inject import FaultInjector
 from blackbox.forge.label import ForkLabel, ForkResult
-from blackbox.forge.operators import FaultOperator, all_operators, seen_operators
+from blackbox.forge.operators import FaultOperator, all_operators
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +68,7 @@ class ForgeProgress:
             "errors": self.errors,
             "flaky_rate": round(self.flaky_rate, 4),
             "elapsed_seconds": round(self.elapsed, 1),
-            "per_operator": {
-                code: dict(counts)
-                for code, counts in self.per_operator.items()
-            },
+            "per_operator": {code: dict(counts) for code, counts in self.per_operator.items()},
         }
 
 
@@ -142,7 +139,8 @@ class ForgeRunner:
         async with self._semaphore:
             try:
                 if with_distractor:
-                    from blackbox.forge.operators import T4Timeout500, C4RepeatedLoop
+                    from blackbox.forge.operators import C4RepeatedLoop, T4Timeout500
+
                     distractor_ops = [T4Timeout500(), C4RepeatedLoop()]
                     dist_op = self.rng.choice(distractor_ops)
                     result = await self.injector.inject_with_distractor(
@@ -207,8 +205,7 @@ class ForgeRunner:
             raise ValueError("no operators provided")
 
         logger.info(
-            "Starting Forge: target=%d positive, max=%d attempts, "
-            "%d operators, concurrency=%d",
+            "Starting Forge: target=%d positive, max=%d attempts, %d operators, concurrency=%d",
             target_positive,
             max_attempts,
             len(operators),
@@ -276,9 +273,7 @@ class ForgeRunner:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Export enriched labels
-        labels = self.injector.recorder.database.query(
-            "SELECT * FROM labels ORDER BY run_id"
-        )
+        labels = self.injector.recorder.database.query("SELECT * FROM labels ORDER BY run_id")
         enriched_labels = []
         for row in labels:
             item = dict(row)

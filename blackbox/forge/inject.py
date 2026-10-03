@@ -8,9 +8,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from blackbox.forge.label import ForkLabel, ForkResult, Labeler
+from blackbox.forge.label import ForkResult, Labeler
 from blackbox.forge.operators import FaultOperator
-from blackbox.replay import Edit, ReplayEngine, override_output
+from blackbox.replay import Edit, ReplayEngine
 from blackbox.sdk import Recorder
 from blackbox.sdk.runtime import RunSession
 
@@ -268,4 +268,3 @@ class FaultInjector:
             )
 
         return None
-

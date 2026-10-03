@@ -120,9 +120,7 @@ class Labeler:
 
         return result
 
-    def _find_manifestation(
-        self, batch: ReplayBatch, target_addr: str
-    ) -> str | None:
+    def _find_manifestation(self, batch: ReplayBatch, target_addr: str) -> str | None:
         """Find the first step after the target whose cache status is 'live'."""
         if not batch.edited:
             return None
@@ -136,7 +134,8 @@ class Labeler:
 
         # Steps that ran live after the target step
         live_addrs = [
-            addr for addr, status in statuses.items()
+            addr
+            for addr, status in statuses.items()
             if status in {"live", "edited"}
             and addr != target_addr
             and addr_to_seq.get(addr, 999999) > target_seq
@@ -164,4 +163,3 @@ class Labeler:
             """,
             (run_id, root_addr, fault_type, recovered, manifest_addr),
         )
-

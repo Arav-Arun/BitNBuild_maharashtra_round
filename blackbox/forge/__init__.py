@@ -2,6 +2,7 @@
 
 from blackbox.forge.inject import FaultInjector
 from blackbox.forge.label import ForkLabel, ForkResult, Labeler
+from blackbox.forge.natural_label import NaturalLabel, NaturalLabeler
 from blackbox.forge.operators import (
     C1InstructionMisread,
     C2ConstraintDropped,
@@ -23,7 +24,6 @@ from blackbox.forge.operators import (
     held_out_operators,
     seen_operators,
 )
-from blackbox.forge.natural_label import NaturalLabel, NaturalLabeler
 from blackbox.forge.runner import ForgeRunner
 
 __all__ = [

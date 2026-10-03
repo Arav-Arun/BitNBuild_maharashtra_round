@@ -12,7 +12,6 @@ from typing import Any
 
 from blackbox.replay import ReplayBatch, ReplayEngine, override_output
 from blackbox.sdk import Recorder
-from blackbox.sdk.runtime import RunSession
 
 logger = logging.getLogger(__name__)
 
@@ -154,9 +153,7 @@ class NaturalLabeler:
                 continue
 
             # Check if fix lower bound > control upper bound
-            if (
-                full.fix_interval[0] > (full.control_interval[1] if full.control_interval else 0)
-            ):
+            if full.fix_interval[0] > (full.control_interval[1] if full.control_interval else 0):
                 # Attributed!
                 self._persist_label(run_id, addr)
                 return NaturalLabel(

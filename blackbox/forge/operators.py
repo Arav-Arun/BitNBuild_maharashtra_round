@@ -13,14 +13,13 @@ returns an Edit that the replay engine can consume.
 from __future__ import annotations
 
 import copy
-import math
 import random as random_module
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Any, Literal, Sequence
+from typing import Any, Literal
 
-from blackbox.replay import Edit, override_output, patch_tool_result
+from blackbox.replay import Edit, override_output
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,9 +45,7 @@ class FaultOperator(ABC):
         """Return True if this operator can be applied to the given step."""
 
     @abstractmethod
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         """Return an Edit that injects this fault into the step's output."""
 
     def verify_change(self, original: Any, perturbed: Any) -> bool:
@@ -73,12 +70,22 @@ class FaultOperator(ABC):
 
                 if orig_content != pert_content:
                     import json
+
                     try:
-                        orig_data = json.loads(orig_content) if isinstance(orig_content, str) else orig_content
-                        pert_data = json.loads(pert_content) if isinstance(pert_content, str) else pert_content
+                        orig_data = (
+                            json.loads(orig_content)
+                            if isinstance(orig_content, str)
+                            else orig_content
+                        )
+                        pert_data = (
+                            json.loads(pert_content)
+                            if isinstance(pert_content, str)
+                            else pert_content
+                        )
                         if isinstance(orig_data, dict) and isinstance(pert_data, dict):
                             inner_changed = {
-                                k for k in set(orig_data) | set(pert_data)
+                                k
+                                for k in set(orig_data) | set(pert_data)
                                 if orig_data.get(k) != pert_data.get(k)
                             }
                             if inner_changed and inner_changed <= allowed:
@@ -87,7 +94,9 @@ class FaultOperator(ABC):
                         pass
 
                     if isinstance(orig_content, str) and isinstance(pert_content, str):
-                        if orig_content.startswith(pert_content) and len(pert_content) < len(orig_content):
+                        if orig_content.startswith(pert_content) and len(pert_content) < len(
+                            orig_content
+                        ):
                             return True
                         if any(k in allowed for k in ("text", "content", "questions")):
                             return True
@@ -108,8 +117,6 @@ class FaultOperator(ABC):
         return ""
 
 
-
-
 # ---------------------------------------------------------------------------
 # Tool faults
 # ---------------------------------------------------------------------------
@@ -125,9 +132,18 @@ class T1WrongValue(FaultOperator):
         description="Perturb a numeric or string value in the tool output",
         held_out=False,
         step_kinds=frozenset({"tool"}),
-        changed_fields=("rate", "fare_inr_per_adult", "nightly_local_per_room",
-                        "fee_inr_per_adult", "total_inr", "flights_inr",
-                        "hotels_inr", "visa_inr", "text", "score"),
+        changed_fields=(
+            "rate",
+            "fare_inr_per_adult",
+            "nightly_local_per_room",
+            "fee_inr_per_adult",
+            "total_inr",
+            "flights_inr",
+            "hotels_inr",
+            "visa_inr",
+            "text",
+            "score",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -137,9 +153,7 @@ class T1WrongValue(FaultOperator):
             return False
         return any(isinstance(v, (int, float)) for v in output.values())
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         numeric_keys = [k for k, v in perturbed.items() if isinstance(v, (int, float))]
         if not numeric_keys:
@@ -177,9 +191,7 @@ class T2StaleData(FaultOperator):
             return False
         return isinstance(output, dict) and "as_of" in output
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         try:
             original_date = date.fromisoformat(str(perturbed["as_of"]))
@@ -203,12 +215,31 @@ class T3Empty404(FaultOperator):
         description="Replace tool output with an empty or 404-style response",
         held_out=False,
         step_kinds=frozenset({"tool"}),
-        changed_fields=("options", "error", "status", "message", "text", "doc_id",
-                        "title", "forecast", "rate", "as_of", "currency",
-                        "to", "fee_inr_per_adult", "nationality",
-                        "visa_required", "note", "destination",
-                        "flights_inr", "hotels_inr", "visa_inr",
-                        "total_inr", "fx_as_of", "score"),
+        changed_fields=(
+            "options",
+            "error",
+            "status",
+            "message",
+            "text",
+            "doc_id",
+            "title",
+            "forecast",
+            "rate",
+            "as_of",
+            "currency",
+            "to",
+            "fee_inr_per_adult",
+            "nationality",
+            "visa_required",
+            "note",
+            "destination",
+            "flights_inr",
+            "hotels_inr",
+            "visa_inr",
+            "total_inr",
+            "fx_as_of",
+            "score",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -216,9 +247,7 @@ class T3Empty404(FaultOperator):
             return False
         return isinstance(output, dict)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         # Return an error dict that stays schema-valid as a dict
         error_response = {
             "error": "resource_not_found",
@@ -238,12 +267,31 @@ class T4Timeout500(FaultOperator):
         description="Replace tool output with a 500 or timeout error response",
         held_out=False,
         step_kinds=frozenset({"tool"}),
-        changed_fields=("error", "status", "message", "options", "text",
-                        "doc_id", "title", "forecast", "rate", "as_of",
-                        "currency", "to", "fee_inr_per_adult",
-                        "nationality", "visa_required", "note",
-                        "destination", "flights_inr", "hotels_inr",
-                        "visa_inr", "total_inr", "fx_as_of", "score"),
+        changed_fields=(
+            "error",
+            "status",
+            "message",
+            "options",
+            "text",
+            "doc_id",
+            "title",
+            "forecast",
+            "rate",
+            "as_of",
+            "currency",
+            "to",
+            "fee_inr_per_adult",
+            "nationality",
+            "visa_required",
+            "note",
+            "destination",
+            "flights_inr",
+            "hotels_inr",
+            "visa_inr",
+            "total_inr",
+            "fx_as_of",
+            "score",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -251,9 +299,7 @@ class T4Timeout500(FaultOperator):
             return False
         return isinstance(output, dict)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         error_response = {
             "error": "internal_server_error",
             "status": 500,
@@ -272,10 +318,18 @@ class T5SchemaDrift(FaultOperator):
         description="Rename or retype fields to simulate an API version mismatch",
         held_out=True,
         step_kinds=frozenset({"tool"}),
-        changed_fields=("rate", "exchange_rate", "fare_inr_per_adult",
-                        "price_inr", "nightly_local_per_room",
-                        "nightly_rate", "text", "content", "score",
-                        "relevance"),
+        changed_fields=(
+            "rate",
+            "exchange_rate",
+            "fare_inr_per_adult",
+            "price_inr",
+            "nightly_local_per_room",
+            "nightly_rate",
+            "text",
+            "content",
+            "score",
+            "relevance",
+        ),
     )
 
     _renames = {
@@ -293,9 +347,7 @@ class T5SchemaDrift(FaultOperator):
             return False
         return any(k in output for k in self._renames)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         for old_key, new_key in self._renames.items():
             if old_key in perturbed:
@@ -329,9 +381,7 @@ class R1IrrelevantDocuments(FaultOperator):
             return "doc_id" in output[0] or "score" in output[0]
         return False
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         if not perturbed:
             return override_output(step["addr"], perturbed)
@@ -364,9 +414,7 @@ class R2PoisonedFact(FaultOperator):
             return False
         return "text" in output and isinstance(output.get("text"), str)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         original = perturbed["text"]
         # Split into sentences and replace a random one with contradictory info
@@ -395,10 +443,21 @@ class D1WrongArguments(FaultOperator):
         description="Change arguments the LLM chose for a tool call",
         held_out=False,
         step_kinds=frozenset({"llm"}),
-        changed_fields=("origin", "destination", "departure", "return_date",
-                        "adults", "query", "questions", "text",
-                        "scenario_id", "flight_id", "hotel_id",
-                        "total_inr", "budget_inr"),
+        changed_fields=(
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "adults",
+            "query",
+            "questions",
+            "text",
+            "scenario_id",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+            "budget_inr",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -414,20 +473,18 @@ class D1WrongArguments(FaultOperator):
         content = msg.get("content", "")
         return bool(content and isinstance(content, str))
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         msg = perturbed["choices"][0]["message"]
         content = msg["content"]
         # Try to parse as JSON and mutate a field
         try:
             import json
+
             data = json.loads(content)
             if isinstance(data, dict):
                 # Pick a string or numeric field and corrupt it
-                mutable = [k for k, v in data.items()
-                           if isinstance(v, (str, int, float))]
+                mutable = [k for k, v in data.items() if isinstance(v, (str, int, float))]
                 if mutable:
                     key = rng.choice(mutable)
                     val = data[key]
@@ -440,14 +497,13 @@ class D1WrongArguments(FaultOperator):
                 msg["content"] = json.dumps(data, sort_keys=True)
         except (json.JSONDecodeError, TypeError, KeyError):
             # If not parseable, just corrupt the raw content
-            msg["content"] = content[:len(content) // 2]
+            msg["content"] = content[: len(content) // 2]
         return override_output(step["addr"], perturbed)
 
     def ghost_hint(
         self, step: dict[str, Any] | None = None, rng: random_module.Random | None = None
     ) -> str:
         return "SYSTEM HINT (UNSTORED): Use incorrect arguments for the tool call (e.g., alter the date, departure, destination, or budget)."
-
 
 
 class D2WrongTool(FaultOperator):
@@ -460,10 +516,24 @@ class D2WrongTool(FaultOperator):
         description="Simulate the LLM calling a wrong tool by swapping output content",
         held_out=False,
         step_kinds=frozenset({"llm"}),
-        changed_fields=("origin", "destination", "departure", "return_date",
-                        "adults", "text", "flight_id", "hotel_id",
-                        "total_inr", "budget_inr", "questions", "error",
-                        "message", "vegetarian", "refundable", "no_red_eye"),
+        changed_fields=(
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "adults",
+            "text",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+            "budget_inr",
+            "questions",
+            "error",
+            "message",
+            "vegetarian",
+            "refundable",
+            "no_red_eye",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -477,14 +547,13 @@ class D2WrongTool(FaultOperator):
         msg = choices[0].get("message", {}) if isinstance(choices[0], dict) else {}
         return bool(msg.get("content"))
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         msg = perturbed["choices"][0]["message"]
         # Replace the content with a generic wrong-tool output
         try:
             import json
+
             data = json.loads(msg["content"])
             if isinstance(data, dict):
                 # Blank out all values to simulate wrong tool output
@@ -507,7 +576,6 @@ class D2WrongTool(FaultOperator):
         return "SYSTEM HINT (UNSTORED): Call a different or incorrect tool instead of the one required by the task."
 
 
-
 class D3HallucinatedValue(FaultOperator):
     """Inject a hallucinated value that doesn't appear in any input."""
 
@@ -518,13 +586,27 @@ class D3HallucinatedValue(FaultOperator):
         description="Inject a plausible but fabricated value into the LLM output",
         held_out=True,
         step_kinds=frozenset({"llm"}),
-        changed_fields=("origin", "destination", "departure", "return_date",
-                        "adults", "text", "flight_id", "hotel_id",
-                        "total_inr", "questions", "doc_ids"),
+        changed_fields=(
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "adults",
+            "text",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+            "questions",
+            "doc_ids",
+        ),
     )
 
     _hallucinated_cities = [
-        "Atlantis", "El Dorado", "Shangri-La", "Xanadu", "Camelot",
+        "Atlantis",
+        "El Dorado",
+        "Shangri-La",
+        "Xanadu",
+        "Camelot",
     ]
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -538,18 +620,16 @@ class D3HallucinatedValue(FaultOperator):
         msg = choices[0].get("message", {}) if isinstance(choices[0], dict) else {}
         return bool(msg.get("content"))
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         msg = perturbed["choices"][0]["message"]
         try:
             import json
+
             data = json.loads(msg["content"])
             if isinstance(data, dict):
                 string_keys = [k for k, v in data.items() if isinstance(v, str)]
-                numeric_keys = [k for k, v in data.items()
-                                if isinstance(v, (int, float))]
+                numeric_keys = [k for k, v in data.items() if isinstance(v, (int, float))]
                 if string_keys:
                     key = rng.choice(string_keys)
                     data[key] = rng.choice(self._hallucinated_cities)
@@ -577,10 +657,22 @@ class D4StopsTooEarly(FaultOperator):
         description="Truncate the LLM output to simulate premature stopping",
         held_out=False,
         step_kinds=frozenset({"llm"}),
-        changed_fields=("origin", "destination", "departure", "return_date",
-                        "adults", "text", "flight_id", "hotel_id",
-                        "total_inr", "questions", "doc_ids", "budget_inr",
-                        "finish_reason", "content"),
+        changed_fields=(
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "adults",
+            "text",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+            "questions",
+            "doc_ids",
+            "budget_inr",
+            "finish_reason",
+            "content",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -595,9 +687,7 @@ class D4StopsTooEarly(FaultOperator):
         content = msg.get("content", "")
         return isinstance(content, str) and len(content) > 20
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         msg = perturbed["choices"][0]["message"]
         content = msg["content"]
@@ -615,7 +705,6 @@ class D4StopsTooEarly(FaultOperator):
         return "SYSTEM HINT (UNSTORED): Stop generating prematurely before completing the required output."
 
 
-
 # ---------------------------------------------------------------------------
 # Coordination faults
 # ---------------------------------------------------------------------------
@@ -631,10 +720,22 @@ class C1InstructionMisread(FaultOperator):
         description="Swap or drop a constraint to simulate misreading instructions",
         held_out=False,
         step_kinds=frozenset({"llm"}),
-        changed_fields=("origin", "destination", "departure", "return_date",
-                        "adults", "text", "flight_id", "hotel_id",
-                        "total_inr", "questions", "vegetarian",
-                        "refundable", "no_red_eye", "budget_inr"),
+        changed_fields=(
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "adults",
+            "text",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+            "questions",
+            "vegetarian",
+            "refundable",
+            "no_red_eye",
+            "budget_inr",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -648,13 +749,12 @@ class C1InstructionMisread(FaultOperator):
         msg = choices[0].get("message", {}) if isinstance(choices[0], dict) else {}
         return bool(msg.get("content"))
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         msg = perturbed["choices"][0]["message"]
         try:
             import json
+
             data = json.loads(msg["content"])
             if isinstance(data, dict):
                 # Flip boolean constraints
@@ -664,8 +764,7 @@ class C1InstructionMisread(FaultOperator):
                     data[key] = not data[key]
                 else:
                     # Modify a numeric constraint
-                    num_keys = [k for k, v in data.items()
-                                if isinstance(v, (int, float))]
+                    num_keys = [k for k, v in data.items() if isinstance(v, (int, float))]
                     if num_keys:
                         key = rng.choice(num_keys)
                         data[key] = data[key] * rng.choice([2, 3])
@@ -692,10 +791,22 @@ class C2ConstraintDropped(FaultOperator):
         description="Remove a constraint field during inter-agent hand-off",
         held_out=True,
         step_kinds=frozenset({"llm", "state"}),
-        changed_fields=("vegetarian", "refundable", "no_red_eye",
-                        "budget_inr", "adults", "origin", "destination",
-                        "departure", "return_date", "text", "questions",
-                        "flight_id", "hotel_id", "total_inr"),
+        changed_fields=(
+            "vegetarian",
+            "refundable",
+            "no_red_eye",
+            "budget_inr",
+            "adults",
+            "origin",
+            "destination",
+            "departure",
+            "return_date",
+            "text",
+            "questions",
+            "flight_id",
+            "hotel_id",
+            "total_inr",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -706,6 +817,7 @@ class C2ConstraintDropped(FaultOperator):
             if output.get("choices"):
                 try:
                     import json
+
                     msg = output["choices"][0]["message"]
                     data = json.loads(msg["content"])
                     return isinstance(data, dict) and len(data) > 2
@@ -714,12 +826,11 @@ class C2ConstraintDropped(FaultOperator):
             return len(output) > 2
         return False
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         if perturbed.get("choices"):
             import json
+
             msg = perturbed["choices"][0]["message"]
             data = json.loads(msg["content"])
             if isinstance(data, dict) and len(data) > 2:
@@ -740,7 +851,6 @@ class C2ConstraintDropped(FaultOperator):
         return "SYSTEM HINT (UNSTORED): Drop one required constraint during agent coordination or state transfer."
 
 
-
 class C3StateCorruption(FaultOperator):
     """Corrupt a state value to simulate state management bugs."""
 
@@ -751,16 +861,43 @@ class C3StateCorruption(FaultOperator):
         description="Corrupt a value in the agent state to simulate state bugs",
         held_out=True,
         step_kinds=frozenset({"state", "tool", "llm"}),
-        changed_fields=("constraints", "flight_task", "hotel_task",
-                        "destination", "flight_query", "hotel_query",
-                        "weather", "fx", "visa", "flight", "hotel",
-                        "flight_catalog", "hotel_catalog", "budget",
-                        "draft", "verified_plan", "final_plan", "check",
-                        "plan", "question", "corpus_id", "text",
-                        "total_inr", "flights_inr", "hotels_inr",
-                        "visa_inr", "fx_as_of", "rate", "as_of",
-                        "currency", "to", "vegetarian", "refundable",
-                        "no_red_eye", "origin"),
+        changed_fields=(
+            "constraints",
+            "flight_task",
+            "hotel_task",
+            "destination",
+            "flight_query",
+            "hotel_query",
+            "weather",
+            "fx",
+            "visa",
+            "flight",
+            "hotel",
+            "flight_catalog",
+            "hotel_catalog",
+            "budget",
+            "draft",
+            "verified_plan",
+            "final_plan",
+            "check",
+            "plan",
+            "question",
+            "corpus_id",
+            "text",
+            "total_inr",
+            "flights_inr",
+            "hotels_inr",
+            "visa_inr",
+            "fx_as_of",
+            "rate",
+            "as_of",
+            "currency",
+            "to",
+            "vegetarian",
+            "refundable",
+            "no_red_eye",
+            "origin",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -768,14 +905,13 @@ class C3StateCorruption(FaultOperator):
             return False
         return isinstance(output, dict)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         if perturbed.get("choices"):
             # LLM output — corrupt the parsed content
             try:
                 import json
+
                 msg = perturbed["choices"][0]["message"]
                 data = json.loads(msg["content"])
                 if isinstance(data, dict):
@@ -817,9 +953,19 @@ class C4RepeatedLoop(FaultOperator):
         description="Duplicate the output to simulate the agent repeating an action",
         held_out=False,
         step_kinds=frozenset({"llm", "tool"}),
-        changed_fields=("text", "questions", "doc_ids", "options",
-                        "flights_inr", "hotels_inr", "visa_inr",
-                        "total_inr", "rate", "origin", "destination"),
+        changed_fields=(
+            "text",
+            "questions",
+            "doc_ids",
+            "options",
+            "flights_inr",
+            "hotels_inr",
+            "visa_inr",
+            "total_inr",
+            "rate",
+            "origin",
+            "destination",
+        ),
     )
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
@@ -827,13 +973,12 @@ class C4RepeatedLoop(FaultOperator):
             return False
         return isinstance(output, dict)
 
-    def apply(
-        self, step: dict[str, Any], output: Any, rng: random_module.Random
-    ) -> Edit:
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         if perturbed.get("choices"):
             try:
                 import json
+
                 msg = perturbed["choices"][0]["message"]
                 data = json.loads(msg["content"])
                 if isinstance(data, dict):
@@ -861,8 +1006,6 @@ class C4RepeatedLoop(FaultOperator):
         self, step: dict[str, Any] | None = None, rng: random_module.Random | None = None
     ) -> str:
         return "SYSTEM HINT (UNSTORED): Repeat the previous action or question list in an unnecessary loop."
-
-
 
 
 # ---------------------------------------------------------------------------

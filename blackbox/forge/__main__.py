@@ -6,11 +6,9 @@ import argparse
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
 
 from blackbox.config import Settings
 from blackbox.forge.inject import FaultInjector
-from blackbox.forge.operators import all_operators, held_out_operators, seen_operators
 from blackbox.forge.runner import ForgeRunner
 from blackbox.sdk import Recorder
 
@@ -44,22 +42,42 @@ def make_agent_factory(recorder: Recorder, agent_name: str = "tripcrew"):
 
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Fault Forge dataset generator")
-    parser.add_argument("--target", "-n", type=int, default=360, help="Target positive forks (default 360)")
+    parser.add_argument(
+        "--target", "-n", type=int, default=360, help="Target positive forks (default 360)"
+    )
     parser.add_argument("--max-attempts", type=int, default=1000, help="Maximum injection attempts")
-    parser.add_argument("--concurrency", "-c", type=int, default=4, help="Concurrency limit (default 4)")
-    parser.add_argument("--agent", type=str, default="tripcrew", help="Target agent (default tripcrew)")
-    parser.add_argument("--data-dir", type=str, default="data", help="Data directory (default data)")
-    parser.add_argument("--checkpoint-dir", type=str, default="data/forge", help="Checkpoint directory")
-    parser.add_argument("--per-operator", type=int, default=None, help="Run N forks per operator instead")
-    parser.add_argument("--distractor-rate", type=float, default=0.3, help="Distractor rate (default 0.3)")
-    parser.add_argument("--samples", type=int, default=1, help="Replay samples per fork (default 1)")
+    parser.add_argument(
+        "--concurrency", "-c", type=int, default=4, help="Concurrency limit (default 4)"
+    )
+    parser.add_argument(
+        "--agent", type=str, default="tripcrew", help="Target agent (default tripcrew)"
+    )
+    parser.add_argument(
+        "--data-dir", type=str, default="data", help="Data directory (default data)"
+    )
+    parser.add_argument(
+        "--checkpoint-dir", type=str, default="data/forge", help="Checkpoint directory"
+    )
+    parser.add_argument(
+        "--per-operator", type=int, default=None, help="Run N forks per operator instead"
+    )
+    parser.add_argument(
+        "--distractor-rate", type=float, default=0.3, help="Distractor rate (default 0.3)"
+    )
+    parser.add_argument(
+        "--samples", type=int, default=1, help="Replay samples per fork (default 1)"
+    )
     parser.add_argument("--no-control", action="store_true", help="Skip control runs")
     parser.add_argument("--seed", type=int, default=42, help="RNG seed (default 42)")
     parser.add_argument("--freeze", action="store_true", help="Freeze dataset upon completion")
-    parser.add_argument("--freeze-dir", type=str, default="data", help="Output directory for frozen dataset")
+    parser.add_argument(
+        "--freeze-dir", type=str, default="data", help="Output directory for frozen dataset"
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
 
     settings = Settings.load()
     data_path = Path(args.data_dir)

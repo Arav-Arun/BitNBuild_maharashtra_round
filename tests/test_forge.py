@@ -10,14 +10,12 @@ Tests per the plan:
 
 from __future__ import annotations
 
-import asyncio
 import copy
 import json
 import random
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock
 
 from blackbox.forge.label import ForkLabel, ForkResult, Labeler
@@ -30,7 +28,6 @@ from blackbox.forge.operators import (
     D2WrongTool,
     D3HallucinatedValue,
     D4StopsTooEarly,
-    FaultOperator,
     R1IrrelevantDocuments,
     R2PoisonedFact,
     T1WrongValue,
@@ -44,10 +41,10 @@ from blackbox.forge.operators import (
 )
 from blackbox.replay import ReplayBatch, ReplayRun
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _tool_step(addr="fx/tool#1", kind="tool", seq=5):
     return {
@@ -340,7 +337,8 @@ class TestC1InstructionMisread(unittest.TestCase):
         original_content = json.loads(original["choices"][0]["message"]["content"])
         # At least one boolean should be flipped
         bools_changed = [
-            k for k in original_content
+            k
+            for k in original_content
             if isinstance(original_content[k], bool) and original_content[k] != new_content.get(k)
         ]
         self.assertTrue(len(bools_changed) >= 1)
@@ -449,6 +447,7 @@ class TestLabeler(unittest.TestCase):
             ]
 
         from blackbox.replay import wilson_interval
+
         fix_successes = sum(o == "passed" for o in fix_outcomes)
         fix_rate = fix_successes / len(fix_outcomes)
         fix_interval = wilson_interval(fix_successes, len(fix_outcomes))
@@ -576,8 +575,7 @@ class TestAllOperatorsProduceEdits(unittest.TestCase):
             output = _fx_output()
             edit = self._run_operator(op, step, output)
             if edit is not None:
-                self.assertNotEqual(edit.value, output,
-                                    f"{op.spec.code} did not change output")
+                self.assertNotEqual(edit.value, output, f"{op.spec.code} did not change output")
 
     def test_retrieval_operators_on_search_results(self):
         op = R1IrrelevantDocuments()
@@ -599,8 +597,7 @@ class TestAllOperatorsProduceEdits(unittest.TestCase):
             step = _llm_step()
             output = _llm_output()
             edit = self._run_operator(op, step, output)
-            self.assertIsNotNone(edit,
-                                 f"{op.spec.code} should be applicable to LLM output")
+            self.assertIsNotNone(edit, f"{op.spec.code} should be applicable to LLM output")
 
     def test_coordination_operators_on_llm_output(self):
         for OpClass in [C1InstructionMisread, C2ConstraintDropped, C4RepeatedLoop]:
@@ -608,8 +605,7 @@ class TestAllOperatorsProduceEdits(unittest.TestCase):
             step = _llm_step()
             output = _llm_output()
             edit = self._run_operator(op, step, output)
-            self.assertIsNotNone(edit,
-                                 f"{op.spec.code} should be applicable to LLM output")
+            self.assertIsNotNone(edit, f"{op.spec.code} should be applicable to LLM output")
 
     def test_c3_on_tool_output(self):
         op = C3StateCorruption()
@@ -659,8 +655,11 @@ class TestAntiCheating(unittest.TestCase):
         # Non-numeric fields should be unchanged
         for key in original:
             if not isinstance(original[key], (int, float)):
-                self.assertEqual(edit.value.get(key), original[key],
-                                 f"T1 unexpectedly changed non-numeric field {key}")
+                self.assertEqual(
+                    edit.value.get(key),
+                    original[key],
+                    f"T1 unexpectedly changed non-numeric field {key}",
+                )
 
     def test_t2_only_changes_declared(self):
         op = T2StaleData()
@@ -724,10 +723,10 @@ class TestForkResult(unittest.TestCase):
         self.assertEqual(result.confidence, "high")
 
 
-
 class TestForgeProgress(unittest.TestCase):
     def test_flaky_rate_computation(self):
         from blackbox.forge.runner import ForgeProgress
+
         progress = ForgeProgress()
         self.assertEqual(progress.flaky_rate, 0.0)
 
@@ -755,11 +754,18 @@ class TestForgeProgress(unittest.TestCase):
 
     def test_summary_keys(self):
         from blackbox.forge.runner import ForgeProgress
+
         progress = ForgeProgress()
         summary = progress.summary()
         expected_keys = {
-            "total_attempts", "positive", "recovered", "flaky",
-            "errors", "flaky_rate", "elapsed_seconds", "per_operator",
+            "total_attempts",
+            "positive",
+            "recovered",
+            "flaky",
+            "errors",
+            "flaky_rate",
+            "elapsed_seconds",
+            "per_operator",
         }
         self.assertEqual(set(summary.keys()), expected_keys)
 
@@ -816,7 +822,7 @@ class TestDatasetFreezeContract(unittest.TestCase):
 
     def test_frozen_dataset_contains_paired_seeds_and_counts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            from blackbox.forge.runner import ForgeProgress, ForgeRunner
+            from blackbox.forge.runner import ForgeRunner
             from blackbox.sdk import Recorder
 
             recorder = Recorder(tmpdir, mode="offline")
@@ -888,10 +894,10 @@ class TestDatasetFreezeContract(unittest.TestCase):
                 self.assertGreaterEqual(item["control_count"], 1)
                 self.assertEqual(item["confidence"], "high")
 
-
                 # Verify parquet file export
                 try:
                     import polars as pl
+
                     parquet_file = out_path / "labels.parquet"
                     self.assertTrue(parquet_file.exists())
                     df = pl.read_parquet(parquet_file)
@@ -1062,7 +1068,7 @@ class Test20ForksPerOperatorSimulation(unittest.IsolatedAsyncioTestCase):
     """20 forks per operator with outcome counts printed."""
 
     async def test_20_forks_per_operator_outcomes_printed(self):
-        from blackbox.forge.runner import ForgeProgress, ForgeRunner
+        from blackbox.forge.runner import ForgeRunner
 
         injector = MagicMock()
         runner = ForgeRunner(injector, concurrency=4)
@@ -1110,7 +1116,9 @@ class Test20ForksPerOperatorSimulation(unittest.IsolatedAsyncioTestCase):
         # Print outcome counts per operator as required by PLAN.md
         print("\n=== Fault Forge 20 Forks Per Operator Summary ===")
         print(f"Total Attempts: {summary['total_attempts']}")
-        print(f"Positive: {summary['positive']} | Recovered: {summary['recovered']} | Flaky: {summary['flaky']}")
+        print(
+            f"Positive: {summary['positive']} | Recovered: {summary['recovered']} | Flaky: {summary['flaky']}"
+        )
         print(f"Flaky Rate: {summary['flaky_rate']:.2%}")
         print("-" * 50)
         print(f"{'Operator':<10} {'Positive':<10} {'Recovered':<10} {'Flaky':<10}")
@@ -1142,8 +1150,16 @@ class TestNaturalLabelerReproduction(unittest.IsolatedAsyncioTestCase):
                 # Set up 10 runs each with 4 steps where a known fault was injected
                 candidate_addrs = ["planner/chat#1", "fx/tool#1", "hotel/tool#1", "flight/tool#1"]
                 known_roots = [
-                    "fx/tool#1", "hotel/tool#1", "flight/tool#1", "fx/tool#1", "hotel/tool#1",
-                    "flight/tool#1", "fx/tool#1", "hotel/tool#1", "flight/tool#1", "fx/tool#1"
+                    "fx/tool#1",
+                    "hotel/tool#1",
+                    "flight/tool#1",
+                    "fx/tool#1",
+                    "hotel/tool#1",
+                    "flight/tool#1",
+                    "fx/tool#1",
+                    "hotel/tool#1",
+                    "flight/tool#1",
+                    "fx/tool#1",
                 ]
 
                 for i, root in enumerate(known_roots):
@@ -1167,7 +1183,9 @@ class TestNaturalLabelerReproduction(unittest.IsolatedAsyncioTestCase):
                 # Mock ReplayEngine so that replaying with fix at known_root passes, others fail
                 labeler = NaturalLabeler(recorder, agent_fn_factory=lambda rid: MagicMock())
 
-                async def mock_replay(run_id, agent_fn, edits=(), samples=1, control=True, **kwargs):
+                async def mock_replay(
+                    run_id, agent_fn, edits=(), samples=1, control=True, **kwargs
+                ):
                     edit_addr = edits[0].addr if edits else None
                     run_idx = int(run_id.split("-")[-1])
                     expected_root = known_roots[run_idx]
@@ -1183,8 +1201,23 @@ class TestNaturalLabelerReproduction(unittest.IsolatedAsyncioTestCase):
                         fork_id=f"mock-fork-{run_id}",
                         base_run_id=run_id,
                         mode="cone",
-                        edited=[ReplayRun(f"fix-{j}", "passed" if fix_rate == 1.0 else "failed", 1.0 if fix_rate == 1.0 else 0.0, None, {}, None) for j in range(samples)],
-                        controls=[ReplayRun(f"ctrl-{j}", "failed", 0.0, None, {}, None) for j in range(samples)] if control else [],
+                        edited=[
+                            ReplayRun(
+                                f"fix-{j}",
+                                "passed" if fix_rate == 1.0 else "failed",
+                                1.0 if fix_rate == 1.0 else 0.0,
+                                None,
+                                {},
+                                None,
+                            )
+                            for j in range(samples)
+                        ],
+                        controls=[
+                            ReplayRun(f"ctrl-{j}", "failed", 0.0, None, {}, None)
+                            for j in range(samples)
+                        ]
+                        if control
+                        else [],
                         invalidated=set(),
                         reexecuted_steps=1,
                         cached_steps=3,
@@ -1210,11 +1243,12 @@ class TestNaturalLabelerReproduction(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(label.candidate_addr, expected_root)
                     reproduced_count += 1
 
-                self.assertEqual(reproduced_count, 10, "Natural labeler did not reproduce all 10 known roots")
+                self.assertEqual(
+                    reproduced_count, 10, "Natural labeler did not reproduce all 10 known roots"
+                )
             finally:
                 recorder.close()
 
 
 if __name__ == "__main__":
     unittest.main()
-
