@@ -1,19 +1,18 @@
 UV ?= uv
 RUN = $(UV) run --locked --extra dev
 
-.PHONY: help setup check lint format test smoke sample build
+.PHONY: help setup check lint format test build
 
 help:
 	@echo "setup   Install the locked development environment"
-	@echo "check   Run lint, formatting checks, tests, and CLI smoke check"
+	@echo "check   Run lint, formatting checks, and tests"
 	@echo "format  Format Python and sort imports"
-	@echo "sample  Write a sample trace to blackbox/data"
 	@echo "build   Build wheel and source distribution in dist/"
 
 setup:
 	$(UV) sync --locked --extra dev
 
-check: lint test smoke
+check: lint test
 
 lint:
 	$(RUN) ruff check .
@@ -25,12 +24,6 @@ format:
 
 test:
 	$(RUN) python -m unittest discover -s tests -v
-
-smoke:
-	$(RUN) python scripts/smoke.py
-
-sample:
-	$(RUN) blackbox sample
 
 build:
 	$(UV) build

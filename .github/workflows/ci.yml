@@ -24,7 +24,7 @@ jobs:
           enable-cache: true
       - name: Install locked dependencies
         run: make setup
-      - name: Lint, test, and exercise CLI
+      - name: Lint and test
         run: make check
       - name: Build distributions
         run: make build
@@ -34,4 +34,4 @@ jobs:
           uv venv /tmp/blackbox-wheel
           uv pip install --python /tmp/blackbox-wheel/bin/python dist/*.whl
           cd /tmp
-          /tmp/blackbox-wheel/bin/blackbox --help
+          /tmp/blackbox-wheel/bin/python -c "import blackbox.recorder, blackbox.eval"

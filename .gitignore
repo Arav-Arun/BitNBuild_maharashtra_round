@@ -9,6 +9,11 @@ dist/
 .coverage
 .env
 .DS_Store
-blackbox/data/*
-!blackbox/data/.gitkeep
+data/
+*.db
+*.db-wal
+*.db-shm
+node_modules/
+.next/
+.env.local
 artifacts/

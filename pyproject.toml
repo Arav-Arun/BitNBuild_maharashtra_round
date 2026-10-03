@@ -14,9 +14,6 @@ dependencies = []
 ml = ["scikit-learn>=1.5,<2"]
 dev = ["ruff>=0.9,<1"]
 
-[project.scripts]
-blackbox = "blackbox.cli:main"
-
 [tool.setuptools.packages.find]
 include = ["blackbox*"]
 
