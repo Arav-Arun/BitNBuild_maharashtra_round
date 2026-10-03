@@ -2,6 +2,7 @@ UV ?= uv
 RUN = $(UV) run --locked --extra dev
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
+.PHONY: hoprag-data hoprag
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -13,6 +14,8 @@ help:
 	@echo "dev-web Run the Next.js development server"
 	@echo "tripcrew Run 20 offline TripCrew scenarios"
 	@echo "tripcrew-demo Demonstrate stale-FX repair with selective replay"
+	@echo "hoprag-data Download and verify the MuSiQue-Ans development dataset"
+	@echo "hoprag Record 50 HopRAG questions and verify unchanged replay (offline baseline)"
 
 setup:
 	$(UV) sync --locked --extra dev
@@ -53,3 +56,9 @@ tripcrew:
 
 tripcrew-demo:
 	$(RUN) python -m agents.tripcrew demo --report data/tripcrew/demo.json
+
+hoprag-data:
+	$(RUN) python -m agents.hoprag download
+
+hoprag:
+	$(RUN) python -m agents.hoprag run --count 50 --verify-replay

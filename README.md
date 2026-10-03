@@ -19,11 +19,14 @@ affects.
 | `blackbox/replay/` | Immutable cone/prefix/full replay, exact caching, controls and verdict intervals |
 | `blackbox/eval/` | Localization metrics: Recall@1, Recall@3, MRR |
 | `agents/tripcrew/` | Seeded scenarios, mock travel APIs, parallel 16-step agent, independent checker, offline fixture and live Groq runners |
+| `agents/hoprag/` | MuSiQue-Ans adapter, local BM25 search, multi-hop agent, alias-aware scoring, gold oracle export, offline baseline and live Groq runners |
 | `server/models.py`, `web/` | Typed API contract fixtures and the first Next.js recorded-runs shell |
 
 Tasks 1–3 and the Task 4 implementation are present. TripCrew passes its offline
 acceptance checks; the live-model pass-rate target and five-run human review are
-pending. Tasks 5 onward follow [PLAN.md](PLAN.md).
+pending. Task 5's HopRAG implementation has recorded and replayed 50 real MuSiQue
+questions using its offline lexical baseline; live-model evaluation remains
+pending. ShopDesk is an unimplemented stretch goal. Tasks 6 onward follow [PLAN.md](PLAN.md).
 
 ## TripCrew
 
@@ -38,6 +41,22 @@ The fixture is a test double, not an LLM benchmark. The real runner uses
 `AGENT_MODEL` from configuration. Reports and recorded runs go into the ignored
 `data/tripcrew/` directory. See [docs/tripcrew.md](docs/tripcrew.md) for the graph,
 scenario export, worked arithmetic checks, and remaining live validation.
+
+## HopRAG
+
+```sh
+make hoprag-data    # one-time, checksum-verified download (about 30 MB)
+make hoprag         # 50 real questions with offline baseline + unchanged replay
+# With GROQ_API_KEY configured locally:
+uv run --locked --extra dev python -m agents.hoprag run --client groq --count 50 \
+  --verify-replay --report data/hoprag/live.json
+```
+
+The offline baseline is a small lexical algorithm, not a model-quality benchmark.
+Its measured result is 2/50 (4%); all 50 unchanged replays are fully cached and
+preserve the outcome and final state. Dataset files, oracle sub-answers and reports
+are saved under ignored `data/hoprag/`. [docs/hoprag.md](docs/hoprag.md) describes
+the dataset source, label boundary, tools, graph, and validation results.
 
 ## Development
 
