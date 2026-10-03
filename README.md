@@ -18,9 +18,26 @@ affects.
 | `blackbox/sdk/` | Run/step recording, LLM and tool wrappers, versioned state, redaction and provenance |
 | `blackbox/replay/` | Immutable cone/prefix/full replay, exact caching, controls and verdict intervals |
 | `blackbox/eval/` | Localization metrics: Recall@1, Recall@3, MRR |
+| `agents/tripcrew/` | Seeded scenarios, mock travel APIs, parallel 16-step agent, independent checker, offline fixture and live Groq runners |
 | `server/models.py`, `web/` | Typed API contract fixtures and the first Next.js recorded-runs shell |
 
-Tasks 1–3 are implemented. Tasks 4 onward follow [PLAN.md](PLAN.md).
+Tasks 1–3 and the Task 4 implementation are present. TripCrew passes its offline
+acceptance checks; the live-model pass-rate target and five-run human review are
+pending. Tasks 5 onward follow [PLAN.md](PLAN.md).
+
+## TripCrew
+
+```sh
+make tripcrew       # run 20 scenarios with the deterministic offline fixture
+make tripcrew-demo  # repair a stale FX quote, replaying only affected calls
+# After configuring GROQ_API_KEY in your local .env:
+uv run --locked --extra dev python -m agents.tripcrew run --client groq --count 20
+```
+
+The fixture is a test double, not an LLM benchmark. The real runner uses
+`AGENT_MODEL` from configuration. Reports and recorded runs go into the ignored
+`data/tripcrew/` directory. See [docs/tripcrew.md](docs/tripcrew.md) for the graph,
+scenario export, worked arithmetic checks, and remaining live validation.
 
 ## Development
 

@@ -21,7 +21,7 @@ dev = ["ruff>=0.9,<1"]
 blackbox = "blackbox.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["blackbox*"]
+include = ["blackbox*", "agents*"]
 
 [tool.setuptools.package-data]
 "blackbox.store" = ["schema.sql"]
