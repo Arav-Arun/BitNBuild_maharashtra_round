@@ -166,14 +166,10 @@ class PromptRunTests(unittest.IsolatedAsyncioTestCase):
                 metadata_dir = Path(directory) / "prompt-scenarios"
                 metadata_dir.mkdir()
                 (metadata_dir / f"{task_id}.json").write_text(
-                    json.dumps(
-                        {"scenario": asdict(scenario), "stale_fx": True, "prompt": prompt}
-                    ),
+                    json.dumps({"scenario": asdict(scenario), "stale_fx": True, "prompt": prompt}),
                     encoding="utf-8",
                 )
-                with recorder.run(
-                    "tripcrew", task_id, seed, model="tripcrew-fixture-v1"
-                ) as run:
+                with recorder.run("tripcrew", task_id, seed, model="tripcrew-fixture-v1") as run:
                     await TripCrew(
                         scenario,
                         TravelAPI([scenario], stale_fx=True),
@@ -191,9 +187,7 @@ class PromptRunTests(unittest.IsolatedAsyncioTestCase):
                 result = await ReplayEngine(recorder).replay(
                     run.run_id,
                     adapter.factory(run.run_id),
-                    edits=[
-                        Edit("fx/tool#1", "patch_tool_result", known_good_fx, known_good=True)
-                    ],
+                    edits=[Edit("fx/tool#1", "patch_tool_result", known_good_fx, known_good=True)],
                     samples=5,
                     control=True,
                 )
@@ -201,7 +195,10 @@ class PromptRunTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(result.control_pass_rate, 0.0)
                 self.assertEqual(result.verdict, "VERIFIED")
                 self.assertTrue(
-                    all("scenario_id does not match" not in (run.reason or "") for run in result.edited)
+                    all(
+                        "scenario_id does not match" not in (run.reason or "")
+                        for run in result.edited
+                    )
                 )
             finally:
                 recorder.close()
