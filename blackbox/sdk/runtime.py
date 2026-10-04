@@ -76,7 +76,10 @@ class Redactor:
         re.compile(r"\b(?:gsk_|sk-)[A-Za-z0-9_-]{12,}\b"),
         re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE),
         re.compile(
-            r"(?<![\d₹$])(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)[\s.-]?)?"
+            # Don't redact digit sequences embedded in identifiers such as
+            # PROMPT-8496625705CA. A phone number in prose is still preceded by
+            # whitespace or punctuation and remains covered by this pattern.
+            r"(?<![\w₹$-])(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)[\s.-]?)?"
             r"\d{3}[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)"
         ),
     )

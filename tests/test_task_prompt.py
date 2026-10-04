@@ -12,9 +12,10 @@ from pathlib import Path
 from agents.tripcrew import TravelAPI, TripCrew
 from agents.tripcrew.fixture_client import FixtureClient
 from agents.tripcrew.prompt import catalog_seed, parse_trip_prompt
+from agents.tripcrew.scenarios import catalog, money
 from blackbox.api.agents import TripCrewProfile
 from blackbox.forge.adapters import TripCrewAdapter
-from blackbox.replay import ReplayEngine, patch_tool_args
+from blackbox.replay import Edit, ReplayEngine, patch_tool_args
 from blackbox.sdk import Recorder
 
 PROMPT = (
@@ -102,20 +103,22 @@ class PromptParserTests(unittest.TestCase):
 # The one-click examples on the web "New task" page (web/components/pages/NewRunPage.tsx).
 DEMO_EXAMPLES = [
     "Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. "
-    "Budget ₹80,000.",
+    "Budget ₹1,00,000.",
     "Family holiday from Chennai to Bangkok, 2026-12-20 to 2026-12-24, 3 adults, budget "
     "₹1,40,000. Vegetarian: yes.",
     "Weekend from Hyderabad to Dubai departing 2026-12-05, returning 2026-12-08, for 2 adults. "
     "Budget Rs. 1,00,000. No red-eye: yes.",
     "Solo trip from Bangalore to London departing 2026-12-01, returning 2026-12-07, for 1 adult. "
     "Budget ₹80,000. Refundable: yes.",
+    "Plan a trip from Hyderabad to London departing 2026-12-12, returning 2026-12-17, "
+    "for 2 adults. Budget ₹80,000.",
 ]
 
 
 class DemoExampleTests(unittest.TestCase):
     def test_examples_parse_and_fit_their_budget_with_headroom(self):
         # With headroom, the only failure an old exchange rate causes is the INR total, so the
-        # suggested fix can be VERIFIED. Prices depend on the exact text: re-run after edits.
+        # suggested fix can be VERIFIED. The budget is a constraint, not an inventory seed.
         for prompt in DEMO_EXAMPLES:
             with self.subTest(prompt=prompt):
                 scenario_id, seed = catalog_seed(prompt)
@@ -125,8 +128,84 @@ class DemoExampleTests(unittest.TestCase):
                     catalog_seed(" ".join(prompt.upper().split())), (scenario_id, seed)
                 )
 
+    def test_changing_only_budget_keeps_the_same_catalog_and_repairable_fixture(self):
+        prompt = DEMO_EXAMPLES[-1]
+        larger_budget = prompt.replace("₹80,000", "₹90,000")
+        scenario_id, seed = catalog_seed(prompt)
+        larger_id, larger_seed = catalog_seed(larger_budget)
+        self.assertEqual((scenario_id, seed), (larger_id, larger_seed))
+        scenario = parse_trip_prompt(prompt, scenario_id=scenario_id, seed=seed)
+        self.assertLess(scenario.expected_total_inr, scenario.budget_inr)
+
+        data = catalog(scenario)
+        basic_flight = next(flight for flight in data["flights"] if flight["id"] == "F-basic")
+        basic_hotel = next(hotel for hotel in data["hotels"] if hotel["id"] == "H-basic")
+        stale_total = money(
+            basic_flight["fare_inr_per_adult"] * scenario.adults
+            + basic_hotel["nightly_local_per_room"]
+            * scenario.nights
+            * ((scenario.adults + 1) // 2)
+            * data["fresh_rate"]
+            * 0.85
+            + data["visa_fee_inr_per_adult"] * scenario.adults
+        )
+        self.assertLess(stale_total, scenario.budget_inr)
+
 
 class PromptRunTests(unittest.IsolatedAsyncioTestCase):
+    async def test_hyderabad_london_old_fx_fix_verifies_and_preserves_prompt_id(self):
+        prompt = DEMO_EXAMPLES[-1]
+        scenario_id, seed = catalog_seed(prompt)
+        scenario = parse_trip_prompt(prompt, scenario_id=scenario_id, seed=seed)
+        self.assertLess(scenario.expected_total_inr, scenario.budget_inr)
+
+        with tempfile.TemporaryDirectory() as directory:
+            recorder = Recorder(Path(directory), mode="offline", llm_client=FixtureClient())
+            try:
+                task_id = "PROMPT-DEMO-HYD-LON"
+                metadata_dir = Path(directory) / "prompt-scenarios"
+                metadata_dir.mkdir()
+                (metadata_dir / f"{task_id}.json").write_text(
+                    json.dumps(
+                        {"scenario": asdict(scenario), "stale_fx": True, "prompt": prompt}
+                    ),
+                    encoding="utf-8",
+                )
+                with recorder.run(
+                    "tripcrew", task_id, seed, model="tripcrew-fixture-v1"
+                ) as run:
+                    await TripCrew(
+                        scenario,
+                        TravelAPI([scenario], stale_fx=True),
+                        model="tripcrew-fixture-v1",
+                        task_prompt=prompt,
+                    )(run)
+                self.assertEqual(run.outcome, "failed")
+                self.assertIn("Incorrect INR total", run.checker_reason)
+
+                adapter = TripCrewAdapter(
+                    recorder,
+                    argparse.Namespace(agent="tripcrew", stale_fx=False, stale_fx_seeds=()),
+                )
+                known_good_fx = adapter.oracle_fixes(run.run_id)["fx/tool#1"]
+                result = await ReplayEngine(recorder).replay(
+                    run.run_id,
+                    adapter.factory(run.run_id),
+                    edits=[
+                        Edit("fx/tool#1", "patch_tool_result", known_good_fx, known_good=True)
+                    ],
+                    samples=5,
+                    control=True,
+                )
+                self.assertEqual(result.fix_pass_rate, 1.0)
+                self.assertEqual(result.control_pass_rate, 0.0)
+                self.assertEqual(result.verdict, "VERIFIED")
+                self.assertTrue(
+                    all("scenario_id does not match" not in (run.reason or "") for run in result.edited)
+                )
+            finally:
+                recorder.close()
+
     async def test_offline_task_is_recorded_and_replay_metadata_survives_adapter_rebuild(self):
         scenario_id = "PROMPT-TEST123459"
         scenario = parse_trip_prompt(PROMPT, scenario_id=scenario_id, seed=77)

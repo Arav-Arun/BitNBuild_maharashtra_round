@@ -566,7 +566,9 @@ def decide_verdict(
         return None
     if k >= 3 and fix.ci_low > control.ci_high:
         return "VERIFIED"
-    if k >= 3 and known_good and fix.passed == 0 and fix.rate <= control.rate:
+    # Equal zero-pass branches do not show that the edit is irrelevant: both may
+    # contain another failure, so there is no counterfactual contrast to interpret.
+    if k >= 3 and known_good and fix.passed == 0 and control.passed > fix.passed:
         return "REFUTED"
     return "INCONCLUSIVE"
 

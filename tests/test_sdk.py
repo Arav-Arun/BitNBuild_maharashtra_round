@@ -3,6 +3,7 @@ import tempfile
 import unittest
 
 from blackbox.sdk import Recorder
+from blackbox.sdk.runtime import Redactor
 
 
 class FakeLLM:
@@ -74,6 +75,11 @@ async def record_toy(recorder: Recorder, run_id: str):
 
 
 class RecorderSDKTests(unittest.TestCase):
+    def test_phone_redaction_does_not_corrupt_prompt_ids(self):
+        redact = Redactor()
+        self.assertEqual(redact("PROMPT-8496625705CA"), "PROMPT-8496625705CA")
+        self.assertEqual(redact("Call 849-662-5705 for help"), "Call [REDACTED] for help")
+
     def test_records_steps_state_provenance_redaction_and_stable_hashes(self):
         with tempfile.TemporaryDirectory() as directory:
             fake = FakeLLM()

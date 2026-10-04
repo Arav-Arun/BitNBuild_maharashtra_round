@@ -33,6 +33,15 @@ export function ForkResult({ baseRunId, progress, summary, error, onClose }: For
   const complete = summary?.status === "complete";
   const failed = summary?.status === "error" || Boolean(error);
   const fixedRun = summary?.edited_runs.find((run) => run.passed) ?? summary?.edited_runs[0];
+  const explanation = summary?.fix && summary.control_result
+    ? summary.fix.passed === 0 && summary.control_result.passed === 0
+      ? "Neither branch passed. This comparison can’t isolate the cause; inspect the failure reason, then try another candidate or correction."
+      : summary.verdict === "REFUTED"
+        ? "The unchanged runs passed more often, so this correction did not fix the failure. Inspect the edited step or test another candidate."
+        : summary.verdict === "INCONCLUSIVE"
+          ? "The edited and unchanged runs did not separate clearly. Try a better correction or run more samples."
+          : null
+    : null;
 
   async function exportTest() {
     if (!summary) return;
@@ -82,6 +91,7 @@ export function ForkResult({ baseRunId, progress, summary, error, onClose }: For
               {summary.replay_fidelity != null ? ` · replay fidelity ${Math.round(summary.replay_fidelity * 100)}%` : ""}.
             </p>
           )}
+          {explanation && <p className="notice-box" role="status">{explanation}</p>}
           <div className="row fork-actions">
             {fixedRun && (
               <Link className="btn btn-sm" href={`/compare?a=${encodeURIComponent(baseRunId)}&b=${encodeURIComponent(fixedRun.run_id)}`}>See what changed</Link>

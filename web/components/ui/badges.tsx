@@ -14,8 +14,8 @@ import type { StepKind } from "../types";
 
 const VERDICT_HELP: Record<string, string> = {
   VERIFIED: "The fix passed reliably more often than the unchanged control (95% intervals do not overlap).",
-  REFUTED: "A known-good edit reached the outcome but did not improve it.",
-  INCONCLUSIVE: "The fix and control intervals overlap. More samples or a better edit are needed.",
+  REFUTED: "The unchanged runs passed more often than the edited runs, so this correction did not fix the failure.",
+  INCONCLUSIVE: "The edited and unchanged runs did not separate. Inspect the failure or try another correction.",
 };
 
 export function VerdictBadge({

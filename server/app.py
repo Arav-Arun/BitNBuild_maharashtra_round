@@ -186,8 +186,8 @@ async def run_task(request: Request, body: m.TaskRunRequest):
         raise ApiError("unavailable", "The TripCrew recorder is not available.")
 
     # Each run keeps a unique task id (its replay metadata is stored per run), but the
-    # synthetic catalog is seeded from the request text: the same request always prices the
-    # same, so a run with the old exchange rate differs from a clean run only in that rate.
+    # synthetic catalog is seeded from the request constraints. Budget amounts are excluded,
+    # so changing the budget does not silently change the underlying prices.
     task_id = f"PROMPT-{uuid.uuid4().hex[:12].upper()}"
     scenario_id, seed = catalog_seed(body.prompt)
     try:

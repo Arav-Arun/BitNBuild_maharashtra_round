@@ -759,7 +759,10 @@ def build_diff(
                 )
                 if differs
             ]
-            status = "cached" if b.cache_status == "cached" else "changed" if changed else "same"
+            # The stored cache status describes how the call ran, while hashes describe
+            # what the user needs to compare. Reused model/tool payloads can still produce
+            # changed agent state after an upstream edit; show those values in the diff.
+            status = "changed" if changed else "cached" if b.cache_status == "cached" else "same"
         payload = status in {"changed", "new", "removed"}
         state_keys = {
             write.rsplit("@", 1)[0] for step in (a, b) if step is not None for write in step.writes

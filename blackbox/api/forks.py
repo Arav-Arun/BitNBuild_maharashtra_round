@@ -760,8 +760,16 @@ def explain_verdict(fork: m.ForkSummary) -> str:
         )
     if fork.verdict == "REFUTED":
         return (
-            f"A known-good value replaced this step's output, yet the run passed only {fix} "
-            f"(control {control}). This step is not what made the run fail."
+            f"A known-good value replaced this step's output, but the edited run passed only "
+            f"{fix} compared with {control} unchanged. The unchanged runs passed more often, "
+            "so this edit did not fix the failure; test another candidate or inspect for a "
+            "second issue."
+        )
+    if fork.fix.passed == 0 and fork.control_result.passed == 0:
+        return (
+            "Neither the edited runs nor the unchanged controls passed. This comparison "
+            "cannot isolate this step as the cause; inspect the failure reason and try the "
+            "next candidate or a different correction."
         )
     return (
         f"Edit {fix} vs control {control}: the 95% intervals overlap. Add samples "

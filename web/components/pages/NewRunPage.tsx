@@ -7,9 +7,9 @@ import { useAppContext } from "../shell/AppContext";
 
 // Each example was checked end to end with the old exchange rate: the run fails only on the
 // INR total, the diagnoser ranks fx_rate first, and the paired fix test comes back VERIFIED.
-// Prices are seeded from the request text, so editing a request changes its prices.
+// Prices are seeded from trip constraints; changing only the budget leaves them unchanged.
 const EXAMPLES = [
-  { route: "Delhi to Tokyo", prompt: "Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. Budget ₹80,000." },
+  { route: "Delhi to Tokyo", prompt: "Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. Budget ₹1,00,000." },
   { route: "Chennai to Bangkok", prompt: "Family holiday from Chennai to Bangkok, 2026-12-20 to 2026-12-24, 3 adults, budget ₹1,40,000. Vegetarian: yes." },
   { route: "Hyderabad to Dubai", prompt: "Weekend from Hyderabad to Dubai departing 2026-12-05, returning 2026-12-08, for 2 adults. Budget Rs. 1,00,000. No red-eye: yes." },
   { route: "Bangalore to London", prompt: "Solo trip from Bangalore to London departing 2026-12-01, returning 2026-12-07, for 1 adult. Budget ₹80,000. Refundable: yes." },

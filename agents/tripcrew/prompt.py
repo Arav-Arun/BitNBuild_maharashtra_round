@@ -20,8 +20,17 @@ AMOUNT = r"(\d[\d,]*(?:\.\d{1,2})?)\s*(lakhs?|lacs?)?"
 
 
 def catalog_seed(prompt: str) -> tuple[str, int]:
-    """Scenario id and seed for a request, so the same request always gets the same prices."""
-    digest = hashlib.sha256(" ".join(prompt.split()).casefold().encode("utf-8")).hexdigest()
+    """Stable scenario identity; changing only the budget must not change catalog prices."""
+    price_request = prompt
+    # Currency and budget amounts describe a constraint, not the trip inventory. Excluding
+    # them means raising a budget cannot silently reshuffle prices and change the task itself.
+    for pattern in (
+        rf"\bbudget\s*(?:is\s*)?(?:of\s*)?(?:about\s*)?{CURRENCY}?\s*{AMOUNT}",
+        rf"{CURRENCY}\s*{AMOUNT}",
+        rf"\b{AMOUNT}\s*(?:INR|rupees)\b",
+    ):
+        price_request = re.sub(pattern, "budget", price_request, flags=re.IGNORECASE)
+    digest = hashlib.sha256(" ".join(price_request.split()).casefold().encode("utf-8")).hexdigest()
     return f"PROMPT-{digest[:12].upper()}", int(digest[:8], 16)
 
 

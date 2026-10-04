@@ -554,7 +554,10 @@ class ReplayEngine:
                 samples >= 3
                 and any(edit.known_good for edit in edits)
                 and fix_successes == 0
-                and fix_rate <= control_rate
+                # A known-good value only refutes this candidate when the unchanged
+                # branch demonstrates that these samples can pass. If both branches
+                # fail, there is no outcome contrast to support either conclusion.
+                and control_successes > fix_successes
             ):
                 verdict = "REFUTED"
             else:

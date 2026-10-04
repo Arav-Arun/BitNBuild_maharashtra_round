@@ -268,6 +268,29 @@ class ReplayTests(unittest.TestCase):
             finally:
                 recorder.close()
 
+    def test_equal_zero_pass_branches_are_inconclusive_even_for_known_good_edit(self):
+        """Two failing branches provide no evidence that the edited step was causal."""
+        with tempfile.TemporaryDirectory() as directory:
+            recorder = Recorder(directory, mode="live")
+            try:
+                agent = dag_agent(DagTools())
+                asyncio.run(record_base(recorder, agent))
+                batch = asyncio.run(
+                    ReplayEngine(recorder).replay(
+                        "base",
+                        agent,
+                        # This known-good output is a no-op; both branches fail at D.
+                        edits=[override_output("B/tool#1", 2, known_good=True)],
+                        samples=5,
+                        control=True,
+                    )
+                )
+                self.assertEqual(batch.fix_pass_rate, 0.0)
+                self.assertEqual(batch.control_pass_rate, 0.0)
+                self.assertEqual(batch.verdict, "INCONCLUSIVE")
+            finally:
+                recorder.close()
+
     def test_tampered_recorded_output_stops_replay(self):
         with tempfile.TemporaryDirectory() as directory:
             tools = DagTools()
