@@ -1,0 +1,112 @@
+{
+  "run_id": "tc-0001",
+  "title": "Mumbai → Singapore under ₹1,53,516 failed on a stale exchange rate",
+  "generated_at": "2026-10-04T09:30:00Z",
+  "synopsis": "tc-0001 failed the checker (Incorrect INR total: got 130949.18, expected 134999.04). The responsible step is fx/tool#1, confirmed by replay: 5/5 edited runs passed against 0/5 unchanged controls.",
+  "sequence_of_events": [
+    {
+      "seq": 0,
+      "addr": "planner/chat#1",
+      "text": "The planner parsed the request into constraints.",
+      "tag": "unaffected"
+    },
+    {
+      "seq": 5,
+      "addr": "fx/tool#1",
+      "text": "The FX tool returned a rate dated 2026-03-03.",
+      "tag": "root"
+    },
+    {
+      "seq": 11,
+      "addr": "budget/tool#1",
+      "text": "The budget step multiplied by that rate.",
+      "tag": "symptom"
+    },
+    {
+      "seq": 12,
+      "addr": "writer/chat#1",
+      "text": "The writer put the budget total into the plan.",
+      "tag": "symptom"
+    },
+    {
+      "seq": 13,
+      "addr": "verifier/chat#1",
+      "text": "The verifier passed the plan through unchanged.",
+      "tag": "symptom"
+    },
+    {
+      "seq": 15,
+      "addr": "checker/state#1",
+      "text": "The checker rejected the plan: Incorrect INR total: got 130949.18, expected 134999.04",
+      "tag": "symptom"
+    }
+  ],
+  "probable_cause": {
+    "text": "The SGD to INR rate came from a snapshot months older than the rest of the run's data.",
+    "cites": [
+      {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output/as_of"
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "text": "Nothing downstream checks the age of the rate before using it.",
+      "cites": [
+        {
+          "addr": "budget/tool#1",
+          "json_pointer": "/input/args/fx/as_of"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "text": "The exchange rate is 214 days older than the freshest data in this run.",
+      "cites": [
+        {
+          "addr": "fx/tool#1",
+          "json_pointer": "/output/as_of"
+        }
+      ]
+    },
+    {
+      "text": "The rate (54.4) is 15% below the rate used by the nearest passing run.",
+      "cites": [
+        {
+          "addr": "fx/tool#1",
+          "json_pointer": "/output/rate"
+        }
+      ]
+    },
+    {
+      "text": "5 later steps consume this output, so a wrong value reaches the final plan.",
+      "cites": [
+        {
+          "addr": "fx/tool#1",
+          "json_pointer": "/output"
+        }
+      ]
+    }
+  ],
+  "recommended_fix": {
+    "text": "Re-fetch the rate with fresh=true.",
+    "cites": [
+      {
+        "addr": "fx/tool#1",
+        "json_pointer": "/input/args"
+      }
+    ]
+  },
+  "verification": {
+    "text": "VERIFIED at K=5: fix 5/5 (95% interval 0.566 to 1.000) against control 0/5 (0.000 to 0.434).",
+    "cites": [
+      {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output"
+      }
+    ]
+  },
+  "fixture": true
+}

@@ -1,0 +1,17 @@
+{
+  "label_id": "lbl-0001",
+  "run_id": "hr-0003",
+  "annotator": "annotator-a",
+  "root_addr": "hop1/answer#1",
+  "created_at": "2026-10-04T14:00:00Z",
+  "progress": {
+    "labelled": 1,
+    "target": 50,
+    "remaining": 49
+  },
+  "agreement": {
+    "kappa": null,
+    "n": 0,
+    "annotators": 1
+  }
+}

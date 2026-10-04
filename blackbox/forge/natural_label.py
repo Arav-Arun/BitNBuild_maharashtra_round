@@ -5,9 +5,12 @@ These runs are test-only — they never enter training data.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from blackbox.replay import ReplayBatch, ReplayEngine, override_output
@@ -18,17 +21,59 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class NaturalLabel:
-    """Attribution result for a naturally failed run."""
+    """Attribution result for a naturally failed run.
+
+    ``verdict`` is "attributed" (the edited lower bound beat the control's upper bound),
+    "natural_inconclusive" (a candidate whose bounds still overlap, never truth) or
+    "unattributable" (no oracle fix flipped the run). ``samples`` is the K of the deciding
+    paired replay (0 when no step was promising enough to run it).
+    """
 
     run_id: str
     candidate_addr: str | None
-    verdict: str  # "attributed", "inconclusive", "unattributable"
+    verdict: str
     fix_pass_rate: float | None
     control_pass_rate: float | None
     fix_ci: tuple[float, float] | None
     control_ci: tuple[float, float] | None
     attempts: int
     created_at: str
+    samples: int = 0
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> NaturalLabel:
+        data = dict(data)
+        for key in ("fix_ci", "control_ci"):
+            if data.get(key) is not None:
+                data[key] = tuple(data[key])
+        return cls(**data)
+
+
+class NaturalLedger:
+    """Append-only record of every natural run examined, so a restart skips finished runs."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.labels: dict[str, NaturalLabel] = {}
+        if path.exists():
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+                if not line.strip():
+                    continue
+                try:
+                    label = NaturalLabel.from_json(json.loads(line))
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    # A crash mid-write can truncate only the final line.
+                    logger.warning(
+                        "Skipping unreadable ledger line %d in %s", line_number + 1, path
+                    )
+                    continue
+                self.labels[label.run_id] = label
+
+    def append(self, label: NaturalLabel) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(asdict(label)) + "\n")
+        self.labels[label.run_id] = label
 
 
 class NaturalLabeler:
@@ -47,11 +92,13 @@ class NaturalLabeler:
         recorder: Recorder,
         agent_fn_factory: Any,
         oracle_fn: Any | None = None,
+        ledger: NaturalLedger | None = None,
     ) -> None:
         self.recorder = recorder
         self.engine = ReplayEngine(recorder)
         self.agent_fn_factory = agent_fn_factory
         self.oracle_fn = oracle_fn
+        self.ledger = ledger
 
     def _failed_runs(self, agent: str | None = None) -> list[dict[str, Any]]:
         """Query naturally failed base runs (not fork children)."""
@@ -166,6 +213,7 @@ class NaturalLabeler:
                     control_ci=full.control_interval,
                     attempts=attempts,
                     created_at=datetime.now(UTC).isoformat(),
+                    samples=len(full.edited),
                 )
 
             # Overlapping bounds — record as inconclusive
@@ -190,6 +238,7 @@ class NaturalLabeler:
                 control_ci=inc_batch.control_interval,
                 attempts=attempts,
                 created_at=datetime.now(UTC).isoformat(),
+                samples=len(inc_batch.edited),
             )
 
         # No step flipped the run
@@ -211,7 +260,7 @@ class NaturalLabeler:
             """
             INSERT OR IGNORE INTO labels(
                 run_id, root_addr, fault_type, source, recovered, manifest_addr, verified
-            ) VALUES (?, ?, 'natural', 'natural_auto', 0, NULL, 0)
+            ) VALUES (?, ?, 'natural', 'natural_auto', 0, NULL, 1)
             """,
             (run_id, root_addr),
         )
@@ -220,13 +269,29 @@ class NaturalLabeler:
         self,
         agent: str | None = None,
         oracle_fixes_fn: Any | None = None,
+        *,
+        limit: int | None = None,
+        select_seed: str = "natural",
     ) -> list[NaturalLabel]:
-        """Label all naturally failed runs for an agent."""
+        """Label naturally failed runs of an agent; returns the labels made by this call.
+
+        ``limit`` caps how many failed runs are examined in total, counting those already in
+        the ledger. Runs are taken in a seeded pseudo-random order, so a capped sample does not
+        depend on recording order and a restarted session continues the same sample.
+        """
         results = []
-        runs = self._failed_runs(agent)
+        runs = sorted(
+            self._failed_runs(agent),
+            key=lambda row: hashlib.sha256(f"{select_seed}:{row['run_id']}".encode()).hexdigest(),
+        )
+        examined = len(self.ledger.labels) if self.ledger is not None else 0
         logger.info("Found %d naturally failed runs to label", len(runs))
 
         for run in runs:
+            if limit is not None and examined >= limit:
+                break
+            if self.ledger is not None and run["run_id"] in self.ledger.labels:
+                continue
             # Check if already labeled
             existing = self.recorder.database.one(
                 "SELECT * FROM labels WHERE run_id = ?", (run["run_id"],)
@@ -240,6 +305,9 @@ class NaturalLabeler:
 
             result = await self.label_run(run["run_id"], oracle_fixes)
             results.append(result)
+            examined += 1
+            if self.ledger is not None:
+                self.ledger.append(result)
             logger.info(
                 "Natural label for %s: %s (addr=%s, attempts=%d)",
                 run["run_id"],

@@ -1,0 +1,78 @@
+{
+  "run_id": "tc-0001",
+  "target": {
+    "addr": "budget/tool#1",
+    "json_pointer": "/input/args/fx/currency",
+    "value": "SGD",
+    "value_hash": "5667af9974ec8ec212ca39bd99c54b61b76ad746d066e2bb5c52b7ec9fa7f30e"
+  },
+  "producer": null,
+  "candidates": [
+    {
+      "addr": "fx/tool#1",
+      "name": "fx_rate",
+      "json_pointer": "/output/currency",
+      "edge_kind": "inferred",
+      "key": null,
+      "version": null,
+      "value_hash": "5667af9974ec8ec212ca39bd99c54b61b76ad746d066e2bb5c52b7ec9fa7f30e"
+    },
+    {
+      "addr": "hotel/tool#1",
+      "name": "search_hotels",
+      "json_pointer": "/output/currency",
+      "edge_kind": "inferred",
+      "key": null,
+      "version": null,
+      "value_hash": "5667af9974ec8ec212ca39bd99c54b61b76ad746d066e2bb5c52b7ec9fa7f30e"
+    }
+  ],
+  "ambiguous": true,
+  "consumers": [
+    {
+      "src_addr": "budget/tool#1",
+      "src_pointer": "/state/budget",
+      "dst_addr": "writer/chat#1",
+      "dst_pointer": "/state/budget",
+      "kind": "state",
+      "key": "budget",
+      "version": 1,
+      "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73",
+      "depth": 1
+    },
+    {
+      "src_addr": "budget/tool#1",
+      "src_pointer": "/state/budget",
+      "dst_addr": "verifier/chat#1",
+      "dst_pointer": "/state/budget",
+      "kind": "state",
+      "key": "budget",
+      "version": 1,
+      "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73",
+      "depth": 1
+    },
+    {
+      "src_addr": "verifier/chat#1",
+      "src_pointer": "/state/verified_plan",
+      "dst_addr": "final/state#1",
+      "dst_pointer": "/state/verified_plan",
+      "kind": "state",
+      "key": "verified_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 2
+    },
+    {
+      "src_addr": "final/state#1",
+      "src_pointer": "/state/final_plan",
+      "dst_addr": "checker/state#1",
+      "dst_pointer": "/state/final_plan",
+      "kind": "state",
+      "key": "final_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 3
+    }
+  ],
+  "reaches_final_answer": true
+}

@@ -1,0 +1,77 @@
+{
+  "run_id": "tc-0001",
+  "target": {
+    "addr": "budget/tool#1",
+    "json_pointer": "/input/args/fx/rate",
+    "value": 54.4,
+    "value_hash": "6ec4e117607445514a95f3c078449068dd8d07b98cc8193c794cad7b48635caa"
+  },
+  "producer": {
+    "addr": "fx/tool#1",
+    "name": "fx_rate",
+    "json_pointer": "/output/rate",
+    "edge_kind": "inferred",
+    "key": null,
+    "version": null,
+    "value_hash": "6ec4e117607445514a95f3c078449068dd8d07b98cc8193c794cad7b48635caa"
+  },
+  "candidates": [
+    {
+      "addr": "fx/tool#1",
+      "name": "fx_rate",
+      "json_pointer": "/output/rate",
+      "edge_kind": "inferred",
+      "key": null,
+      "version": null,
+      "value_hash": "6ec4e117607445514a95f3c078449068dd8d07b98cc8193c794cad7b48635caa"
+    }
+  ],
+  "ambiguous": false,
+  "consumers": [
+    {
+      "src_addr": "budget/tool#1",
+      "src_pointer": "/state/budget",
+      "dst_addr": "writer/chat#1",
+      "dst_pointer": "/state/budget",
+      "kind": "state",
+      "key": "budget",
+      "version": 1,
+      "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73",
+      "depth": 1
+    },
+    {
+      "src_addr": "budget/tool#1",
+      "src_pointer": "/state/budget",
+      "dst_addr": "verifier/chat#1",
+      "dst_pointer": "/state/budget",
+      "kind": "state",
+      "key": "budget",
+      "version": 1,
+      "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73",
+      "depth": 1
+    },
+    {
+      "src_addr": "verifier/chat#1",
+      "src_pointer": "/state/verified_plan",
+      "dst_addr": "final/state#1",
+      "dst_pointer": "/state/verified_plan",
+      "kind": "state",
+      "key": "verified_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 2
+    },
+    {
+      "src_addr": "final/state#1",
+      "src_pointer": "/state/final_plan",
+      "dst_addr": "checker/state#1",
+      "dst_pointer": "/state/final_plan",
+      "kind": "state",
+      "key": "final_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 3
+    }
+  ],
+  "reaches_final_answer": true
+}

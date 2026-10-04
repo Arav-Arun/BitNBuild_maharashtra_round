@@ -1,0 +1,104 @@
+{
+  "job_id": "job-0001",
+  "run_id": "tc-0001",
+  "status": "complete",
+  "samples": 5,
+  "candidates": [
+    {
+      "addr": "fx/tool#1",
+      "status": "complete",
+      "fork_id": "fk-0001",
+      "edit": {
+        "addr": "fx/tool#1",
+        "kind": "patch_tool_args",
+        "value": {
+          "fresh": true
+        },
+        "known_good": true
+      },
+      "edit_source": "precedent",
+      "fix": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "VERIFIED",
+      "note": "Re-fetched with fresh=true."
+    },
+    {
+      "addr": "budget/tool#1",
+      "status": "complete",
+      "fork_id": "fk-0002",
+      "edit": {
+        "addr": "budget/tool#1",
+        "kind": "override_output",
+        "value": {
+          "flights_inr": 96000.0,
+          "hotels_inr": 26999.04,
+          "visa_inr": 12000.0,
+          "total_inr": 134999.04,
+          "fx_as_of": "2026-10-03"
+        },
+        "known_good": true
+      },
+      "edit_source": "oracle",
+      "fix": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "VERIFIED",
+      "note": "Fixing the downstream budget also repairs the run, but it is a symptom of the stale rate, not its cause."
+    },
+    {
+      "addr": "writer/chat#1",
+      "status": "complete",
+      "fork_id": "fk-0003",
+      "edit": {
+        "addr": "writer/chat#1",
+        "kind": "patch_prompt",
+        "value": "Double-check the total before answering.",
+        "known_good": false
+      },
+      "edit_source": "llm",
+      "fix": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "INCONCLUSIVE",
+      "note": "A prompt hint changed nothing: the stand-in ignores prompts. A speculative patch cannot refute a suspect."
+    }
+  ],
+  "best_addr": "fx/tool#1",
+  "created_at": "2026-10-04T12:00:00Z",
+  "completed_at": "2026-10-04T12:00:09Z",
+  "error": null
+}

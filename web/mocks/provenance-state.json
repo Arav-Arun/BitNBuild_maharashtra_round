@@ -1,0 +1,66 @@
+{
+  "run_id": "tc-0001",
+  "target": {
+    "addr": "writer/chat#1",
+    "json_pointer": "/state/budget/total_inr",
+    "value": 130949.18,
+    "value_hash": "c2b38b983d4454fb1acc8595ba7e8a89a5798744597c7841205449595b5b9bfd"
+  },
+  "producer": {
+    "addr": "budget/tool#1",
+    "name": "calculate_budget",
+    "json_pointer": "/state/budget/total_inr",
+    "edge_kind": "state",
+    "key": "budget",
+    "version": 1,
+    "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73"
+  },
+  "candidates": [
+    {
+      "addr": "budget/tool#1",
+      "name": "calculate_budget",
+      "json_pointer": "/state/budget/total_inr",
+      "edge_kind": "state",
+      "key": "budget",
+      "version": 1,
+      "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73"
+    }
+  ],
+  "ambiguous": false,
+  "consumers": [
+    {
+      "src_addr": "writer/chat#1",
+      "src_pointer": "/state/draft",
+      "dst_addr": "verifier/chat#1",
+      "dst_pointer": "/state/draft",
+      "kind": "state",
+      "key": "draft",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 1
+    },
+    {
+      "src_addr": "verifier/chat#1",
+      "src_pointer": "/state/verified_plan",
+      "dst_addr": "final/state#1",
+      "dst_pointer": "/state/verified_plan",
+      "kind": "state",
+      "key": "verified_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 2
+    },
+    {
+      "src_addr": "final/state#1",
+      "src_pointer": "/state/final_plan",
+      "dst_addr": "checker/state#1",
+      "dst_pointer": "/state/final_plan",
+      "kind": "state",
+      "key": "final_plan",
+      "version": 1,
+      "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792",
+      "depth": 3
+    }
+  ],
+  "reaches_final_answer": true
+}

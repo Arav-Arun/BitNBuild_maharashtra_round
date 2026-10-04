@@ -1,9 +1,607 @@
 {
-  "run_id": "TC-0412",
-  "suspects": [
-    { "addr": "fx/tool#1", "probability": 0.82, "reason": "Exchange rate is stale" }
+  "run_id": "tc-0001",
+  "model_version": "fixture-diagnoser-0",
+  "computed_at": "2026-10-04T09:30:00Z",
+  "latency_ms": 12.4,
+  "fixture": true,
+  "ranking": [
+    {
+      "rank": 1,
+      "addr": "fx/tool#1",
+      "name": "fx_rate",
+      "kind": "tool",
+      "score": 3.8015,
+      "probability": 0.82,
+      "in_conformal_set": true,
+      "flags": [
+        "schema_violation",
+        "first_anomaly",
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 2,
+      "addr": "budget/tool#1",
+      "name": "calculate_budget",
+      "kind": "tool",
+      "score": 1.1866,
+      "probability": 0.06,
+      "in_conformal_set": false,
+      "flags": [
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 3,
+      "addr": "writer/chat#1",
+      "name": "writer chat",
+      "kind": "llm",
+      "score": 0.4934,
+      "probability": 0.03,
+      "in_conformal_set": false,
+      "flags": [
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 4,
+      "addr": "verifier/chat#1",
+      "name": "verifier chat",
+      "kind": "llm",
+      "score": 0.088,
+      "probability": 0.02,
+      "in_conformal_set": false,
+      "flags": [
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 5,
+      "addr": "checker/state#1",
+      "name": "checker state",
+      "kind": "state",
+      "score": 0.088,
+      "probability": 0.02,
+      "in_conformal_set": false,
+      "flags": [
+        "visible_failure",
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 6,
+      "addr": "final/state#1",
+      "name": "final state",
+      "kind": "state",
+      "score": -0.6052,
+      "probability": 0.01,
+      "in_conformal_set": false,
+      "flags": [
+        "on_damage_path"
+      ]
+    },
+    {
+      "rank": 7,
+      "addr": "planner/chat#1",
+      "name": "planner chat",
+      "kind": "llm",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 8,
+      "addr": "planner/state#1",
+      "name": "planner state",
+      "kind": "state",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 9,
+      "addr": "flight/chat#1",
+      "name": "flight chat",
+      "kind": "llm",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 10,
+      "addr": "hotel/chat#1",
+      "name": "hotel chat",
+      "kind": "llm",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 11,
+      "addr": "weather/tool#1",
+      "name": "get_weather",
+      "kind": "tool",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 12,
+      "addr": "visa/tool#1",
+      "name": "visa_rules",
+      "kind": "tool",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 13,
+      "addr": "flight/tool#1",
+      "name": "search_flights",
+      "kind": "tool",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 14,
+      "addr": "hotel/tool#1",
+      "name": "search_hotels",
+      "kind": "tool",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 15,
+      "addr": "flight/chat#2",
+      "name": "flight chat",
+      "kind": "llm",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    },
+    {
+      "rank": 16,
+      "addr": "hotel/chat#2",
+      "name": "hotel chat",
+      "kind": "llm",
+      "score": -1.5215,
+      "probability": 0.004,
+      "in_conformal_set": false,
+      "flags": []
+    }
   ],
-  "conformal_set": ["fx/tool#1"],
+  "conformal_set": [
+    "fx/tool#1"
+  ],
+  "coverage_target": 0.9,
   "abstain": false,
-  "verdict": null
+  "abstain_reason": null,
+  "abstain_message": null,
+  "visible_failure_addr": "checker/state#1",
+  "responsible_addr": "fx/tool#1",
+  "reasons": [
+    {
+      "suspect_addr": "fx/tool#1",
+      "text": "The exchange rate is 214 days older than the freshest data in this run.",
+      "citation": {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output/as_of"
+      },
+      "feature": {
+        "name": "as_of_age_days",
+        "group": "Validity",
+        "value": 214.0,
+        "contribution": 2.31
+      }
+    },
+    {
+      "suspect_addr": "fx/tool#1",
+      "text": "The rate (54.4) is 15% below the rate used by the nearest passing run.",
+      "citation": {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output/rate"
+      },
+      "feature": {
+        "name": "value_drift_vs_passing",
+        "group": "Grounding",
+        "value": 0.15,
+        "contribution": 0.64
+      }
+    },
+    {
+      "suspect_addr": "fx/tool#1",
+      "text": "5 later steps consume this output, so a wrong value reaches the final plan.",
+      "citation": {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output"
+      },
+      "feature": {
+        "name": "downstream_consumers",
+        "group": "Lineage",
+        "value": 5.0,
+        "contribution": 1.12
+      }
+    }
+  ],
+  "rule_evidence": [
+    {
+      "rule": "stale_as_of",
+      "severity": "error",
+      "message": "`as_of` is 214 days older than the freshest data in this run.",
+      "citation": {
+        "addr": "fx/tool#1",
+        "json_pointer": "/output/as_of"
+      },
+      "evidence": {
+        "as_of": "2026-03-03",
+        "reference_as_of": "2026-10-03",
+        "age_days": 214
+      }
+    }
+  ],
+  "damage_path": {
+    "root_addr": "fx/tool#1",
+    "nodes": [
+      {
+        "addr": "planner/chat#1",
+        "name": "planner chat",
+        "kind": "llm",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "planner/state#1",
+        "name": "planner state",
+        "kind": "state",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "flight/chat#1",
+        "name": "flight chat",
+        "kind": "llm",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "hotel/chat#1",
+        "name": "hotel chat",
+        "kind": "llm",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "weather/tool#1",
+        "name": "get_weather",
+        "kind": "tool",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "fx/tool#1",
+        "name": "fx_rate",
+        "kind": "tool",
+        "tag": "root",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "visa/tool#1",
+        "name": "visa_rules",
+        "kind": "tool",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "flight/tool#1",
+        "name": "search_flights",
+        "kind": "tool",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "hotel/tool#1",
+        "name": "search_hotels",
+        "kind": "tool",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "flight/chat#2",
+        "name": "flight chat",
+        "kind": "llm",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "hotel/chat#2",
+        "name": "hotel chat",
+        "kind": "llm",
+        "tag": "unaffected",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "budget/tool#1",
+        "name": "calculate_budget",
+        "kind": "tool",
+        "tag": "symptom",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "writer/chat#1",
+        "name": "writer chat",
+        "kind": "llm",
+        "tag": "symptom",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "verifier/chat#1",
+        "name": "verifier chat",
+        "kind": "llm",
+        "tag": "symptom",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "final/state#1",
+        "name": "final state",
+        "kind": "state",
+        "tag": "symptom",
+        "is_visible_failure": false
+      },
+      {
+        "addr": "checker/state#1",
+        "name": "checker state",
+        "kind": "state",
+        "tag": "symptom",
+        "is_visible_failure": true
+      }
+    ],
+    "edges": [
+      {
+        "src_addr": "fx/tool#1",
+        "src_pointer": "/state/fx",
+        "dst_addr": "budget/tool#1",
+        "dst_pointer": "/state/fx",
+        "kind": "state",
+        "key": "fx",
+        "version": 1,
+        "value_hash": "d9deaec148cd6a2d768a13b2d9ae85f50e97d2b1e9a10aeb309ccb45534feb63"
+      },
+      {
+        "src_addr": "budget/tool#1",
+        "src_pointer": "/state/budget",
+        "dst_addr": "writer/chat#1",
+        "dst_pointer": "/state/budget",
+        "kind": "state",
+        "key": "budget",
+        "version": 1,
+        "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73"
+      },
+      {
+        "src_addr": "writer/chat#1",
+        "src_pointer": "/state/draft",
+        "dst_addr": "verifier/chat#1",
+        "dst_pointer": "/state/draft",
+        "kind": "state",
+        "key": "draft",
+        "version": 1,
+        "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792"
+      },
+      {
+        "src_addr": "budget/tool#1",
+        "src_pointer": "/state/budget",
+        "dst_addr": "verifier/chat#1",
+        "dst_pointer": "/state/budget",
+        "kind": "state",
+        "key": "budget",
+        "version": 1,
+        "value_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73"
+      },
+      {
+        "src_addr": "verifier/chat#1",
+        "src_pointer": "/state/verified_plan",
+        "dst_addr": "final/state#1",
+        "dst_pointer": "/state/verified_plan",
+        "kind": "state",
+        "key": "verified_plan",
+        "version": 1,
+        "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792"
+      },
+      {
+        "src_addr": "final/state#1",
+        "src_pointer": "/state/final_plan",
+        "dst_addr": "checker/state#1",
+        "dst_pointer": "/state/final_plan",
+        "kind": "state",
+        "key": "final_plan",
+        "version": 1,
+        "value_hash": "3415b245361243c139026fd97f96fb32c673b465fb213d2caf87777304463792"
+      }
+    ],
+    "reaches_final_answer": true
+  },
+  "precedents": {
+    "fault_type": "stale_data",
+    "neighbours": 12,
+    "same_fault": 9,
+    "fix_summary": "fresh=true",
+    "fix_tried": 9,
+    "fix_worked": 7,
+    "summary": "Looks like 9 of 12 past stale-data failures; fresh=true fixed 7 of them.",
+    "cases": [
+      {
+        "run_id": "tc-0004",
+        "root_addr": "fx/tool#1",
+        "fault_type": "natural",
+        "similarity": 0.94,
+        "fix_worked": true,
+        "label_source": "natural_auto"
+      },
+      {
+        "run_id": "tc-0009",
+        "root_addr": "fx/tool#1",
+        "fault_type": "natural",
+        "similarity": 0.89,
+        "fix_worked": true,
+        "label_source": "natural_auto"
+      },
+      {
+        "run_id": "ij-0001-fix-0",
+        "root_addr": "fx/tool#1",
+        "fault_type": "stale_data",
+        "similarity": 0.83,
+        "fix_worked": null,
+        "label_source": "injected"
+      }
+    ]
+  },
+  "nearest_twin": {
+    "run": {
+      "run_id": "tc-0007",
+      "status": "passed",
+      "agent": "tripcrew",
+      "task_id": "TC-7-0007",
+      "task": "Delhi → Singapore under ₹83,299",
+      "origin": "natural",
+      "parent_run_id": null,
+      "fork_id": null,
+      "mode": "offline",
+      "model": "tripcrew-fixture-v1",
+      "client": "deterministic_standin",
+      "seed": 7,
+      "steps": 16,
+      "duration_ms": 21.68,
+      "cost": {
+        "llm_calls": 7,
+        "tokens_in": 3351,
+        "tokens_out": 297,
+        "tokens_cached": 0,
+        "usd": null
+      },
+      "started_at": "2026-10-04T10:50:00Z",
+      "ended_at": "2026-10-04T10:50:00.021680Z",
+      "score": 1.0,
+      "checker_reason": "All constraints and fresh-catalog total match",
+      "split": null,
+      "risk": 0.07,
+      "top_suspect": null,
+      "failure_signature": null,
+      "label": null
+    },
+    "similarity": 0.91,
+    "same_task": false,
+    "basis": [
+      "agent",
+      "graph_shape"
+    ],
+    "known_good_values": [
+      {
+        "citation": {
+          "addr": "fx/tool#1",
+          "json_pointer": "/output/rate"
+        },
+        "value": 64.0,
+        "failing_value": 54.4
+      },
+      {
+        "citation": {
+          "addr": "fx/tool#1",
+          "json_pointer": "/output/as_of"
+        },
+        "value": "2026-10-03",
+        "failing_value": "2026-03-03"
+      }
+    ]
+  },
+  "proposed_fixes": [
+    {
+      "addr": "fx/tool#1",
+      "edit": {
+        "addr": "fx/tool#1",
+        "kind": "patch_tool_args",
+        "value": {
+          "fresh": true
+        },
+        "known_good": true
+      },
+      "source": "precedent",
+      "rationale": "Re-fetch the rate with fresh=true. The same fix repaired most similar past failures, and the nearest passing run used a rate dated 2026-10-03.",
+      "confidence": 0.78
+    }
+  ],
+  "verification": {
+    "verdict": "VERIFIED",
+    "status": "complete",
+    "fork_id": "fk-0001",
+    "edit_addr": "fx/tool#1",
+    "k": 5,
+    "fix": {
+      "passed": 5,
+      "total": 5,
+      "rate": 1.0,
+      "ci_low": 0.5655175352168251,
+      "ci_high": 1.0
+    },
+    "control": {
+      "passed": 0,
+      "total": 5,
+      "rate": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.43448246478317476
+    },
+    "replay_fidelity": 1.0,
+    "preview": false,
+    "explanation": "Fix lower bound 0.566 is above control upper bound 0.434 at K=5."
+  },
+  "stages": {
+    "localize": "done",
+    "attribute": "done",
+    "propose": "done",
+    "verify": "done",
+    "current": "verify"
+  },
+  "narrative": {
+    "summary": "tc-0001 failed because the SGD to INR rate was stale. The budget step multiplied by it, the writer and verifier carried the total forward, and the checker rejected the plan.",
+    "claims": [
+      {
+        "text": "The rate was dated months before every other tool result.",
+        "cites": [
+          {
+            "addr": "fx/tool#1",
+            "json_pointer": "/output/as_of"
+          }
+        ]
+      },
+      {
+        "text": "The budget total was computed from that rate.",
+        "cites": [
+          {
+            "addr": "budget/tool#1",
+            "json_pointer": "/output/total_inr"
+          }
+        ]
+      },
+      {
+        "text": "The checker found the final total did not match the fresh catalog.",
+        "cites": [
+          {
+            "addr": "checker/state#1",
+            "json_pointer": "/state_after/check"
+          }
+        ]
+      }
+    ],
+    "source": "template",
+    "validated": true
+  }
 }

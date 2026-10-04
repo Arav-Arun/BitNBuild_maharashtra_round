@@ -1,20 +1,2167 @@
 {
-  "sample_size": 405,
-  "metrics": {
-    "s1_top1": 0.48,
-    "s4_top1": 0.31,
-    "replay_savings": 0.55
-  },
-  "ablations": {
-    "edges": {
-      "full": 0.48,
-      "protocol_only": 0.41,
-      "none": 0.36
-    },
-    "observability": {
-      "full": 0.48,
-      "otel": 0.29,
-      "outputs_only": 0.24
+  "fixture": true,
+  "fixture_notice": "ILLUSTRATIVE FIXTURE. Every number on this page is a hand-picked placeholder that exercises the layout. None of it was measured. Real values come from `make eval`.",
+  "generated_at": "2026-10-04T09:30:00Z",
+  "dataset": {
+    "version": "fixture-0000",
+    "frozen_at": null,
+    "agents": [
+      "tripcrew",
+      "hoprag"
+    ],
+    "held_out_fault_codes": [
+      "T2",
+      "T5",
+      "R2",
+      "D3",
+      "C2",
+      "C3"
+    ],
+    "counts": {
+      "base_runs": 100,
+      "injected_forks": 400,
+      "accepted_failures": 300,
+      "natural_failures": 45,
+      "human_labelled": 0,
+      "runs_per_split": {
+        "S0": 120,
+        "S1": 90,
+        "S3": 60,
+        "S4": 45,
+        "S5": 30
+      },
+      "failures_per_family": {
+        "tool": 100,
+        "retrieval": 50,
+        "decision": 80,
+        "coordination": 70
+      }
     }
-  }
+  },
+  "model": {
+    "model_version": "fixture-diagnoser-0",
+    "backend": "sklearn-hgb",
+    "trained_at": null,
+    "n_features": 90,
+    "feature_groups": [
+      {
+        "id": "A",
+        "name": "Structure",
+        "n_features": 14,
+        "enabled": true
+      },
+      {
+        "id": "B",
+        "name": "Telemetry",
+        "n_features": 12,
+        "enabled": true
+      },
+      {
+        "id": "C",
+        "name": "Validity",
+        "n_features": 12,
+        "enabled": true
+      },
+      {
+        "id": "D",
+        "name": "Grounding",
+        "n_features": 10,
+        "enabled": true
+      },
+      {
+        "id": "E",
+        "name": "Surprisal",
+        "n_features": 8,
+        "enabled": false
+      },
+      {
+        "id": "F",
+        "name": "Novelty",
+        "n_features": 8,
+        "enabled": true
+      },
+      {
+        "id": "G",
+        "name": "Context",
+        "n_features": 12,
+        "enabled": true
+      },
+      {
+        "id": "H",
+        "name": "Lineage",
+        "n_features": 10,
+        "enabled": true
+      },
+      {
+        "id": "I",
+        "name": "Embedding",
+        "n_features": 4,
+        "enabled": true
+      }
+    ],
+    "temperature": 1.0,
+    "conformal_coverage": 0.9,
+    "trained_on_runs": 200
+  },
+  "headline": [
+    {
+      "id": "unseen_fault_top1",
+      "title": "Unseen fault types, top-1",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 0.5,
+        "ci_low": 0.44,
+        "ci_high": 0.56
+      },
+      "unit": "fraction",
+      "n": 90,
+      "comparator_name": "first-error",
+      "comparator": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "tooltip": "Top-1 on faults of types held out from training, against the best baseline."
+    },
+    {
+      "id": "natural_top1",
+      "title": "Natural failures, top-1",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "unit": "fraction",
+      "n": 45,
+      "comparator_name": null,
+      "comparator": null,
+      "tooltip": "Top-1 on failures nobody injected. Test-only."
+    },
+    {
+      "id": "replay_savings",
+      "title": "Calls saved by cone replay",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 0.7,
+        "ci_low": 0.65,
+        "ci_high": 0.75
+      },
+      "unit": "fraction",
+      "n": 40,
+      "comparator_name": null,
+      "comparator": null,
+      "tooltip": "Share of LLM and tool calls served from the recording instead of re-run."
+    },
+    {
+      "id": "ms_per_trace",
+      "title": "Diagnosis latency",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 12.0,
+        "ci_low": null,
+        "ci_high": null
+      },
+      "unit": "ms",
+      "n": null,
+      "comparator_name": null,
+      "comparator": null,
+      "tooltip": "Milliseconds to rank every step of one trace on a laptop CPU."
+    }
+  ],
+  "leaderboard": [
+    {
+      "method": "blackbox-ranker",
+      "method_kind": "ranker",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.8,
+        "ci_low": 0.75,
+        "ci_high": 0.85
+      },
+      "top3": {
+        "value": 1.0,
+        "ci_low": 0.95,
+        "ci_high": 1.0
+      },
+      "within1": {
+        "value": 0.9,
+        "ci_low": 0.85,
+        "ci_high": 0.95
+      },
+      "mrr": {
+        "value": 0.95,
+        "ci_low": 0.9,
+        "ci_high": 1.0
+      },
+      "latency_ms": 12.0
+    },
+    {
+      "method": "blackbox-ranker",
+      "method_kind": "ranker",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.5,
+        "ci_low": 0.44,
+        "ci_high": 0.56
+      },
+      "top3": {
+        "value": 0.7,
+        "ci_low": 0.64,
+        "ci_high": 0.76
+      },
+      "within1": {
+        "value": 0.6,
+        "ci_low": 0.54,
+        "ci_high": 0.66
+      },
+      "mrr": {
+        "value": 0.65,
+        "ci_low": 0.59,
+        "ci_high": 0.71
+      },
+      "latency_ms": 12.0
+    },
+    {
+      "method": "blackbox-ranker",
+      "method_kind": "ranker",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.4,
+        "ci_low": 0.32,
+        "ci_high": 0.48
+      },
+      "top3": {
+        "value": 0.6,
+        "ci_low": 0.52,
+        "ci_high": 0.68
+      },
+      "within1": {
+        "value": 0.5,
+        "ci_low": 0.42,
+        "ci_high": 0.58
+      },
+      "mrr": {
+        "value": 0.55,
+        "ci_low": 0.47,
+        "ci_high": 0.63
+      },
+      "latency_ms": 12.0
+    },
+    {
+      "method": "blackbox-ranker",
+      "method_kind": "ranker",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.41,
+        "ci_high": 0.59
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.31,
+        "ci_high": 0.49
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.36,
+        "ci_high": 0.54
+      },
+      "latency_ms": 12.0
+    },
+    {
+      "method": "blackbox-ranker",
+      "method_kind": "ranker",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "random-step",
+      "method_kind": "baseline",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.1,
+        "ci_low": 0.05,
+        "ci_high": 0.15
+      },
+      "top3": {
+        "value": 0.3,
+        "ci_low": 0.25,
+        "ci_high": 0.35
+      },
+      "within1": {
+        "value": 0.2,
+        "ci_low": 0.15,
+        "ci_high": 0.25
+      },
+      "mrr": {
+        "value": 0.25,
+        "ci_low": 0.2,
+        "ci_high": 0.3
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "random-step",
+      "method_kind": "baseline",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.1,
+        "ci_low": 0.04,
+        "ci_high": 0.16
+      },
+      "top3": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "within1": {
+        "value": 0.2,
+        "ci_low": 0.14,
+        "ci_high": 0.26
+      },
+      "mrr": {
+        "value": 0.25,
+        "ci_low": 0.19,
+        "ci_high": 0.31
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "random-step",
+      "method_kind": "baseline",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.1,
+        "ci_low": 0.02,
+        "ci_high": 0.18
+      },
+      "top3": {
+        "value": 0.3,
+        "ci_low": 0.22,
+        "ci_high": 0.38
+      },
+      "within1": {
+        "value": 0.2,
+        "ci_low": 0.12,
+        "ci_high": 0.28
+      },
+      "mrr": {
+        "value": 0.25,
+        "ci_low": 0.17,
+        "ci_high": 0.33
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "random-step",
+      "method_kind": "baseline",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.1,
+        "ci_low": 0.01,
+        "ci_high": 0.19
+      },
+      "top3": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "within1": {
+        "value": 0.2,
+        "ci_low": 0.11,
+        "ci_high": 0.29
+      },
+      "mrr": {
+        "value": 0.25,
+        "ci_low": 0.16,
+        "ci_high": 0.34
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "random-step",
+      "method_kind": "baseline",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "last-step",
+      "method_kind": "baseline",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.15,
+        "ci_high": 0.25
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.35,
+        "ci_high": 0.45
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.25,
+        "ci_high": 0.35
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.3,
+        "ci_high": 0.4
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "last-step",
+      "method_kind": "baseline",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.14,
+        "ci_high": 0.26
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.34,
+        "ci_high": 0.46
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.29,
+        "ci_high": 0.41
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "last-step",
+      "method_kind": "baseline",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.12,
+        "ci_high": 0.28
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.32,
+        "ci_high": 0.48
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.22,
+        "ci_high": 0.38
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.27,
+        "ci_high": 0.43
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "last-step",
+      "method_kind": "baseline",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.11,
+        "ci_high": 0.29
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.31,
+        "ci_high": 0.49
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.26,
+        "ci_high": 0.44
+      },
+      "latency_ms": 0.1
+    },
+    {
+      "method": "last-step",
+      "method_kind": "baseline",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "first-error",
+      "method_kind": "baseline",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.25,
+        "ci_high": 0.35
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.45,
+        "ci_high": 0.55
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.35,
+        "ci_high": 0.45
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.4,
+        "ci_high": 0.5
+      },
+      "latency_ms": 0.2
+    },
+    {
+      "method": "first-error",
+      "method_kind": "baseline",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.44,
+        "ci_high": 0.56
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.34,
+        "ci_high": 0.46
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.39,
+        "ci_high": 0.51
+      },
+      "latency_ms": 0.2
+    },
+    {
+      "method": "first-error",
+      "method_kind": "baseline",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.22,
+        "ci_high": 0.38
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.42,
+        "ci_high": 0.58
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.32,
+        "ci_high": 0.48
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.37,
+        "ci_high": 0.53
+      },
+      "latency_ms": 0.2
+    },
+    {
+      "method": "first-error",
+      "method_kind": "baseline",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.11,
+        "ci_high": 0.29
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.31,
+        "ci_high": 0.49
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.26,
+        "ci_high": 0.44
+      },
+      "latency_ms": 0.2
+    },
+    {
+      "method": "first-error",
+      "method_kind": "baseline",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "position-only",
+      "method_kind": "baseline",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.4,
+        "ci_low": 0.35,
+        "ci_high": 0.45
+      },
+      "top3": {
+        "value": 0.6,
+        "ci_low": 0.55,
+        "ci_high": 0.65
+      },
+      "within1": {
+        "value": 0.5,
+        "ci_low": 0.45,
+        "ci_high": 0.55
+      },
+      "mrr": {
+        "value": 0.55,
+        "ci_low": 0.5,
+        "ci_high": 0.6
+      },
+      "latency_ms": 0.5
+    },
+    {
+      "method": "position-only",
+      "method_kind": "baseline",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.14,
+        "ci_high": 0.26
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.34,
+        "ci_high": 0.46
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.29,
+        "ci_high": 0.41
+      },
+      "latency_ms": 0.5
+    },
+    {
+      "method": "position-only",
+      "method_kind": "baseline",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.12,
+        "ci_high": 0.28
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.32,
+        "ci_high": 0.48
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.22,
+        "ci_high": 0.38
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.27,
+        "ci_high": 0.43
+      },
+      "latency_ms": 0.5
+    },
+    {
+      "method": "position-only",
+      "method_kind": "baseline",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.1,
+        "ci_low": 0.01,
+        "ci_high": 0.19
+      },
+      "top3": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "within1": {
+        "value": 0.2,
+        "ci_low": 0.11,
+        "ci_high": 0.29
+      },
+      "mrr": {
+        "value": 0.25,
+        "ci_low": 0.16,
+        "ci_high": 0.34
+      },
+      "latency_ms": 0.5
+    },
+    {
+      "method": "position-only",
+      "method_kind": "baseline",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "isolation-forest-max",
+      "method_kind": "baseline",
+      "split": "S0",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 120,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.25,
+        "ci_high": 0.35
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.45,
+        "ci_high": 0.55
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.35,
+        "ci_high": 0.45
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.4,
+        "ci_high": 0.5
+      },
+      "latency_ms": 3.0
+    },
+    {
+      "method": "isolation-forest-max",
+      "method_kind": "baseline",
+      "split": "S1",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 90,
+      "top1": {
+        "value": 0.3,
+        "ci_low": 0.24,
+        "ci_high": 0.36
+      },
+      "top3": {
+        "value": 0.5,
+        "ci_low": 0.44,
+        "ci_high": 0.56
+      },
+      "within1": {
+        "value": 0.4,
+        "ci_low": 0.34,
+        "ci_high": 0.46
+      },
+      "mrr": {
+        "value": 0.45,
+        "ci_low": 0.39,
+        "ci_high": 0.51
+      },
+      "latency_ms": 3.0
+    },
+    {
+      "method": "isolation-forest-max",
+      "method_kind": "baseline",
+      "split": "S3",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 60,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.12,
+        "ci_high": 0.28
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.32,
+        "ci_high": 0.48
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.22,
+        "ci_high": 0.38
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.27,
+        "ci_high": 0.43
+      },
+      "latency_ms": 3.0
+    },
+    {
+      "method": "isolation-forest-max",
+      "method_kind": "baseline",
+      "split": "S4",
+      "status": "ran",
+      "reason": null,
+      "reported_literature": false,
+      "source": null,
+      "n": 45,
+      "top1": {
+        "value": 0.2,
+        "ci_low": 0.11,
+        "ci_high": 0.29
+      },
+      "top3": {
+        "value": 0.4,
+        "ci_low": 0.31,
+        "ci_high": 0.49
+      },
+      "within1": {
+        "value": 0.3,
+        "ci_low": 0.21,
+        "ci_high": 0.39
+      },
+      "mrr": {
+        "value": 0.35,
+        "ci_low": 0.26,
+        "ci_high": 0.44
+      },
+      "latency_ms": 3.0
+    },
+    {
+      "method": "isolation-forest-max",
+      "method_kind": "baseline",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "Who&When zero-shot is computed once, after the model is frozen.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-all-at-once",
+      "method_kind": "llm_judge",
+      "split": "S0",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-all-at-once",
+      "method_kind": "llm_judge",
+      "split": "S1",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-all-at-once",
+      "method_kind": "llm_judge",
+      "split": "S3",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-all-at-once",
+      "method_kind": "llm_judge",
+      "split": "S4",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-all-at-once",
+      "method_kind": "llm_judge",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-step-by-step",
+      "method_kind": "llm_judge",
+      "split": "S0",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-step-by-step",
+      "method_kind": "llm_judge",
+      "split": "S1",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-step-by-step",
+      "method_kind": "llm_judge",
+      "split": "S3",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-step-by-step",
+      "method_kind": "llm_judge",
+      "split": "S4",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-step-by-step",
+      "method_kind": "llm_judge",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-binary-search",
+      "method_kind": "llm_judge",
+      "split": "S0",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-binary-search",
+      "method_kind": "llm_judge",
+      "split": "S1",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-binary-search",
+      "method_kind": "llm_judge",
+      "split": "S3",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-binary-search",
+      "method_kind": "llm_judge",
+      "split": "S4",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "llm-judge-binary-search",
+      "method_kind": "llm_judge",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "No Groq API key in this environment; the judge calls were not made.",
+      "reported_literature": false,
+      "source": null,
+      "n": null,
+      "top1": null,
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    },
+    {
+      "method": "literature-pipeline-placeholder",
+      "method_kind": "literature",
+      "split": "S5",
+      "status": "not_run",
+      "reason": "A published number that this repository did not reproduce.",
+      "reported_literature": true,
+      "source": "Placeholder row: replace with a cited value from the source ledger.",
+      "n": null,
+      "top1": {
+        "value": 0.35,
+        "ci_low": null,
+        "ci_high": null
+      },
+      "top3": null,
+      "within1": null,
+      "mrr": null,
+      "latency_ms": null
+    }
+  ],
+  "generalisation": {
+    "metric": "top1",
+    "methods": [
+      "blackbox-ranker",
+      "random-step",
+      "last-step",
+      "first-error",
+      "position-only",
+      "isolation-forest-max",
+      "llm-judge-all-at-once",
+      "llm-judge-step-by-step",
+      "llm-judge-binary-search"
+    ],
+    "splits": [
+      "S0",
+      "S1",
+      "S3",
+      "S4",
+      "S5"
+    ],
+    "cells": [
+      {
+        "method": "blackbox-ranker",
+        "split": "S0",
+        "value": 0.8,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "blackbox-ranker",
+        "split": "S1",
+        "value": 0.5,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "blackbox-ranker",
+        "split": "S3",
+        "value": 0.4,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "blackbox-ranker",
+        "split": "S4",
+        "value": 0.3,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "blackbox-ranker",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "random-step",
+        "split": "S0",
+        "value": 0.1,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "random-step",
+        "split": "S1",
+        "value": 0.1,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "random-step",
+        "split": "S3",
+        "value": 0.1,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "random-step",
+        "split": "S4",
+        "value": 0.1,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "random-step",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "last-step",
+        "split": "S0",
+        "value": 0.2,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "last-step",
+        "split": "S1",
+        "value": 0.2,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "last-step",
+        "split": "S3",
+        "value": 0.2,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "last-step",
+        "split": "S4",
+        "value": 0.2,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "last-step",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "first-error",
+        "split": "S0",
+        "value": 0.3,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "first-error",
+        "split": "S1",
+        "value": 0.3,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "first-error",
+        "split": "S3",
+        "value": 0.3,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "first-error",
+        "split": "S4",
+        "value": 0.2,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "first-error",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "position-only",
+        "split": "S0",
+        "value": 0.4,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "position-only",
+        "split": "S1",
+        "value": 0.2,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "position-only",
+        "split": "S3",
+        "value": 0.2,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "position-only",
+        "split": "S4",
+        "value": 0.1,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "position-only",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "isolation-forest-max",
+        "split": "S0",
+        "value": 0.3,
+        "n": 120,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "isolation-forest-max",
+        "split": "S1",
+        "value": 0.3,
+        "n": 90,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "isolation-forest-max",
+        "split": "S3",
+        "value": 0.2,
+        "n": 60,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "isolation-forest-max",
+        "split": "S4",
+        "value": 0.2,
+        "n": 45,
+        "status": "ran",
+        "reason": null
+      },
+      {
+        "method": "isolation-forest-max",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "Who&When zero-shot is computed once, after the model is frozen."
+      },
+      {
+        "method": "llm-judge-all-at-once",
+        "split": "S0",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-all-at-once",
+        "split": "S1",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-all-at-once",
+        "split": "S3",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-all-at-once",
+        "split": "S4",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-all-at-once",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-step-by-step",
+        "split": "S0",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-step-by-step",
+        "split": "S1",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-step-by-step",
+        "split": "S3",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-step-by-step",
+        "split": "S4",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-step-by-step",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-binary-search",
+        "split": "S0",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-binary-search",
+        "split": "S1",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-binary-search",
+        "split": "S3",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-binary-search",
+        "split": "S4",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      },
+      {
+        "method": "llm-judge-binary-search",
+        "split": "S5",
+        "value": null,
+        "n": null,
+        "status": "not_run",
+        "reason": "No Groq API key in this environment; the judge calls were not made."
+      }
+    ]
+  },
+  "feature_group_ablation": {
+    "split": "S1",
+    "n": 90,
+    "full": {
+      "value": 0.5,
+      "ci_low": 0.44,
+      "ci_high": 0.56
+    },
+    "rows": [
+      {
+        "group_id": "A",
+        "group_name": "Structure",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.48,
+          "ci_low": 0.38,
+          "ci_high": 0.58
+        },
+        "delta_vs_full": {
+          "delta": -0.02,
+          "ci_low": -0.06,
+          "ci_high": 0.02,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": false
+        }
+      },
+      {
+        "group_id": "B",
+        "group_name": "Telemetry",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.46,
+          "ci_low": 0.36,
+          "ci_high": 0.56
+        },
+        "delta_vs_full": {
+          "delta": -0.04,
+          "ci_low": -0.08,
+          "ci_high": 0.0,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": false
+        }
+      },
+      {
+        "group_id": "C",
+        "group_name": "Validity",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.44,
+          "ci_low": 0.34,
+          "ci_high": 0.54
+        },
+        "delta_vs_full": {
+          "delta": -0.06,
+          "ci_low": -0.1,
+          "ci_high": -0.02,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": true
+        }
+      },
+      {
+        "group_id": "D",
+        "group_name": "Grounding",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.42,
+          "ci_low": 0.32,
+          "ci_high": 0.52
+        },
+        "delta_vs_full": {
+          "delta": -0.08,
+          "ci_low": -0.12,
+          "ci_high": -0.04,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": true
+        }
+      },
+      {
+        "group_id": "E",
+        "group_name": "Surprisal",
+        "status": "not_run",
+        "reason": "Qwen3-0.6B surprisal needs a GPU and was not computed here.",
+        "top1_without": null,
+        "delta_vs_full": null
+      },
+      {
+        "group_id": "F",
+        "group_name": "Novelty",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.48,
+          "ci_low": 0.38,
+          "ci_high": 0.58
+        },
+        "delta_vs_full": {
+          "delta": -0.02,
+          "ci_low": -0.06,
+          "ci_high": 0.02,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": false
+        }
+      },
+      {
+        "group_id": "G",
+        "group_name": "Context",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.46,
+          "ci_low": 0.36,
+          "ci_high": 0.56
+        },
+        "delta_vs_full": {
+          "delta": -0.04,
+          "ci_low": -0.08,
+          "ci_high": 0.0,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": false
+        }
+      },
+      {
+        "group_id": "H",
+        "group_name": "Lineage",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.44,
+          "ci_low": 0.34,
+          "ci_high": 0.54
+        },
+        "delta_vs_full": {
+          "delta": -0.06,
+          "ci_low": -0.1,
+          "ci_high": -0.02,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": true
+        }
+      },
+      {
+        "group_id": "I",
+        "group_name": "Embedding",
+        "status": "ran",
+        "reason": null,
+        "top1_without": {
+          "value": 0.42,
+          "ci_low": 0.32,
+          "ci_high": 0.52
+        },
+        "delta_vs_full": {
+          "delta": -0.08,
+          "ci_low": -0.12,
+          "ci_high": -0.04,
+          "n": 90,
+          "n_boot": 2000,
+          "excludes_zero": true
+        }
+      }
+    ]
+  },
+  "recorder_ablations": [
+    {
+      "id": "provenance_edges",
+      "title": "Full provenance vs protocol-only vs no edges",
+      "split": "S1",
+      "n": 90,
+      "reference_arm": "full_edges",
+      "arms": [
+        {
+          "arm": "full_edges",
+          "label": "Full provenance edges",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.5,
+            "ci_low": 0.4,
+            "ci_high": 0.6
+          },
+          "diff_vs_reference": null
+        },
+        {
+          "arm": "protocol_edges",
+          "label": "Protocol-only edges",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.46,
+            "ci_low": 0.36,
+            "ci_high": 0.56
+          },
+          "diff_vs_reference": {
+            "delta": -0.04,
+            "ci_low": -0.1,
+            "ci_high": 0.02,
+            "n": 90,
+            "n_boot": 2000,
+            "excludes_zero": false
+          }
+        },
+        {
+          "arm": "no_edges",
+          "label": "No edges",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.41,
+            "ci_low": 0.31,
+            "ci_high": 0.51
+          },
+          "diff_vs_reference": {
+            "delta": -0.09,
+            "ci_low": -0.15,
+            "ci_high": -0.03,
+            "n": 90,
+            "n_boot": 2000,
+            "excludes_zero": true
+          }
+        }
+      ],
+      "interpretation": "no_significant_difference"
+    },
+    {
+      "id": "telemetry_sufficiency",
+      "title": "Full record vs OTel-style fields vs outputs-only",
+      "split": "S1",
+      "n": 90,
+      "reference_arm": "full_record",
+      "arms": [
+        {
+          "arm": "full_record",
+          "label": "Full Black Box record",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.5,
+            "ci_low": 0.4,
+            "ci_high": 0.6
+          },
+          "diff_vs_reference": null
+        },
+        {
+          "arm": "otel_style",
+          "label": "OTel-style fields",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.38,
+            "ci_low": 0.28,
+            "ci_high": 0.48
+          },
+          "diff_vs_reference": {
+            "delta": -0.12,
+            "ci_low": -0.18,
+            "ci_high": -0.06,
+            "n": 90,
+            "n_boot": 2000,
+            "excludes_zero": true
+          }
+        },
+        {
+          "arm": "outputs_only",
+          "label": "Outputs only",
+          "status": "ran",
+          "reason": null,
+          "top1": {
+            "value": 0.3,
+            "ci_low": 0.2,
+            "ci_high": 0.4
+          },
+          "diff_vs_reference": {
+            "delta": -0.2,
+            "ci_low": -0.26,
+            "ci_high": -0.14,
+            "n": 90,
+            "n_boot": 2000,
+            "excludes_zero": true
+          }
+        }
+      ],
+      "interpretation": "reference_wins"
+    }
+  ],
+  "integrity": [
+    {
+      "id": "artifact_audit",
+      "title": "Artifact audit",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 0.6,
+        "ci_low": 0.52,
+        "ci_high": 0.68
+      },
+      "threshold": 0.65,
+      "passes": true,
+      "n": 90,
+      "detail": "AUROC of a surface-only classifier that tries to spot injected steps."
+    },
+    {
+      "id": "shuffled_labels",
+      "title": "Shuffled labels",
+      "status": "ran",
+      "reason": null,
+      "value": {
+        "value": 0.1,
+        "ci_low": 0.04,
+        "ci_high": 0.16
+      },
+      "threshold": null,
+      "passes": true,
+      "n": 90,
+      "detail": "Top-1 after shuffling training labels; chance level is about 0.10."
+    },
+    {
+      "id": "human_agreement",
+      "title": "Human agreement (kappa)",
+      "status": "not_run",
+      "reason": "No run has two annotators yet.",
+      "value": null,
+      "threshold": null,
+      "passes": null,
+      "n": null,
+      "detail": "Cohen's kappa over runs labelled in Label mode."
+    }
+  ],
+  "calibration": {
+    "split": "S0",
+    "status": "ran",
+    "reason": null,
+    "bins": [
+      {
+        "lo": 0.0,
+        "hi": 0.1,
+        "n": 10,
+        "mean_confidence": 0.05,
+        "accuracy": 0.02
+      },
+      {
+        "lo": 0.1,
+        "hi": 0.2,
+        "n": 11,
+        "mean_confidence": 0.15,
+        "accuracy": 0.12
+      },
+      {
+        "lo": 0.2,
+        "hi": 0.3,
+        "n": 12,
+        "mean_confidence": 0.25,
+        "accuracy": 0.22
+      },
+      {
+        "lo": 0.3,
+        "hi": 0.4,
+        "n": 13,
+        "mean_confidence": 0.35,
+        "accuracy": 0.32
+      },
+      {
+        "lo": 0.4,
+        "hi": 0.5,
+        "n": 14,
+        "mean_confidence": 0.45,
+        "accuracy": 0.42
+      },
+      {
+        "lo": 0.5,
+        "hi": 0.6,
+        "n": 15,
+        "mean_confidence": 0.55,
+        "accuracy": 0.52
+      },
+      {
+        "lo": 0.6,
+        "hi": 0.7,
+        "n": 16,
+        "mean_confidence": 0.65,
+        "accuracy": 0.62
+      },
+      {
+        "lo": 0.7,
+        "hi": 0.8,
+        "n": 17,
+        "mean_confidence": 0.75,
+        "accuracy": 0.72
+      },
+      {
+        "lo": 0.8,
+        "hi": 0.9,
+        "n": 18,
+        "mean_confidence": 0.85,
+        "accuracy": 0.82
+      },
+      {
+        "lo": 0.9,
+        "hi": 1.0,
+        "n": 19,
+        "mean_confidence": 0.95,
+        "accuracy": 0.92
+      }
+    ],
+    "abstention": [
+      {
+        "answered_fraction": 1.0,
+        "top1_when_answered": 0.8,
+        "n": 120
+      },
+      {
+        "answered_fraction": 0.8,
+        "top1_when_answered": 0.85,
+        "n": 120
+      },
+      {
+        "answered_fraction": 0.6,
+        "top1_when_answered": 0.9,
+        "n": 120
+      },
+      {
+        "answered_fraction": 0.4,
+        "top1_when_answered": 0.95,
+        "n": 120
+      }
+    ],
+    "ece": 0.05,
+    "conformal_target": 0.9,
+    "conformal_empirical": 0.9,
+    "mean_set_size": 2.0,
+    "abstain_rate": 0.2
+  },
+  "replay_savings": {
+    "status": "ran",
+    "reason": null,
+    "n_forks": 40,
+    "by_mode": [
+      {
+        "mode": "cone",
+        "mean_steps_reexecuted": 4.0,
+        "mean_fraction_reexecuted": 0.25,
+        "n": 40
+      },
+      {
+        "mode": "prefix",
+        "mean_steps_reexecuted": 8.0,
+        "mean_fraction_reexecuted": 0.5,
+        "n": 40
+      },
+      {
+        "mode": "full",
+        "mean_steps_reexecuted": 16.0,
+        "mean_fraction_reexecuted": 1.0,
+        "n": 40
+      }
+    ],
+    "calls_saved_fraction": {
+      "value": 0.7,
+      "ci_low": 0.65,
+      "ci_high": 0.75
+    },
+    "tokens_saved": 100000,
+    "ms_saved": 50000.0,
+    "verifier": {
+      "n_known_roots": 30,
+      "verified": 20,
+      "refuted": 2,
+      "inconclusive": 8,
+      "n_wrong_roots": 20,
+      "falsely_verified": 0
+    }
+  },
+  "detector": {
+    "status": "ran",
+    "reason": null,
+    "split": "S0",
+    "n_runs": 200,
+    "n_failed": 100,
+    "auroc": {
+      "value": 0.85,
+      "ci_low": 0.8,
+      "ci_high": 0.9
+    },
+    "accuracy": {
+      "value": 0.8,
+      "ci_low": 0.75,
+      "ci_high": 0.85
+    }
+  },
+  "not_run": [
+    {
+      "section": "leaderboard",
+      "item": "LLM judge baselines",
+      "reason": "No Groq API key in this environment."
+    },
+    {
+      "section": "leaderboard",
+      "item": "Who&When zero-shot (S5)",
+      "reason": "Computed once, after the model is frozen."
+    },
+    {
+      "section": "features",
+      "item": "Surprisal group (E)",
+      "reason": "Needs a GPU for Qwen3-0.6B."
+    },
+    {
+      "section": "model",
+      "item": "LightGBM ranker",
+      "reason": "LightGBM cannot load on this machine; sklearn-hgb is used instead."
+    },
+    {
+      "section": "integrity",
+      "item": "Human agreement (kappa)",
+      "reason": "No double-annotated runs yet."
+    }
+  ],
+  "notes": [
+    "Fixture: the structure and states are real, the numbers are not.",
+    "Rows that did not run are listed explicitly rather than left blank."
+  ]
 }

@@ -1,0 +1,3691 @@
+{
+  "fork_id": "fk-0004",
+  "description": "A noisy writer step: the bounds overlap. Engine events with sample/branch, timings and a running phase added.",
+  "provenance": "engine_recording_noisy_standin",
+  "events": [
+    {
+      "id": 1,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.411,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 2,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 3,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 4,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.611,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 5,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.993,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 6,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.393,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 7,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 8,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 2.692,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 9,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.148,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 10,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.557,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 11,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.941,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 12,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.04,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 13,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.535,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 14,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 15,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 16,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.298,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 17,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 18,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 19,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.616,
+        "tokens": 732,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 20,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 21,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 22,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.582,
+        "tokens": 747,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 23,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 24,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 25,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.018,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 26,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 27,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 28,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.071,
+        "tokens": null,
+        "sample": 0,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 29,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-fix-0",
+        "sample": 0,
+        "branch": "fix",
+        "passed": false,
+        "reason": "Incorrect INR total: got 66999.56, expected 65999.56",
+        "is_control": false
+      }
+    },
+    {
+      "id": 30,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.396,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 31,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 32,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 33,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.799,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 34,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.278,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 35,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.705,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 36,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 37,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 3.062,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 38,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.605,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 39,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.647,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 40,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.965,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 41,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.145,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 42,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.624,
+        "tokens": 0,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 43,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 44,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 45,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.229,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 46,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 47,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 48,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.689,
+        "tokens": 732,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 49,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 50,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 51,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.574,
+        "tokens": 747,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 52,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 53,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 54,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.02,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 55,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 56,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 57,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.088,
+        "tokens": null,
+        "sample": 0,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 58,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-control-0",
+        "sample": 0,
+        "branch": "control",
+        "passed": false,
+        "reason": "Incorrect INR total: got 65199.63, expected 65999.56",
+        "is_control": true
+      }
+    },
+    {
+      "id": 59,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.426,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 60,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.022,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 61,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 62,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.62,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 63,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.0,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 64,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.422,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 65,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.717,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 66,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.029,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 67,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.575,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 68,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.879,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 69,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.027,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 70,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.438,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 71,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 72,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.241,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 73,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 74,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 75,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.622,
+        "tokens": 732,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 76,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 77,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 78,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.591,
+        "tokens": 747,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 79,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 80,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 81,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.02,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 82,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 83,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 84,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.08,
+        "tokens": null,
+        "sample": 1,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 85,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-fix-1",
+        "sample": 1,
+        "branch": "fix",
+        "passed": true,
+        "reason": "All constraints and fresh-catalog total match",
+        "is_control": false
+      }
+    },
+    {
+      "id": 86,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.408,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 87,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 88,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 89,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.731,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 90,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.151,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 91,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.599,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 92,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 93,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 2.941,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 94,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.261,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 95,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.575,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 96,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.882,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 97,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.054,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 98,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.475,
+        "tokens": 0,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 99,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 100,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 101,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.206,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 102,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 103,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 104,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.538,
+        "tokens": 732,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 105,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 106,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 107,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.551,
+        "tokens": 747,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 108,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 109,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 110,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.019,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 111,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 112,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 113,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.077,
+        "tokens": null,
+        "sample": 1,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 114,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-control-1",
+        "sample": 1,
+        "branch": "control",
+        "passed": false,
+        "reason": "Incorrect INR total: got 64199.63, expected 65999.56",
+        "is_control": true
+      }
+    },
+    {
+      "id": 115,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.403,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 116,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.019,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 117,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 118,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.617,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 119,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.029,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 120,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.438,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 121,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.739,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 122,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.056,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 123,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.56,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 124,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.863,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 125,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.018,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 126,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.439,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 127,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 128,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.229,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 129,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 130,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 131,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.561,
+        "tokens": 732,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 132,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 133,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 134,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.537,
+        "tokens": 747,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 135,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 136,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 137,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.02,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 138,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 139,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 140,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.073,
+        "tokens": null,
+        "sample": 2,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 141,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-fix-2",
+        "sample": 2,
+        "branch": "fix",
+        "passed": true,
+        "reason": "All constraints and fresh-catalog total match",
+        "is_control": false
+      }
+    },
+    {
+      "id": 142,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.393,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 143,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.017,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 144,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 145,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.553,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 146,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.966,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 147,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.409,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 148,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 149,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 2.725,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 150,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.067,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 151,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.57,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 152,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.902,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 153,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.042,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 154,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.465,
+        "tokens": 0,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 155,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 156,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 157,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.2,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 158,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 159,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 160,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.525,
+        "tokens": 732,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 161,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 162,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 163,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.507,
+        "tokens": 747,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 164,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 165,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 166,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.019,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 167,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 168,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 169,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.07,
+        "tokens": null,
+        "sample": 2,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 170,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-control-2",
+        "sample": 2,
+        "branch": "control",
+        "passed": false,
+        "reason": "Incorrect INR total: got 64199.63, expected 65999.56",
+        "is_control": true
+      }
+    },
+    {
+      "id": 171,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.389,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 172,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 173,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 174,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.606,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 175,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.968,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 176,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.38,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 177,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.675,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 178,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.026,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 179,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.568,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 180,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.884,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 181,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.05,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 182,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.472,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 183,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 184,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.24,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 185,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 186,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 187,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.548,
+        "tokens": 732,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 188,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 189,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 190,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.525,
+        "tokens": 747,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 191,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 192,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 193,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.019,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 194,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 195,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 196,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.077,
+        "tokens": null,
+        "sample": 3,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 197,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-fix-3",
+        "sample": 3,
+        "branch": "fix",
+        "passed": true,
+        "reason": "All constraints and fresh-catalog total match",
+        "is_control": false
+      }
+    },
+    {
+      "id": 198,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.394,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 199,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 200,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 201,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.609,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 202,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.007,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 203,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.4,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 204,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 205,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 2.7,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 206,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.027,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 207,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.595,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 208,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.009,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 209,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.142,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 210,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.581,
+        "tokens": 0,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 211,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 212,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 213,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.198,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 214,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 215,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 216,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.522,
+        "tokens": 732,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 217,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 218,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 219,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.498,
+        "tokens": 747,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 220,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 221,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 222,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.018,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 223,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 224,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 225,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.078,
+        "tokens": null,
+        "sample": 3,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 226,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-control-3",
+        "sample": 3,
+        "branch": "control",
+        "passed": false,
+        "reason": "Incorrect INR total: got 64199.63, expected 65999.56",
+        "is_control": true
+      }
+    },
+    {
+      "id": 227,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.407,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 228,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.018,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 229,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 230,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.555,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 231,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.961,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 232,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.375,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 233,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.68,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 234,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 3.056,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 235,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.571,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 236,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.886,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 237,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.044,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 238,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.441,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 239,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 240,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.24,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 241,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 242,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 243,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.554,
+        "tokens": 732,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 244,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 245,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 246,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.564,
+        "tokens": 747,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 247,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 248,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 249,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.019,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 250,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 251,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 252,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.07,
+        "tokens": null,
+        "sample": 4,
+        "branch": "fix"
+      }
+    },
+    {
+      "id": 253,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-fix-4",
+        "sample": 4,
+        "branch": "fix",
+        "passed": false,
+        "reason": "Incorrect INR total: got 66999.56, expected 65999.56",
+        "is_control": false
+      }
+    },
+    {
+      "id": 254,
+      "event": "step",
+      "data": {
+        "addr": "planner/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.388,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 255,
+      "event": "step",
+      "data": {
+        "addr": "planner/state#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.017,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 256,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 257,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.561,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 258,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.926,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 259,
+      "event": "step",
+      "data": {
+        "addr": "weather/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.345,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 260,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 261,
+      "event": "step",
+      "data": {
+        "addr": "fx/tool#1",
+        "phase": "done",
+        "cache_status": "edited",
+        "ms": 2.659,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 262,
+      "event": "step",
+      "data": {
+        "addr": "visa/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 2.959,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 263,
+      "event": "step",
+      "data": {
+        "addr": "flight/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.545,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 264,
+      "event": "step",
+      "data": {
+        "addr": "hotel/tool#1",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 0.843,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 265,
+      "event": "step",
+      "data": {
+        "addr": "flight/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.009,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 266,
+      "event": "step",
+      "data": {
+        "addr": "hotel/chat#2",
+        "phase": "done",
+        "cache_status": "cached",
+        "ms": 1.422,
+        "tokens": 0,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 267,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 268,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 269,
+      "event": "step",
+      "data": {
+        "addr": "budget/tool#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.201,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 270,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 271,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 272,
+      "event": "step",
+      "data": {
+        "addr": "writer/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.526,
+        "tokens": 732,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 273,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 274,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 275,
+      "event": "step",
+      "data": {
+        "addr": "verifier/chat#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.505,
+        "tokens": 747,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 276,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 277,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 278,
+      "event": "step",
+      "data": {
+        "addr": "final/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.019,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 279,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "queued",
+        "cache_status": "invalidated",
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 280,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "running",
+        "cache_status": null,
+        "ms": null,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 281,
+      "event": "step",
+      "data": {
+        "addr": "checker/state#1",
+        "phase": "done",
+        "cache_status": "live",
+        "ms": 0.067,
+        "tokens": null,
+        "sample": 4,
+        "branch": "control"
+      }
+    },
+    {
+      "id": 282,
+      "event": "outcome",
+      "data": {
+        "run_id": "fk-0004-control-4",
+        "sample": 4,
+        "branch": "control",
+        "passed": false,
+        "reason": "Incorrect INR total: got 65199.63, expected 65999.56",
+        "is_control": true
+      }
+    },
+    {
+      "id": 283,
+      "event": "summary",
+      "data": {
+        "fork_id": "fk-0004",
+        "reexecuted": 6,
+        "cached": 10,
+        "invalidated": 6,
+        "total_steps": 16,
+        "calls_reexecuted": 4,
+        "calls_cached": 9,
+        "tokens_saved": 21690,
+        "ms_saved": 167.517,
+        "fix_rate": 0.6,
+        "fix_ci": [
+          0.2307242812760128,
+          0.882379225767352
+        ],
+        "control_rate": 0.0,
+        "control_ci": [
+          0.0,
+          0.43448246478317476
+        ],
+        "k": 5,
+        "verdict": "INCONCLUSIVE",
+        "preview": false
+      }
+    }
+  ]
+}

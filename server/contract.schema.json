@@ -1,0 +1,7352 @@
+{
+  "$defs": {
+    "AblationArm": {
+      "additionalProperties": false,
+      "properties": {
+        "arm": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top1": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diff_vs_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PairedDifference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Arm minus reference on the same runs; null for the reference itself."
+        }
+      },
+      "required": [
+        "arm",
+        "label",
+        "status",
+        "reason",
+        "top1",
+        "diff_vs_reference"
+      ],
+      "title": "AblationArm",
+      "type": "object"
+    },
+    "AbstentionPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "answered_fraction": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "top1_when_answered": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "answered_fraction",
+        "top1_when_answered",
+        "n"
+      ],
+      "title": "AbstentionPoint",
+      "type": "object"
+    },
+    "AgentInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "client": {
+          "enum": [
+            "llm",
+            "deterministic_standin",
+            "imported"
+          ],
+          "type": "string"
+        },
+        "models": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "runs": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "passed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "typical_steps": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "agent_id",
+        "display_name",
+        "description",
+        "client",
+        "models",
+        "runs",
+        "passed",
+        "failed",
+        "typical_steps"
+      ],
+      "title": "AgentInfo",
+      "type": "object"
+    },
+    "AgentList": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AgentInfo"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "AgentList",
+      "type": "object"
+    },
+    "AppHealth": {
+      "additionalProperties": false,
+      "description": "GET /health. Cheap enough for a platform health check.",
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "degraded"
+          ],
+          "type": "string"
+        },
+        "api_version": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "live",
+            "recorded",
+            "offline"
+          ],
+          "type": "string"
+        },
+        "static_bundle": {
+          "description": "True when served from web/public/recorded.",
+          "type": "boolean"
+        },
+        "model_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Diagnoser artifact version, null if absent."
+        },
+        "dataset_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "counts": {
+          "$ref": "#/$defs/HealthCounts"
+        },
+        "started_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "api_version",
+        "mode",
+        "static_bundle",
+        "model_version",
+        "dataset_version",
+        "capabilities",
+        "counts",
+        "started_at",
+        "notes"
+      ],
+      "title": "AppHealth",
+      "type": "object"
+    },
+    "Calibration": {
+      "additionalProperties": false,
+      "properties": {
+        "split": {
+          "enum": [
+            "S0",
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bins": {
+          "items": {
+            "$ref": "#/$defs/ReliabilityBin"
+          },
+          "type": "array"
+        },
+        "abstention": {
+          "items": {
+            "$ref": "#/$defs/AbstentionPoint"
+          },
+          "type": "array"
+        },
+        "ece": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conformal_target": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conformal_empirical": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mean_set_size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "abstain_rate": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "split",
+        "status",
+        "reason",
+        "bins",
+        "abstention",
+        "ece",
+        "conformal_target",
+        "conformal_empirical",
+        "mean_set_size",
+        "abstain_rate"
+      ],
+      "title": "Calibration",
+      "type": "object"
+    },
+    "Capabilities": {
+      "additionalProperties": false,
+      "description": "What this deployment can do. The UI disables controls instead of letting them fail.",
+      "properties": {
+        "diagnose": {
+          "type": "boolean"
+        },
+        "fork": {
+          "description": "POST /forks accepts edits (false for the static bundle).",
+          "type": "boolean"
+        },
+        "live_calls": {
+          "description": "Replay may call a real model or tool.",
+          "type": "boolean"
+        },
+        "verify": {
+          "type": "boolean"
+        },
+        "export_test": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "boolean"
+        },
+        "ingest_otlp": {
+          "type": "boolean"
+        },
+        "eval": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "diagnose",
+        "fork",
+        "live_calls",
+        "verify",
+        "export_test",
+        "label",
+        "ingest_otlp",
+        "eval"
+      ],
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "Citation": {
+      "additionalProperties": false,
+      "description": "A pointer to evidence. `json_pointer` is relative to the step document.\n\nThe step document is `{input, output, reasoning, state_before, state_after}` of\n`StepDetail`. Edges recorded by the SDK use the shorthand `/state/<key>`, which means\n`state_after` on the producing side and `state_before` on the consuming side.",
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "json_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "json_pointer"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "ConsumerHop": {
+      "additionalProperties": false,
+      "description": "An edge on the forward path from the clicked value; `depth` 1 is a direct consumer.",
+      "properties": {
+        "src_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "src_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dst_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "dst_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "state",
+            "message",
+            "inferred"
+          ],
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "depth": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "src_addr",
+        "src_pointer",
+        "dst_addr",
+        "dst_pointer",
+        "kind",
+        "key",
+        "version",
+        "value_hash",
+        "depth"
+      ],
+      "title": "ConsumerHop",
+      "type": "object"
+    },
+    "Cost": {
+      "additionalProperties": false,
+      "description": "Token and money cost of one run. `usd` is null when the model has no known price.",
+      "properties": {
+        "llm_calls": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tokens_in": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tokens_out": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tokens_cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "llm_calls",
+        "tokens_in",
+        "tokens_out",
+        "tokens_cached",
+        "usd"
+      ],
+      "title": "Cost",
+      "type": "object"
+    },
+    "CrashReport": {
+      "additionalProperties": false,
+      "description": "Structured crash report; the Markdown export is rendered from the same content.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "synopsis": {
+          "type": "string"
+        },
+        "sequence_of_events": {
+          "items": {
+            "$ref": "#/$defs/ReportEvent"
+          },
+          "type": "array"
+        },
+        "probable_cause": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportClaim"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributing_factors": {
+          "items": {
+            "$ref": "#/$defs/ReportClaim"
+          },
+          "type": "array"
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/ReportClaim"
+          },
+          "type": "array"
+        },
+        "recommended_fix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportClaim"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportClaim"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fixture": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "title",
+        "generated_at",
+        "synopsis",
+        "sequence_of_events",
+        "probable_cause",
+        "contributing_factors",
+        "findings",
+        "recommended_fix",
+        "verification",
+        "fixture"
+      ],
+      "title": "CrashReport",
+      "type": "object"
+    },
+    "DamageNode": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "tool",
+            "retrieval",
+            "state",
+            "value"
+          ],
+          "type": "string"
+        },
+        "tag": {
+          "enum": [
+            "root",
+            "symptom",
+            "unaffected"
+          ],
+          "type": "string"
+        },
+        "is_visible_failure": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "addr",
+        "name",
+        "kind",
+        "tag",
+        "is_visible_failure"
+      ],
+      "title": "DamageNode",
+      "type": "object"
+    },
+    "DamagePath": {
+      "additionalProperties": false,
+      "description": "The suspect's forward cone. Every step appears once, tagged root/symptom/unaffected.",
+      "properties": {
+        "root_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/DamageNode"
+          },
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "type": "array"
+        },
+        "reaches_final_answer": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "root_addr",
+        "nodes",
+        "edges",
+        "reaches_final_answer"
+      ],
+      "title": "DamagePath",
+      "type": "object"
+    },
+    "DatasetCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "base_runs": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "injected_forks": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "accepted_failures": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "natural_failures": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "human_labelled": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "runs_per_split": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "failures_per_family": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "base_runs",
+        "injected_forks",
+        "accepted_failures",
+        "natural_failures",
+        "human_labelled",
+        "runs_per_split",
+        "failures_per_family"
+      ],
+      "title": "DatasetCounts",
+      "type": "object"
+    },
+    "DatasetInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "description": "Hash of the frozen dataset (data/DATASET_VERSION).",
+          "type": "string"
+        },
+        "frozen_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "held_out_fault_codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "counts": {
+          "$ref": "#/$defs/DatasetCounts"
+        }
+      },
+      "required": [
+        "version",
+        "frozen_at",
+        "agents",
+        "held_out_fault_codes",
+        "counts"
+      ],
+      "title": "DatasetInfo",
+      "type": "object"
+    },
+    "DetectorMetrics": {
+      "additionalProperties": false,
+      "description": "Run-level failure detector: powers the risk column in the Runs table.",
+      "properties": {
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "split": {
+          "anyOf": [
+            {
+              "enum": [
+                "S0",
+                "S1",
+                "S3",
+                "S4",
+                "S5"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_runs": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "n_failed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "auroc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accuracy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "reason",
+        "split",
+        "n_runs",
+        "n_failed",
+        "auroc",
+        "accuracy"
+      ],
+      "title": "DetectorMetrics",
+      "type": "object"
+    },
+    "Diagnosis": {
+      "additionalProperties": false,
+      "description": "GET /runs/{id}/diagnosis: ranked suspects, evidence, proof, and an honest abstain path.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "computed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "fixture": {
+          "description": "True for hand-authored illustrative content.",
+          "type": "boolean"
+        },
+        "ranking": {
+          "description": "Every step, most suspect first.",
+          "items": {
+            "$ref": "#/$defs/Suspect"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "conformal_set": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "coverage_target": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "abstain": {
+          "type": "boolean"
+        },
+        "abstain_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "margin_too_small",
+                "set_too_large",
+                "no_signal",
+                "model_unavailable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "abstain_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Headline shown instead of a culprit."
+        },
+        "visible_failure_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the failure showed up. Not necessarily the responsible step."
+        },
+        "responsible_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Top suspect; null when abstaining."
+        },
+        "reasons": {
+          "items": {
+            "$ref": "#/$defs/Reason"
+          },
+          "type": "array"
+        },
+        "rule_evidence": {
+          "items": {
+            "$ref": "#/$defs/RuleViolation"
+          },
+          "type": "array"
+        },
+        "damage_path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DamagePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "precedents": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Precedents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nearest_twin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NearestTwin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposed_fixes": {
+          "items": {
+            "$ref": "#/$defs/ProposedFix"
+          },
+          "type": "array"
+        },
+        "verification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Verification"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stages": {
+          "$ref": "#/$defs/StageRail"
+        },
+        "narrative": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Narrative"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "run_id",
+        "model_version",
+        "computed_at",
+        "latency_ms",
+        "fixture",
+        "ranking",
+        "conformal_set",
+        "coverage_target",
+        "abstain",
+        "abstain_reason",
+        "abstain_message",
+        "visible_failure_addr",
+        "responsible_addr",
+        "reasons",
+        "rule_evidence",
+        "damage_path",
+        "precedents",
+        "nearest_twin",
+        "proposed_fixes",
+        "verification",
+        "stages",
+        "narrative"
+      ],
+      "title": "Diagnosis",
+      "type": "object"
+    },
+    "DiffResponse": {
+      "additionalProperties": false,
+      "description": "GET /diff?a=&b=. Rows are aligned by address, or by LCS when control flow changed.",
+      "properties": {
+        "left_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "right_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "alignment": {
+          "enum": [
+            "address",
+            "lcs"
+          ],
+          "type": "string"
+        },
+        "first_divergence": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stats": {
+          "$ref": "#/$defs/DiffStats"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/DiffRow"
+          },
+          "type": "array"
+        },
+        "state_diff": {
+          "items": {
+            "$ref": "#/$defs/StateKeyDiff"
+          },
+          "type": "array"
+        },
+        "outcome": {
+          "$ref": "#/$defs/OutcomeDiff"
+        },
+        "nearest_passing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NearestPassingLink"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "left_run_id",
+        "right_run_id",
+        "alignment",
+        "first_divergence",
+        "stats",
+        "rows",
+        "state_diff",
+        "outcome",
+        "nearest_passing"
+      ],
+      "title": "DiffResponse",
+      "type": "object"
+    },
+    "DiffRow": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "same",
+            "cached",
+            "changed",
+            "new",
+            "removed"
+          ],
+          "type": "string"
+        },
+        "in_cone": {
+          "type": "boolean"
+        },
+        "changed": {
+          "items": {
+            "enum": [
+              "input",
+              "output",
+              "state"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "left": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiffSide"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiffSide"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "status",
+        "in_cone",
+        "changed",
+        "left",
+        "right"
+      ],
+      "title": "DiffRow",
+      "type": "object"
+    },
+    "DiffSide": {
+      "additionalProperties": false,
+      "description": "One side of an aligned row. Payloads are omitted for same/cached rows.",
+      "properties": {
+        "seq": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "tool",
+            "retrieval",
+            "state",
+            "value"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "cache_status": {
+          "enum": [
+            "cached",
+            "invalidated",
+            "live",
+            "edited"
+          ],
+          "type": "string"
+        },
+        "input": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state_after_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "kind",
+        "name",
+        "cache_status",
+        "input",
+        "output",
+        "input_hash",
+        "output_hash",
+        "state_after_hash"
+      ],
+      "title": "DiffSide",
+      "type": "object"
+    },
+    "DiffStats": {
+      "additionalProperties": false,
+      "properties": {
+        "same": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "changed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "new": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "removed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "same",
+        "cached",
+        "changed",
+        "new",
+        "removed"
+      ],
+      "title": "DiffStats",
+      "type": "object"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "description": "A dependency between two steps. Pointers are relative to each step's document.",
+      "properties": {
+        "src_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "src_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dst_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "dst_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "state",
+            "message",
+            "inferred"
+          ],
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "src_addr",
+        "src_pointer",
+        "dst_addr",
+        "dst_pointer",
+        "kind",
+        "key",
+        "version",
+        "value_hash"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "ErrorBody": {
+      "additionalProperties": false,
+      "description": "Machine-readable error. `code` is stable; `message` is for people.",
+      "properties": {
+        "code": {
+          "enum": [
+            "bad_request",
+            "validation_error",
+            "not_found",
+            "conflict",
+            "live_call_refused",
+            "replay_divergence",
+            "not_verified",
+            "not_applicable",
+            "rate_limited",
+            "unavailable",
+            "unsupported",
+            "internal_error"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "maximum": 599,
+          "minimum": 400,
+          "type": "integer"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the caller can do next, when there is a next step."
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "type": "array"
+        },
+        "context": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "status",
+        "hint",
+        "issues",
+        "context",
+        "request_id"
+      ],
+      "title": "ErrorBody",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "description": "Uniform body of every non-2xx response, including the SSE `error` event's data.",
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ErrorBody"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "Estimate": {
+      "additionalProperties": false,
+      "description": "A point estimate with an optional 95% interval (bootstrap over runs unless noted).",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "ci_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ci_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "ci_low",
+        "ci_high"
+      ],
+      "title": "Estimate",
+      "type": "object"
+    },
+    "EvalResponse": {
+      "additionalProperties": false,
+      "description": "GET /eval: every table the Results page draws. Numbers always carry n and an interval.",
+      "properties": {
+        "fixture": {
+          "type": "boolean"
+        },
+        "fixture_notice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Shown prominently when fixture is true; null otherwise."
+        },
+        "generated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "dataset": {
+          "$ref": "#/$defs/DatasetInfo"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "headline": {
+          "items": {
+            "$ref": "#/$defs/HeadlineCard"
+          },
+          "type": "array"
+        },
+        "leaderboard": {
+          "items": {
+            "$ref": "#/$defs/LeaderboardRow"
+          },
+          "type": "array"
+        },
+        "generalisation": {
+          "$ref": "#/$defs/GeneralisationMatrix"
+        },
+        "feature_group_ablation": {
+          "$ref": "#/$defs/FeatureGroupAblation"
+        },
+        "recorder_ablations": {
+          "items": {
+            "$ref": "#/$defs/PairedAblation"
+          },
+          "type": "array"
+        },
+        "integrity": {
+          "items": {
+            "$ref": "#/$defs/IntegrityCheck"
+          },
+          "type": "array"
+        },
+        "calibration": {
+          "$ref": "#/$defs/Calibration"
+        },
+        "replay_savings": {
+          "$ref": "#/$defs/ReplaySavings"
+        },
+        "detector": {
+          "$ref": "#/$defs/DetectorMetrics"
+        },
+        "not_run": {
+          "items": {
+            "$ref": "#/$defs/NotRunItem"
+          },
+          "type": "array"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "fixture",
+        "fixture_notice",
+        "generated_at",
+        "dataset",
+        "model",
+        "headline",
+        "leaderboard",
+        "generalisation",
+        "feature_group_ablation",
+        "recorder_ablations",
+        "integrity",
+        "calibration",
+        "replay_savings",
+        "detector",
+        "not_run",
+        "notes"
+      ],
+      "title": "EvalResponse",
+      "type": "object"
+    },
+    "ExportTestRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "overwrite": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "title": "ExportTestRequest",
+      "type": "object"
+    },
+    "ExportTestResponse": {
+      "additionalProperties": false,
+      "description": "POST /forks/{id}/export-test. Only a VERIFIED fork can be exported.",
+      "properties": {
+        "export_id": {
+          "type": "string"
+        },
+        "fork_id": {
+          "type": "string"
+        },
+        "verdict": {
+          "const": "VERIFIED",
+          "type": "string"
+        },
+        "test_path": {
+          "type": "string"
+        },
+        "fixture_dir": {
+          "type": "string"
+        },
+        "test_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/ExportedFile"
+          },
+          "type": "array"
+        },
+        "invalidation_cone": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "run_command": {
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "export_id",
+        "fork_id",
+        "verdict",
+        "test_path",
+        "fixture_dir",
+        "test_sha256",
+        "fixture_sha256",
+        "files",
+        "invalidation_cone",
+        "run_command",
+        "created_at"
+      ],
+      "title": "ExportTestResponse",
+      "type": "object"
+    },
+    "ExportedFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "bytes": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "title": "ExportedFile",
+      "type": "object"
+    },
+    "FailureGroup": {
+      "additionalProperties": false,
+      "description": "'14 runs fail like this': failed runs sharing one failure_signature.",
+      "properties": {
+        "signature": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "top_suspect_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fault_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "example_run_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "signature",
+        "label",
+        "agent",
+        "count",
+        "top_suspect_name",
+        "fault_type",
+        "example_run_ids"
+      ],
+      "title": "FailureGroup",
+      "type": "object"
+    },
+    "FailureGroupList": {
+      "additionalProperties": false,
+      "properties": {
+        "total_failed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/FailureGroup"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "total_failed",
+        "items"
+      ],
+      "title": "FailureGroupList",
+      "type": "object"
+    },
+    "FeatureAttribution": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "group": {
+          "description": "Feature group, e.g. 'Lineage' or 'Validity'.",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contribution": {
+          "description": "Signed contribution to the suspect's score.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "group",
+        "value",
+        "contribution"
+      ],
+      "title": "FeatureAttribution",
+      "type": "object"
+    },
+    "FeatureGroupAblation": {
+      "additionalProperties": false,
+      "properties": {
+        "split": {
+          "enum": [
+            "S0",
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "type": "string"
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "full": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/FeatureGroupAblationRow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "split",
+        "n",
+        "full",
+        "rows"
+      ],
+      "title": "FeatureGroupAblation",
+      "type": "object"
+    },
+    "FeatureGroupAblationRow": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "type": "string"
+        },
+        "group_name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top1_without": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delta_vs_full": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PairedDifference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "group_id",
+        "group_name",
+        "status",
+        "reason",
+        "top1_without",
+        "delta_vs_full"
+      ],
+      "title": "FeatureGroupAblationRow",
+      "type": "object"
+    },
+    "FeatureGroupInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "n_features": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "n_features",
+        "enabled"
+      ],
+      "title": "FeatureGroupInfo",
+      "type": "object"
+    },
+    "ForkCreated": {
+      "additionalProperties": false,
+      "description": "202 response of POST /forks.",
+      "properties": {
+        "fork_id": {
+          "type": "string"
+        },
+        "base_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "branch_name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "complete",
+            "error"
+          ],
+          "type": "string"
+        },
+        "stream_url": {
+          "type": "string"
+        },
+        "prediction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReplayPrediction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fork_id",
+        "base_run_id",
+        "branch_name",
+        "status",
+        "stream_url",
+        "prediction",
+        "created_at"
+      ],
+      "title": "ForkCreated",
+      "type": "object"
+    },
+    "ForkEdit": {
+      "additionalProperties": false,
+      "description": "One change applied to one step of the base run.\n\n`value` by kind: `override_output` and `patch_tool_result` take the replacement\npayload; `patch_tool_args` an object merged into the tool arguments; `patch_prompt` a\nstring appended to the system prompt or an object merged into the chat request;\n`swap_model` the model id.",
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "override_output",
+            "patch_tool_args",
+            "patch_prompt",
+            "swap_model",
+            "patch_tool_result"
+          ],
+          "type": "string"
+        },
+        "value": {},
+        "known_good": {
+          "default": false,
+          "description": "The value is an oracle or nearest-passing-twin value, which enables REFUTED.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "addr",
+        "kind",
+        "value"
+      ],
+      "title": "ForkEdit",
+      "type": "object"
+    },
+    "ForkRequest": {
+      "additionalProperties": false,
+      "description": "POST /forks and POST /replay/predict.\n\n`edits` non-empty: *Fork with edit*. `edits` empty: *Re-run unchanged*, which resamples\nthe cone of `resample_from` with no edit and is the paired control on its own.",
+      "properties": {
+        "base_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "edits": {
+          "items": {
+            "$ref": "#/$defs/ForkEdit"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "resample_from": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Required when edits is empty; forbidden otherwise."
+        },
+        "mode": {
+          "default": "cone",
+          "enum": [
+            "cone",
+            "prefix",
+            "full"
+          ],
+          "type": "string"
+        },
+        "samples": {
+          "default": 5,
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "control": {
+          "default": true,
+          "description": "Run K unchanged samples with identical seeds. Without it the result is a preview and is never VERIFIED.",
+          "type": "boolean"
+        },
+        "hypothesis": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "branch_name": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "base_run_id"
+      ],
+      "title": "ForkRequest",
+      "type": "object"
+    },
+    "ForkRunRef": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "sample": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "branch": {
+          "enum": [
+            "fix",
+            "control"
+          ],
+          "type": "string"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "run_id",
+        "sample",
+        "branch",
+        "passed",
+        "score",
+        "reason"
+      ],
+      "title": "ForkRunRef",
+      "type": "object"
+    },
+    "ForkStreamRecording": {
+      "additionalProperties": false,
+      "description": "A recorded SSE transcript, used by the UI as a mock stream. Not an API response.",
+      "properties": {
+        "fork_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "engine_recording",
+            "engine_recording_noisy_standin"
+          ],
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "error": "#/$defs/StreamErrorEvent",
+                "outcome": "#/$defs/OutcomeEvent",
+                "step": "#/$defs/StepEvent",
+                "summary": "#/$defs/SummaryEvent"
+              },
+              "propertyName": "event"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/StepEvent"
+              },
+              {
+                "$ref": "#/$defs/OutcomeEvent"
+              },
+              {
+                "$ref": "#/$defs/SummaryEvent"
+              },
+              {
+                "$ref": "#/$defs/StreamErrorEvent"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "fork_id",
+        "description",
+        "provenance",
+        "events"
+      ],
+      "title": "ForkStreamRecording",
+      "type": "object"
+    },
+    "ForkSummary": {
+      "additionalProperties": false,
+      "description": "GET /forks/{id}: an immutable named branch with its paired result.",
+      "properties": {
+        "fork_id": {
+          "type": "string"
+        },
+        "base_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "branch_name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "complete",
+            "error"
+          ],
+          "type": "string"
+        },
+        "hypothesis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edits": {
+          "items": {
+            "$ref": "#/$defs/ForkEdit"
+          },
+          "type": "array"
+        },
+        "mode": {
+          "enum": [
+            "cone",
+            "prefix",
+            "full"
+          ],
+          "type": "string"
+        },
+        "samples": {
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "control": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "savings": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Savings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "VERIFIED",
+                "REFUTED",
+                "INCONCLUSIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preview": {
+          "type": "boolean"
+        },
+        "replay_fidelity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Share of pre-edit steps whose replayed state hash matched the recording."
+        },
+        "edited_runs": {
+          "items": {
+            "$ref": "#/$defs/ForkRunRef"
+          },
+          "type": "array"
+        },
+        "control_runs": {
+          "items": {
+            "$ref": "#/$defs/ForkRunRef"
+          },
+          "type": "array"
+        },
+        "export_available": {
+          "description": "True only for a VERIFIED fork.",
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorBody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fork_id",
+        "base_run_id",
+        "branch_name",
+        "status",
+        "hypothesis",
+        "edits",
+        "mode",
+        "samples",
+        "control",
+        "created_at",
+        "completed_at",
+        "savings",
+        "fix",
+        "control_result",
+        "verdict",
+        "preview",
+        "replay_fidelity",
+        "edited_runs",
+        "control_runs",
+        "export_available",
+        "error"
+      ],
+      "title": "ForkSummary",
+      "type": "object"
+    },
+    "ForkTimeline": {
+      "additionalProperties": false,
+      "description": "GET /runs/{id}/forks.",
+      "properties": {
+        "base_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/TimelineEntry"
+          },
+          "type": "array"
+        },
+        "forks": {
+          "items": {
+            "$ref": "#/$defs/ForkSummary"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "base_run_id",
+        "entries",
+        "forks"
+      ],
+      "title": "ForkTimeline",
+      "type": "object"
+    },
+    "GeneralisationMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "const": "top1",
+          "type": "string"
+        },
+        "methods": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "splits": {
+          "items": {
+            "enum": [
+              "S0",
+              "S1",
+              "S3",
+              "S4",
+              "S5"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/MatrixCell"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "metric",
+        "methods",
+        "splits",
+        "cells"
+      ],
+      "title": "GeneralisationMatrix",
+      "type": "object"
+    },
+    "HeadlineCard": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "enum": [
+            "fraction",
+            "ms",
+            "count"
+          ],
+          "type": "string"
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comparator_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comparator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tooltip": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "status",
+        "reason",
+        "value",
+        "unit",
+        "n",
+        "comparator_name",
+        "comparator",
+        "tooltip"
+      ],
+      "title": "HeadlineCard",
+      "type": "object"
+    },
+    "HealthCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "forks": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "labels": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "runs",
+        "steps",
+        "forks",
+        "labels"
+      ],
+      "title": "HealthCounts",
+      "type": "object"
+    },
+    "IntegrityCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "artifact_audit",
+            "shuffled_labels",
+            "human_agreement"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "passes": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "status",
+        "reason",
+        "value",
+        "threshold",
+        "passes",
+        "n",
+        "detail"
+      ],
+      "title": "IntegrityCheck",
+      "type": "object"
+    },
+    "KappaStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "kappa": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": -1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "description": "Runs labelled by at least two annotators.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "annotators": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kappa",
+        "n",
+        "annotators"
+      ],
+      "title": "KappaStatus",
+      "type": "object"
+    },
+    "KnownGoodValue": {
+      "additionalProperties": false,
+      "properties": {
+        "citation": {
+          "$ref": "#/$defs/Citation"
+        },
+        "value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failing_value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "citation",
+        "value",
+        "failing_value"
+      ],
+      "title": "KnownGoodValue",
+      "type": "object"
+    },
+    "LabelInfo": {
+      "additionalProperties": false,
+      "description": "Ground truth for a run, when known. Hidden (null) in blind/Label mode.",
+      "properties": {
+        "source": {
+          "enum": [
+            "injected",
+            "natural_auto",
+            "human",
+            "verified"
+          ],
+          "type": "string"
+        },
+        "root_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "fault_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Fault Forge operator code such as 'T2'."
+        },
+        "fault_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fault_family": {
+          "anyOf": [
+            {
+              "enum": [
+                "tool",
+                "retrieval",
+                "decision",
+                "coordination"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "held_out": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "True for fault types never seen in training."
+        },
+        "recovered": {
+          "description": "The agent recovered, so the run still passed.",
+          "type": "boolean"
+        },
+        "manifest_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "First step whose behaviour changed."
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "enum": [
+                "high",
+                "low"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "root_addr",
+        "fault_code",
+        "fault_type",
+        "fault_family",
+        "held_out",
+        "recovered",
+        "manifest_addr",
+        "verified",
+        "confidence"
+      ],
+      "title": "LabelInfo",
+      "type": "object"
+    },
+    "LabelProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "labelled": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "target": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "remaining": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "labelled",
+        "target",
+        "remaining"
+      ],
+      "title": "LabelProgress",
+      "type": "object"
+    },
+    "LabelQueue": {
+      "additionalProperties": false,
+      "properties": {
+        "progress": {
+          "$ref": "#/$defs/LabelProgress"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/LabelTask"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "progress",
+        "items"
+      ],
+      "title": "LabelQueue",
+      "type": "object"
+    },
+    "LabelRequest": {
+      "additionalProperties": false,
+      "description": "POST /labels. `root_addr` null means the annotator found no responsible step.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "annotator": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "root_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "certainty": {
+          "default": "sure",
+          "enum": [
+            "sure",
+            "unsure"
+          ],
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "run_id",
+        "annotator",
+        "root_addr"
+      ],
+      "title": "LabelRequest",
+      "type": "object"
+    },
+    "LabelResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "label_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "annotator": {
+          "type": "string"
+        },
+        "root_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "progress": {
+          "$ref": "#/$defs/LabelProgress"
+        },
+        "agreement": {
+          "$ref": "#/$defs/KappaStatus"
+        }
+      },
+      "required": [
+        "label_id",
+        "run_id",
+        "annotator",
+        "root_addr",
+        "created_at",
+        "progress",
+        "agreement"
+      ],
+      "title": "LabelResponse",
+      "type": "object"
+    },
+    "LabelTask": {
+      "additionalProperties": false,
+      "description": "A failed run shown with the model's guess and the ground truth hidden.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "task": {
+          "type": "string"
+        },
+        "checker_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "labelled_by_you": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "agent",
+        "task",
+        "checker_reason",
+        "steps",
+        "labelled_by_you"
+      ],
+      "title": "LabelTask",
+      "type": "object"
+    },
+    "LeaderboardRow": {
+      "additionalProperties": false,
+      "description": "One method on one split. Not-run and literature rows are explicit, never blank.",
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "method_kind": {
+          "enum": [
+            "ranker",
+            "baseline",
+            "llm_judge",
+            "literature"
+          ],
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "S0",
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reported_literature": {
+          "description": "A published number that this repository did not reproduce.",
+          "type": "boolean"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top1": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top3": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "within1": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mrr": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latency_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "method",
+        "method_kind",
+        "split",
+        "status",
+        "reason",
+        "reported_literature",
+        "source",
+        "n",
+        "top1",
+        "top3",
+        "within1",
+        "mrr",
+        "latency_ms"
+      ],
+      "title": "LeaderboardRow",
+      "type": "object"
+    },
+    "MatrixCell": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "S0",
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "method",
+        "split",
+        "value",
+        "n",
+        "status",
+        "reason"
+      ],
+      "title": "MatrixCell",
+      "type": "object"
+    },
+    "ModeSavings": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "cone",
+            "prefix",
+            "full"
+          ],
+          "type": "string"
+        },
+        "mean_steps_reexecuted": {
+          "type": "number"
+        },
+        "mean_fraction_reexecuted": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "n": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mode",
+        "mean_steps_reexecuted",
+        "mean_fraction_reexecuted",
+        "n"
+      ],
+      "title": "ModeSavings",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "model_version": {
+          "type": "string"
+        },
+        "backend": {
+          "enum": [
+            "lightgbm",
+            "sklearn-hgb"
+          ],
+          "type": "string"
+        },
+        "trained_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_features": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "feature_groups": {
+          "items": {
+            "$ref": "#/$defs/FeatureGroupInfo"
+          },
+          "type": "array"
+        },
+        "temperature": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conformal_coverage": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trained_on_runs": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model_version",
+        "backend",
+        "trained_at",
+        "n_features",
+        "feature_groups",
+        "temperature",
+        "conformal_coverage",
+        "trained_on_runs"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "Narrative": {
+      "additionalProperties": false,
+      "description": "Optional incident-style summary. Every claim cites an address that exists.",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/NarrativeClaim"
+          },
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "template",
+            "llm"
+          ],
+          "type": "string"
+        },
+        "validated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "summary",
+        "claims",
+        "source",
+        "validated"
+      ],
+      "title": "Narrative",
+      "type": "object"
+    },
+    "NarrativeClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "cites": {
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "cites"
+      ],
+      "title": "NarrativeClaim",
+      "type": "object"
+    },
+    "NearestPassingLink": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "similarity": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "similarity",
+        "reason"
+      ],
+      "title": "NearestPassingLink",
+      "type": "object"
+    },
+    "NearestTwin": {
+      "additionalProperties": false,
+      "description": "The nearest passing run of the same task or agent: a source of known-good values.",
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/RunSummary"
+        },
+        "similarity": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "same_task": {
+          "type": "boolean"
+        },
+        "basis": {
+          "items": {
+            "enum": [
+              "agent",
+              "task_embedding",
+              "graph_shape"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "known_good_values": {
+          "items": {
+            "$ref": "#/$defs/KnownGoodValue"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "run",
+        "similarity",
+        "same_task",
+        "basis",
+        "known_good_values"
+      ],
+      "title": "NearestTwin",
+      "type": "object"
+    },
+    "NotRunItem": {
+      "additionalProperties": false,
+      "properties": {
+        "section": {
+          "type": "string"
+        },
+        "item": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "section",
+        "item",
+        "reason"
+      ],
+      "title": "NotRunItem",
+      "type": "object"
+    },
+    "OtlpIngestAck": {
+      "additionalProperties": false,
+      "description": "The OTLP ExportTraceServiceResponse plus what Black Box built from the spans.",
+      "properties": {
+        "partialSuccess": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OtlpPartialSuccess"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accepted_spans": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "runs": {
+          "items": {
+            "$ref": "#/$defs/OtlpRunRef"
+          },
+          "type": "array"
+        },
+        "replayable": {
+          "description": "Always false: imported traces cannot be replayed.",
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "partialSuccess",
+        "accepted_spans",
+        "runs",
+        "replayable",
+        "note"
+      ],
+      "title": "OtlpIngestAck",
+      "type": "object"
+    },
+    "OtlpPartialSuccess": {
+      "additionalProperties": false,
+      "description": "OTLP/HTTP wire names (camelCase), so stock exporters accept the response.",
+      "properties": {
+        "rejectedSpans": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "errorMessage": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rejectedSpans",
+        "errorMessage"
+      ],
+      "title": "OtlpPartialSuccess",
+      "type": "object"
+    },
+    "OtlpRunRef": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "spans": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "spans"
+      ],
+      "title": "OtlpRunRef",
+      "type": "object"
+    },
+    "OutcomeBrief": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "running"
+          ],
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "score",
+        "reason"
+      ],
+      "title": "OutcomeBrief",
+      "type": "object"
+    },
+    "OutcomeDiff": {
+      "additionalProperties": false,
+      "properties": {
+        "left": {
+          "$ref": "#/$defs/OutcomeBrief"
+        },
+        "right": {
+          "$ref": "#/$defs/OutcomeBrief"
+        },
+        "flipped": {
+          "type": "boolean"
+        },
+        "direction": {
+          "enum": [
+            "fail_to_pass",
+            "pass_to_fail",
+            "unchanged"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "left",
+        "right",
+        "flipped",
+        "direction"
+      ],
+      "title": "OutcomeDiff",
+      "type": "object"
+    },
+    "OutcomeEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "event": {
+          "const": "outcome",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/OutcomeEventData"
+        }
+      },
+      "required": [
+        "id",
+        "event",
+        "data"
+      ],
+      "title": "OutcomeEvent",
+      "type": "object"
+    },
+    "OutcomeEventData": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "branch": {
+          "enum": [
+            "fix",
+            "control"
+          ],
+          "type": "string"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_control": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "sample",
+        "branch",
+        "passed",
+        "reason",
+        "is_control"
+      ],
+      "title": "OutcomeEventData",
+      "type": "object"
+    },
+    "PairedAblation": {
+      "additionalProperties": false,
+      "description": "A recorder-value ablation. Reported even when the full record does not win.",
+      "properties": {
+        "id": {
+          "enum": [
+            "provenance_edges",
+            "telemetry_sufficiency"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "S0",
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "type": "string"
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_arm": {
+          "type": "string"
+        },
+        "arms": {
+          "items": {
+            "$ref": "#/$defs/AblationArm"
+          },
+          "type": "array"
+        },
+        "interpretation": {
+          "anyOf": [
+            {
+              "enum": [
+                "reference_wins",
+                "no_significant_difference",
+                "reference_loses"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "split",
+        "n",
+        "reference_arm",
+        "arms",
+        "interpretation"
+      ],
+      "title": "PairedAblation",
+      "type": "object"
+    },
+    "PairedDifference": {
+      "additionalProperties": false,
+      "description": "Paired bootstrap difference (arm minus reference) over the same runs.",
+      "properties": {
+        "delta": {
+          "type": "number"
+        },
+        "ci_low": {
+          "type": "number"
+        },
+        "ci_high": {
+          "type": "number"
+        },
+        "n": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "n_boot": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "excludes_zero": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "delta",
+        "ci_low",
+        "ci_high",
+        "n",
+        "n_boot",
+        "excludes_zero"
+      ],
+      "title": "PairedDifference",
+      "type": "object"
+    },
+    "PassRate": {
+      "additionalProperties": false,
+      "description": "k of n passes with the Wilson 95% interval. The interval is checked, not trusted.",
+      "properties": {
+        "passed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "ci_low": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "ci_high": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "passed",
+        "total",
+        "rate",
+        "ci_low",
+        "ci_high"
+      ],
+      "title": "PassRate",
+      "type": "object"
+    },
+    "PrecedentCase": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "root_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "fault_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "similarity": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "fix_worked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label_source": {
+          "enum": [
+            "injected",
+            "natural_auto",
+            "human",
+            "verified"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "root_addr",
+        "fault_type",
+        "similarity",
+        "fix_worked",
+        "label_source"
+      ],
+      "title": "PrecedentCase",
+      "type": "object"
+    },
+    "Precedents": {
+      "additionalProperties": false,
+      "description": "'Looks like 9 of 12 past stale-data failures; fresh=true fixed 7 of them.'",
+      "properties": {
+        "fault_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "neighbours": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "same_fault": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fix_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix_tried": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fix_worked": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "cases": {
+          "items": {
+            "$ref": "#/$defs/PrecedentCase"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "fault_type",
+        "neighbours",
+        "same_fault",
+        "fix_summary",
+        "fix_tried",
+        "fix_worked",
+        "summary",
+        "cases"
+      ],
+      "title": "Precedents",
+      "type": "object"
+    },
+    "ProducerCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "json_pointer": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "pattern": "^(/([^/~]|~[01])*)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edge_kind": {
+          "enum": [
+            "state",
+            "message",
+            "inferred"
+          ],
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "name",
+        "json_pointer",
+        "edge_kind",
+        "key",
+        "version",
+        "value_hash"
+      ],
+      "title": "ProducerCandidate",
+      "type": "object"
+    },
+    "ProposedFix": {
+      "additionalProperties": false,
+      "description": "The *Propose* stage: a fix the Fork drawer is pre-filled with.",
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "edit": {
+          "$ref": "#/$defs/ForkEdit"
+        },
+        "source": {
+          "enum": [
+            "schema_rule",
+            "oracle",
+            "nearest_twin",
+            "precedent",
+            "llm",
+            "manual"
+          ],
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "edit",
+        "source",
+        "rationale",
+        "confidence"
+      ],
+      "title": "ProposedFix",
+      "type": "object"
+    },
+    "Reason": {
+      "additionalProperties": false,
+      "description": "One plain-language reason the model scored the suspect high.",
+      "properties": {
+        "suspect_addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "citation": {
+          "$ref": "#/$defs/Citation"
+        },
+        "feature": {
+          "$ref": "#/$defs/FeatureAttribution"
+        }
+      },
+      "required": [
+        "suspect_addr",
+        "text",
+        "citation",
+        "feature"
+      ],
+      "title": "Reason",
+      "type": "object"
+    },
+    "ReliabilityBin": {
+      "additionalProperties": false,
+      "properties": {
+        "lo": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "hi": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "n": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "mean_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accuracy": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "lo",
+        "hi",
+        "n",
+        "mean_confidence",
+        "accuracy"
+      ],
+      "title": "ReliabilityBin",
+      "type": "object"
+    },
+    "ReplayPrediction": {
+      "additionalProperties": false,
+      "description": "POST /replay/predict: what a fork will cost, before running it.\n\n`expected` is the static dependency cone: edited steps are `edited`, their transitive\nconsumers `invalidated`, everything else `cached`. Early cutoff can only shrink it.",
+      "properties": {
+        "base_run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "cone",
+            "prefix",
+            "full"
+          ],
+          "type": "string"
+        },
+        "samples": {
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "total_steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reexecute_steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_calls": {
+          "description": "LLM/tool/value calls in the base run.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reexecute_calls": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "per_step": {
+          "items": {
+            "$ref": "#/$defs/StepPrediction"
+          },
+          "type": "array"
+        },
+        "estimated_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "estimated_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upper_bound": {
+          "type": "boolean"
+        },
+        "summary": {
+          "description": "'Will re-run 4 of 13 calls (6 of 16 steps), about 12 ms.'",
+          "type": "string"
+        },
+        "blocked": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorBody"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why this fork would be refused in the current mode, or null."
+        }
+      },
+      "required": [
+        "base_run_id",
+        "mode",
+        "samples",
+        "total_steps",
+        "reexecute_steps",
+        "total_calls",
+        "reexecute_calls",
+        "per_step",
+        "estimated_ms",
+        "estimated_tokens",
+        "upper_bound",
+        "summary",
+        "blocked"
+      ],
+      "title": "ReplayPrediction",
+      "type": "object"
+    },
+    "ReplaySavings": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "ran",
+            "not_run"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_forks": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "by_mode": {
+          "items": {
+            "$ref": "#/$defs/ModeSavings"
+          },
+          "type": "array"
+        },
+        "calls_saved_fraction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tokens_saved": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ms_saved": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "verifier": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VerifierStats"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "reason",
+        "n_forks",
+        "by_mode",
+        "calls_saved_fraction",
+        "tokens_saved",
+        "ms_saved",
+        "verifier"
+      ],
+      "title": "ReplaySavings",
+      "type": "object"
+    },
+    "ReportClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "cites": {
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "cites"
+      ],
+      "title": "ReportClaim",
+      "type": "object"
+    },
+    "ReportEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "enum": [
+                "root",
+                "symptom",
+                "unaffected"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "addr",
+        "text",
+        "tag"
+      ],
+      "title": "ReportEvent",
+      "type": "object"
+    },
+    "RuleViolation": {
+      "additionalProperties": false,
+      "description": "A deterministic schema or protocol rule that failed. Evidence, not model prose.",
+      "properties": {
+        "rule": {
+          "enum": [
+            "empty_query",
+            "empty_result",
+            "swallowed_error",
+            "repeated_call",
+            "schema_invalid",
+            "non_finite_or_out_of_range",
+            "unit_token_mismatch",
+            "stale_as_of",
+            "error_status_in_output",
+            "other"
+          ],
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "citation": {
+          "$ref": "#/$defs/Citation"
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule",
+        "severity",
+        "message",
+        "citation",
+        "evidence"
+      ],
+      "title": "RuleViolation",
+      "type": "object"
+    },
+    "RunDetail": {
+      "additionalProperties": false,
+      "description": "GET /runs/{id}: the run, every step with payloads, and every provenance edge.",
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/RunSummary"
+        },
+        "task_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Full task statement given to the agent."
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/StepDetail"
+          },
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "type": "array"
+        },
+        "final_answer": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "run",
+        "task_text",
+        "steps",
+        "edges",
+        "final_answer"
+      ],
+      "title": "RunDetail",
+      "type": "object"
+    },
+    "RunFacets": {
+      "additionalProperties": false,
+      "description": "Counts behind the filter chips, computed over the filtered set before paging.",
+      "properties": {
+        "agents": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "outcomes": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "origins": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "splits": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "agents",
+        "outcomes",
+        "origins",
+        "splits"
+      ],
+      "title": "RunFacets",
+      "type": "object"
+    },
+    "RunList": {
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "offset": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Offset of the next page, or null on the last page."
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RunSummary"
+          },
+          "type": "array"
+        },
+        "facets": {
+          "$ref": "#/$defs/RunFacets"
+        }
+      },
+      "required": [
+        "total",
+        "limit",
+        "offset",
+        "next_offset",
+        "items",
+        "facets"
+      ],
+      "title": "RunList",
+      "type": "object"
+    },
+    "RunListQuery": {
+      "additionalProperties": false,
+      "description": "Query parameters of GET /runs.",
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "passed",
+                "failed",
+                "running"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "enum": [
+                "natural",
+                "injected",
+                "fork",
+                "imported"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "split": {
+          "anyOf": [
+            {
+              "enum": [
+                "S0",
+                "S1",
+                "S3",
+                "S4",
+                "S5"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "label_source": {
+          "anyOf": [
+            {
+              "enum": [
+                "injected",
+                "natural_auto",
+                "human",
+                "verified"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "failure_signature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "q": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Free text over task/run id."
+        },
+        "sort": {
+          "default": "started_at",
+          "enum": [
+            "started_at",
+            "duration_ms",
+            "risk",
+            "steps"
+          ],
+          "type": "string"
+        },
+        "order": {
+          "default": "desc",
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "type": "string"
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "title": "RunListQuery",
+      "type": "object"
+    },
+    "RunSummary": {
+      "additionalProperties": false,
+      "description": "One row of the Runs table.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "running"
+          ],
+          "type": "string"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "task": {
+          "description": "One-line task summary for the table.",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "natural",
+            "injected",
+            "fork",
+            "imported"
+          ],
+          "type": "string"
+        },
+        "parent_run_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fork_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "enum": [
+            "live",
+            "recorded",
+            "offline",
+            "replay"
+          ],
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "description": "'deterministic_standin' runs come from an offline test double, not a model.",
+          "enum": [
+            "llm",
+            "deterministic_standin",
+            "imported"
+          ],
+          "type": "string"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "cost": {
+          "$ref": "#/$defs/Cost"
+        },
+        "started_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checker_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "split": {
+          "anyOf": [
+            {
+              "enum": [
+                "S0",
+                "S1",
+                "S3",
+                "S4",
+                "S5"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "risk": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Run-level failure probability from the detector."
+        },
+        "top_suspect": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SuspectBrief"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure_signature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Groups runs that fail alike: '<agent>:<suspect step name>:<reason class>'."
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LabelInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "run_id",
+        "status",
+        "agent",
+        "task_id",
+        "task",
+        "origin",
+        "parent_run_id",
+        "fork_id",
+        "mode",
+        "model",
+        "client",
+        "seed",
+        "steps",
+        "duration_ms",
+        "cost",
+        "started_at",
+        "ended_at",
+        "score",
+        "checker_reason",
+        "split",
+        "risk",
+        "top_suspect",
+        "failure_signature",
+        "label"
+      ],
+      "title": "RunSummary",
+      "type": "object"
+    },
+    "Savings": {
+      "additionalProperties": false,
+      "properties": {
+        "reexecuted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "invalidated": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "calls_reexecuted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "calls_cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tokens_saved": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ms_saved": {
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "reexecuted",
+        "cached",
+        "invalidated",
+        "total_steps",
+        "calls_reexecuted",
+        "calls_cached",
+        "tokens_saved",
+        "ms_saved"
+      ],
+      "title": "Savings",
+      "type": "object"
+    },
+    "StageRail": {
+      "additionalProperties": false,
+      "properties": {
+        "localize": {
+          "enum": [
+            "pending",
+            "active",
+            "done",
+            "abstained",
+            "blocked"
+          ],
+          "type": "string"
+        },
+        "attribute": {
+          "enum": [
+            "pending",
+            "active",
+            "done",
+            "abstained",
+            "blocked"
+          ],
+          "type": "string"
+        },
+        "propose": {
+          "enum": [
+            "pending",
+            "active",
+            "done",
+            "abstained",
+            "blocked"
+          ],
+          "type": "string"
+        },
+        "verify": {
+          "enum": [
+            "pending",
+            "active",
+            "done",
+            "abstained",
+            "blocked"
+          ],
+          "type": "string"
+        },
+        "current": {
+          "enum": [
+            "localize",
+            "attribute",
+            "propose",
+            "verify"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "localize",
+        "attribute",
+        "propose",
+        "verify",
+        "current"
+      ],
+      "title": "StageRail",
+      "type": "object"
+    },
+    "StateKeyDiff": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "unchanged",
+            "changed",
+            "added",
+            "removed"
+          ],
+          "type": "string"
+        },
+        "left": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "status",
+        "left",
+        "right",
+        "left_hash",
+        "right_hash"
+      ],
+      "title": "StateKeyDiff",
+      "type": "object"
+    },
+    "StepDetail": {
+      "additionalProperties": false,
+      "description": "Everything recorded about one step. The same shape serves list and detail views.",
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "seq": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "tool",
+            "retrieval",
+            "state",
+            "value"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "agent_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasoning": {
+          "description": "Reasoning text per call; kept as evidence only.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "state_before": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "state_after": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "reads": {
+          "description": "State keys read, as 'key@vN'.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "writes": {
+          "description": "State keys written, as 'key@vN'.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "has_call": {
+          "description": "False for pure state steps with no LLM/tool call.",
+          "type": "boolean"
+        },
+        "cache_status": {
+          "enum": [
+            "cached",
+            "invalidated",
+            "live",
+            "edited"
+          ],
+          "type": "string"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TokenUsage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retries": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StepError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rule_violations": {
+          "items": {
+            "$ref": "#/$defs/RuleViolation"
+          },
+          "type": "array"
+        },
+        "hashes": {
+          "$ref": "#/$defs/StepHashes"
+        }
+      },
+      "required": [
+        "addr",
+        "seq",
+        "kind",
+        "name",
+        "agent_role",
+        "input",
+        "output",
+        "reasoning",
+        "state_before",
+        "state_after",
+        "reads",
+        "writes",
+        "has_call",
+        "cache_status",
+        "tokens",
+        "latency_ms",
+        "finish_reason",
+        "retries",
+        "error",
+        "rule_violations",
+        "hashes"
+      ],
+      "title": "StepDetail",
+      "type": "object"
+    },
+    "StepError": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recovered": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "True when later steps ran normally; null when unknown."
+        }
+      },
+      "required": [
+        "type",
+        "message",
+        "recovered"
+      ],
+      "title": "StepError",
+      "type": "object"
+    },
+    "StepEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "event": {
+          "const": "step",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/StepEventData"
+        }
+      },
+      "required": [
+        "id",
+        "event",
+        "data"
+      ],
+      "title": "StepEvent",
+      "type": "object"
+    },
+    "StepEventData": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "phase": {
+          "enum": [
+            "queued",
+            "running",
+            "done",
+            "diverged"
+          ],
+          "type": "string"
+        },
+        "cache_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "cached",
+                "invalidated",
+                "live",
+                "edited"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null until the status is known (e.g. a queued step that is not invalidated)."
+        },
+        "ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "branch": {
+          "enum": [
+            "fix",
+            "control"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "addr",
+        "phase",
+        "cache_status",
+        "ms",
+        "tokens",
+        "sample",
+        "branch"
+      ],
+      "title": "StepEventData",
+      "type": "object"
+    },
+    "StepHashes": {
+      "additionalProperties": false,
+      "description": "Content hashes (hex SHA-256) of the stored payloads, for exact-match reasoning.",
+      "properties": {
+        "request_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasoning": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state_before": {
+          "type": "string"
+        },
+        "state_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "request_key",
+        "input",
+        "output",
+        "reasoning",
+        "state_before",
+        "state_after"
+      ],
+      "title": "StepHashes",
+      "type": "object"
+    },
+    "StepPrediction": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "expected": {
+          "enum": [
+            "cached",
+            "invalidated",
+            "live",
+            "edited"
+          ],
+          "type": "string"
+        },
+        "has_call": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "addr",
+        "expected",
+        "has_call"
+      ],
+      "title": "StepPrediction",
+      "type": "object"
+    },
+    "StreamErrorEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "event": {
+          "const": "error",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/ErrorBody"
+        }
+      },
+      "required": [
+        "id",
+        "event",
+        "data"
+      ],
+      "title": "StreamErrorEvent",
+      "type": "object"
+    },
+    "SummaryEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "event": {
+          "const": "summary",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/SummaryEventData"
+        }
+      },
+      "required": [
+        "id",
+        "event",
+        "data"
+      ],
+      "title": "SummaryEvent",
+      "type": "object"
+    },
+    "SummaryEventData": {
+      "additionalProperties": false,
+      "description": "Final tally. Step counts are per edited run; tokens and time are summed over all runs.",
+      "properties": {
+        "fork_id": {
+          "type": "string"
+        },
+        "reexecuted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "invalidated": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_steps": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "calls_reexecuted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "calls_cached": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tokens_saved": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ms_saved": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "fix_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "fix_ci": {
+          "maxItems": 2,
+          "minItems": 2,
+          "items": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        },
+        "control_rate": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control_ci": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "items": [
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "k": {
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "VERIFIED",
+                "REFUTED",
+                "INCONCLUSIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preview": {
+          "description": "True when there is no paired control.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fork_id",
+        "reexecuted",
+        "cached",
+        "invalidated",
+        "total_steps",
+        "calls_reexecuted",
+        "calls_cached",
+        "tokens_saved",
+        "ms_saved",
+        "fix_rate",
+        "fix_ci",
+        "control_rate",
+        "control_ci",
+        "k",
+        "verdict",
+        "preview"
+      ],
+      "title": "SummaryEventData",
+      "type": "object"
+    },
+    "Suspect": {
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "tool",
+            "retrieval",
+            "state",
+            "value"
+          ],
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "probability": {
+          "description": "Softmax over the run's step scores, temperature fitted.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "in_conformal_set": {
+          "type": "boolean"
+        },
+        "flags": {
+          "items": {
+            "enum": [
+              "visible_failure",
+              "error_recovered",
+              "schema_violation",
+              "first_anomaly",
+              "on_damage_path"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "rank",
+        "addr",
+        "name",
+        "kind",
+        "score",
+        "probability",
+        "in_conformal_set",
+        "flags"
+      ],
+      "title": "Suspect",
+      "type": "object"
+    },
+    "SuspectBrief": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "addr",
+        "name",
+        "probability"
+      ],
+      "title": "SuspectBrief",
+      "type": "object"
+    },
+    "TimelineEntry": {
+      "additionalProperties": false,
+      "description": "One node of the original -> control -> edited-fork timeline.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "original",
+            "control",
+            "fork"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fork_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_fork_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For a control entry: the fork it pairs with."
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "passed",
+                "failed",
+                "running"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checker_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pass_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "VERIFIED",
+                "REFUTED",
+                "INCONCLUSIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preview": {
+          "type": "boolean"
+        },
+        "savings": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Savings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edit_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "run_id",
+        "fork_id",
+        "parent_fork_id",
+        "outcome",
+        "score",
+        "checker_reason",
+        "pass_rate",
+        "verdict",
+        "preview",
+        "savings",
+        "edit_summary"
+      ],
+      "title": "TimelineEntry",
+      "type": "object"
+    },
+    "TokenUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "output": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cached": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "input",
+        "output",
+        "cached"
+      ],
+      "title": "TokenUsage",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "description": "One request-validation problem (the shape of a FastAPI 422 entry, normalised).",
+      "properties": {
+        "loc": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "loc",
+        "message",
+        "type"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    },
+    "ValueProvenance": {
+      "additionalProperties": false,
+      "description": "GET /runs/{id}/provenance. Never invents a single origin for an ambiguous value.",
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ValueRef"
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProducerCandidate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The exact origin; set only when there is exactly one candidate."
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/ProducerCandidate"
+          },
+          "type": "array"
+        },
+        "ambiguous": {
+          "type": "boolean"
+        },
+        "consumers": {
+          "items": {
+            "$ref": "#/$defs/ConsumerHop"
+          },
+          "type": "array"
+        },
+        "reaches_final_answer": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "target",
+        "producer",
+        "candidates",
+        "ambiguous",
+        "consumers",
+        "reaches_final_answer"
+      ],
+      "title": "ValueProvenance",
+      "type": "object"
+    },
+    "ValueRef": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "json_pointer": {
+          "maxLength": 1024,
+          "pattern": "^(/([^/~]|~[01])*)*$",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "json_pointer",
+        "value",
+        "value_hash"
+      ],
+      "title": "ValueRef",
+      "type": "object"
+    },
+    "Verification": {
+      "additionalProperties": false,
+      "description": "What the intervention says, kept separate from what the model suspects.",
+      "properties": {
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "VERIFIED",
+                "REFUTED",
+                "INCONCLUSIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "not_started",
+            "running",
+            "complete"
+          ],
+          "type": "string"
+        },
+        "fork_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edit_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "k": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replay_fidelity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preview": {
+          "type": "boolean"
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why this verdict, or what would resolve it."
+        }
+      },
+      "required": [
+        "verdict",
+        "status",
+        "fork_id",
+        "edit_addr",
+        "k",
+        "fix",
+        "control",
+        "replay_fidelity",
+        "preview",
+        "explanation"
+      ],
+      "title": "Verification",
+      "type": "object"
+    },
+    "VerifierStats": {
+      "additionalProperties": false,
+      "properties": {
+        "n_known_roots": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "verified": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "refuted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "inconclusive": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "n_wrong_roots": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "falsely_verified": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "n_known_roots",
+        "verified",
+        "refuted",
+        "inconclusive",
+        "n_wrong_roots",
+        "falsely_verified"
+      ],
+      "title": "VerifierStats",
+      "type": "object"
+    },
+    "VerifyCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "addr": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "complete",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "fork_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ForkEdit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edit_source": {
+          "anyOf": [
+            {
+              "enum": [
+                "schema_rule",
+                "oracle",
+                "nearest_twin",
+                "precedent",
+                "llm",
+                "manual"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PassRate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "VERIFIED",
+                "REFUTED",
+                "INCONCLUSIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "addr",
+        "status",
+        "fork_id",
+        "edit",
+        "edit_source",
+        "fix",
+        "control_result",
+        "verdict",
+        "note"
+      ],
+      "title": "VerifyCandidate",
+      "type": "object"
+    },
+    "VerifyJob": {
+      "additionalProperties": false,
+      "description": "POST /runs/{id}/verify (202) and GET /jobs/{job_id}.",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "complete",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "samples": {
+          "maximum": 10,
+          "minimum": 3,
+          "type": "integer"
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/VerifyCandidate"
+          },
+          "type": "array"
+        },
+        "best_addr": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^\\S+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Strongest VERIFIED candidate, if any."
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorBody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "job_id",
+        "run_id",
+        "status",
+        "samples",
+        "candidates",
+        "best_addr",
+        "created_at",
+        "completed_at",
+        "error"
+      ],
+      "title": "VerifyJob",
+      "type": "object"
+    },
+    "VerifyRequest": {
+      "additionalProperties": false,
+      "description": "POST /runs/{id}/verify. The verifier picks the fix for each candidate itself.",
+      "properties": {
+        "suspects": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 256,
+                "minLength": 1,
+                "pattern": "^\\S+$",
+                "type": "string"
+              },
+              "maxItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "samples": {
+          "default": 5,
+          "maximum": 10,
+          "minimum": 3,
+          "type": "integer"
+        }
+      },
+      "title": "VerifyRequest",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BlackBoxContract",
+  "x-contract-version": "1.0.0",
+  "x-enums": {
+    "AbstainReason": [
+      "margin_too_small",
+      "set_too_large",
+      "no_signal",
+      "model_unavailable"
+    ],
+    "AlignMode": [
+      "address",
+      "lcs"
+    ],
+    "Branch": [
+      "fix",
+      "control"
+    ],
+    "CacheStatus": [
+      "cached",
+      "invalidated",
+      "live",
+      "edited"
+    ],
+    "ClaimSource": [
+      "template",
+      "llm"
+    ],
+    "ClientKind": [
+      "llm",
+      "deterministic_standin",
+      "imported"
+    ],
+    "DamageTag": [
+      "root",
+      "symptom",
+      "unaffected"
+    ],
+    "DiffStatus": [
+      "same",
+      "cached",
+      "changed",
+      "new",
+      "removed"
+    ],
+    "EdgeKind": [
+      "state",
+      "message",
+      "inferred"
+    ],
+    "EditKind": [
+      "override_output",
+      "patch_tool_args",
+      "patch_prompt",
+      "swap_model",
+      "patch_tool_result"
+    ],
+    "EditSource": [
+      "schema_rule",
+      "oracle",
+      "nearest_twin",
+      "precedent",
+      "llm",
+      "manual"
+    ],
+    "ErrorCode": [
+      "bad_request",
+      "validation_error",
+      "not_found",
+      "conflict",
+      "live_call_refused",
+      "replay_divergence",
+      "not_verified",
+      "not_applicable",
+      "rate_limited",
+      "unavailable",
+      "unsupported",
+      "internal_error"
+    ],
+    "EvalStatus": [
+      "ran",
+      "not_run"
+    ],
+    "FaultFamily": [
+      "tool",
+      "retrieval",
+      "decision",
+      "coordination"
+    ],
+    "ForkStatus": [
+      "queued",
+      "running",
+      "complete",
+      "error"
+    ],
+    "JobStatus": [
+      "queued",
+      "running",
+      "complete",
+      "failed"
+    ],
+    "LabelSource": [
+      "injected",
+      "natural_auto",
+      "human",
+      "verified"
+    ],
+    "MethodKind": [
+      "ranker",
+      "baseline",
+      "llm_judge",
+      "literature"
+    ],
+    "Mode": [
+      "live",
+      "recorded",
+      "offline"
+    ],
+    "ModelBackend": [
+      "lightgbm",
+      "sklearn-hgb"
+    ],
+    "ReplayMode": [
+      "cone",
+      "prefix",
+      "full"
+    ],
+    "RunMode": [
+      "live",
+      "recorded",
+      "offline",
+      "replay"
+    ],
+    "RunOrigin": [
+      "natural",
+      "injected",
+      "fork",
+      "imported"
+    ],
+    "RunStatus": [
+      "passed",
+      "failed",
+      "running"
+    ],
+    "SchemaRule": [
+      "empty_query",
+      "empty_result",
+      "swallowed_error",
+      "repeated_call",
+      "schema_invalid",
+      "non_finite_or_out_of_range",
+      "unit_token_mismatch",
+      "stale_as_of",
+      "error_status_in_output",
+      "other"
+    ],
+    "Severity": [
+      "error",
+      "warning",
+      "info"
+    ],
+    "Split": [
+      "S0",
+      "S1",
+      "S3",
+      "S4",
+      "S5"
+    ],
+    "Stage": [
+      "localize",
+      "attribute",
+      "propose",
+      "verify"
+    ],
+    "StageState": [
+      "pending",
+      "active",
+      "done",
+      "abstained",
+      "blocked"
+    ],
+    "StateKeyStatus": [
+      "unchanged",
+      "changed",
+      "added",
+      "removed"
+    ],
+    "StepKind": [
+      "llm",
+      "tool",
+      "retrieval",
+      "state",
+      "value"
+    ],
+    "StepPhase": [
+      "queued",
+      "running",
+      "done",
+      "diverged"
+    ],
+    "SuspectFlag": [
+      "visible_failure",
+      "error_recovered",
+      "schema_violation",
+      "first_anomaly",
+      "on_damage_path"
+    ],
+    "TimelineKind": [
+      "original",
+      "control",
+      "fork"
+    ],
+    "Verdict": [
+      "VERIFIED",
+      "REFUTED",
+      "INCONCLUSIVE"
+    ]
+  },
+  "x-unions": {
+    "ForkEvent": [
+      "StepEvent",
+      "OutcomeEvent",
+      "SummaryEvent",
+      "StreamErrorEvent"
+    ]
+  },
+  "x-endpoints": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "summary": "Liveness, mode and capabilities",
+      "request": null,
+      "response": "AppHealth",
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/agents",
+      "summary": "Agents with run counts",
+      "request": null,
+      "response": "AgentList",
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/runs",
+      "summary": "Paged run list",
+      "request": "RunListQuery",
+      "response": "RunList",
+      "statuses": [
+        200,
+        422
+      ],
+      "query": [
+        "agent",
+        "outcome",
+        "origin",
+        "split",
+        "label_source",
+        "failure_signature",
+        "q",
+        "sort",
+        "order",
+        "limit",
+        "offset"
+      ],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/failure-groups",
+      "summary": "Failed runs grouped by signature",
+      "request": null,
+      "response": "FailureGroupList",
+      "statuses": [
+        200
+      ],
+      "query": [
+        "agent",
+        "split"
+      ],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}",
+      "summary": "Run detail with steps and edges",
+      "request": null,
+      "response": "RunDetail",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [
+        "blind"
+      ],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/steps/{addr}",
+      "summary": "One step with full payloads",
+      "request": null,
+      "response": "StepDetail",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/provenance",
+      "summary": "Producer candidates and consumer path of one value",
+      "request": null,
+      "response": "ValueProvenance",
+      "statuses": [
+        200,
+        404,
+        422
+      ],
+      "query": [
+        "addr",
+        "pointer"
+      ],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/diagnosis",
+      "summary": "Cached diagnosis, computed on first request",
+      "request": null,
+      "response": "Diagnosis",
+      "statuses": [
+        200,
+        404,
+        409,
+        503
+      ],
+      "query": [
+        "refresh"
+      ],
+      "extension": false
+    },
+    {
+      "method": "POST",
+      "path": "/runs/{run_id}/verify",
+      "summary": "Start the paired-replay verifier",
+      "request": "VerifyRequest",
+      "response": "VerifyJob",
+      "statuses": [
+        202,
+        404,
+        409,
+        422,
+        429
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/jobs/{job_id}",
+      "summary": "Poll a verification job",
+      "request": null,
+      "response": "VerifyJob",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "POST",
+      "path": "/replay/predict",
+      "summary": "Predict what a fork will re-run",
+      "request": "ForkRequest",
+      "response": "ReplayPrediction",
+      "statuses": [
+        200,
+        404,
+        422
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "POST",
+      "path": "/forks",
+      "summary": "Create an immutable fork and start replaying",
+      "request": "ForkRequest",
+      "response": "ForkCreated",
+      "statuses": [
+        202,
+        404,
+        409,
+        422,
+        429
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/forks/{fork_id}",
+      "summary": "One fork with its paired result",
+      "request": null,
+      "response": "ForkSummary",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/forks/{fork_id}/stream",
+      "summary": "Server-sent events of one fork",
+      "request": null,
+      "response": "text/event-stream",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/forks",
+      "summary": "Original -> control -> fork timeline",
+      "request": null,
+      "response": "ForkTimeline",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/diff",
+      "summary": "Aligned comparison of two runs",
+      "request": null,
+      "response": "DiffResponse",
+      "statuses": [
+        200,
+        404,
+        422
+      ],
+      "query": [
+        "a",
+        "b"
+      ],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/twin",
+      "summary": "Nearest passing twin",
+      "request": null,
+      "response": "NearestTwin",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/report",
+      "summary": "Structured crash report",
+      "request": null,
+      "response": "CrashReport",
+      "statuses": [
+        200,
+        404,
+        409
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "GET",
+      "path": "/runs/{run_id}/report.md",
+      "summary": "Crash report as Markdown",
+      "request": null,
+      "response": "text/markdown",
+      "statuses": [
+        200,
+        404,
+        409
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
+      "method": "POST",
+      "path": "/forks/{fork_id}/export-test",
+      "summary": "Generate an offline regression test",
+      "request": "ExportTestRequest",
+      "response": "ExportTestResponse",
+      "statuses": [
+        200,
+        404,
+        409
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/eval",
+      "summary": "Precomputed evaluation",
+      "request": null,
+      "response": "EvalResponse",
+      "statuses": [
+        200,
+        404
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "GET",
+      "path": "/labels/queue",
+      "summary": "Failed runs awaiting a human label",
+      "request": null,
+      "response": "LabelQueue",
+      "statuses": [
+        200
+      ],
+      "query": [
+        "annotator",
+        "limit"
+      ],
+      "extension": true
+    },
+    {
+      "method": "POST",
+      "path": "/labels",
+      "summary": "Record a human label",
+      "request": "LabelRequest",
+      "response": "LabelResponse",
+      "statuses": [
+        201,
+        404,
+        409,
+        422
+      ],
+      "query": [],
+      "extension": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/traces",
+      "summary": "OTLP/HTTP JSON trace ingest",
+      "request": "OTLP ExportTraceServiceRequest",
+      "response": "OtlpIngestAck",
+      "statuses": [
+        200,
+        400,
+        422
+      ],
+      "query": [],
+      "extension": false
+    }
+  ],
+  "x-exported": [
+    "ErrorResponse",
+    "ErrorBody",
+    "ValidationIssue",
+    "AppHealth",
+    "AgentList",
+    "RunListQuery",
+    "RunList",
+    "RunSummary",
+    "FailureGroupList",
+    "RunDetail",
+    "StepDetail",
+    "ValueProvenance",
+    "Diagnosis",
+    "VerifyRequest",
+    "VerifyJob",
+    "ForkRequest",
+    "ForkCreated",
+    "ReplayPrediction",
+    "ForkSummary",
+    "ForkTimeline",
+    "ForkStreamRecording",
+    "StepEvent",
+    "OutcomeEvent",
+    "SummaryEvent",
+    "StreamErrorEvent",
+    "DiffResponse",
+    "NearestTwin",
+    "CrashReport",
+    "ExportTestRequest",
+    "ExportTestResponse",
+    "LabelRequest",
+    "LabelResponse",
+    "LabelQueue",
+    "OtlpIngestAck",
+    "EvalResponse"
+  ]
+}

@@ -339,13 +339,13 @@ class EndToEndTests(unittest.TestCase):
     def test_evaluation_writes_contract_json(self):
         from blackbox.ml.evaluate import run_evaluation
         from blackbox.ml.model import DiagnoserConfig
-        from server.models import EvalResponse
+        from server.models import EvalSummary
 
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory) / "eval"
             fast = DiagnoserConfig(n_estimators=60, calibration_folds=2, early_stopping_rounds=10)
             summary = run_evaluation([self.data], out, Path(directory) / "model", base=fast)
-            EvalResponse.model_validate(
+            EvalSummary.model_validate(
                 {k: summary[k] for k in ("sample_size", "metrics", "ablations")}
             )
             for name in ("leaderboard", "ablations", "calibration", "integrity"):

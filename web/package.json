@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev",
     "check": "tsc --noEmit",
-    "build": "next build"
+    "build": "next build",
+    "contract": "node scripts/gen-contract.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -23,6 +24,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "json-schema-to-typescript": "^16.0.0",
     "typescript": "^5.9.0"
   }
 }

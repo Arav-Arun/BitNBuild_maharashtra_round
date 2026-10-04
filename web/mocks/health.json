@@ -1,0 +1,29 @@
+{
+  "status": "ok",
+  "api_version": "1.0.0",
+  "mode": "recorded",
+  "static_bundle": false,
+  "model_version": null,
+  "dataset_version": null,
+  "capabilities": {
+    "diagnose": true,
+    "fork": true,
+    "live_calls": false,
+    "verify": true,
+    "export_test": true,
+    "label": true,
+    "ingest_otlp": true,
+    "eval": true
+  },
+  "counts": {
+    "runs": 28,
+    "steps": 389,
+    "forks": 4,
+    "labels": 14
+  },
+  "started_at": "2026-10-04T09:00:00Z",
+  "notes": [
+    "Fixture response: counts describe the mock run list, not a real database.",
+    "No diagnoser is trained yet; diagnoses in the mocks are authored fixtures."
+  ]
+}

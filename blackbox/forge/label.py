@@ -50,6 +50,8 @@ class ForkResult:
     held_out: bool
     created_at: str
     confidence: str = "high"
+    # Which of several independent edits at the same step this fork is (0 for the first).
+    variant: int = 0
 
 
 class Labeler:

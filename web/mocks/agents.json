@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "agent_id": "tripcrew",
+      "display_name": "TripCrew",
+      "description": "Multi-agent trip planner over deterministic travel tools.",
+      "client": "deterministic_standin",
+      "models": [
+        "tripcrew-fixture-v1"
+      ],
+      "runs": 18,
+      "passed": 10,
+      "failed": 8,
+      "typical_steps": 16
+    },
+    {
+      "agent_id": "hoprag",
+      "display_name": "HopRAG",
+      "description": "Multi-hop retrieval QA over MuSiQue-Ans paragraphs.",
+      "client": "deterministic_standin",
+      "models": [
+        "hoprag-lexical-v1-h3"
+      ],
+      "runs": 10,
+      "passed": 3,
+      "failed": 7,
+      "typical_steps": 12
+    }
+  ]
+}

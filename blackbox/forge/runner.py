@@ -9,16 +9,26 @@ import logging
 import random as random_module
 import time
 from collections import Counter
-from dataclasses import asdict, dataclass, field
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from blackbox.forge.inject import FaultInjector
 from blackbox.forge.label import ForkLabel, ForkResult
-from blackbox.forge.operators import FaultOperator, all_operators
+from blackbox.forge.natural_label import NaturalLabel, NaturalLedger
+from blackbox.forge.operators import (
+    C4RepeatedLoop,
+    FaultOperator,
+    T4Timeout500,
+    all_operators,
+)
 
 logger = logging.getLogger(__name__)
+
+# Recoverable faults used as distractors: a timeout the agent retries, a loop it shrugs off.
+DISTRACTORS: tuple[type[FaultOperator], ...] = (T4Timeout500, C4RepeatedLoop)
 
 
 @dataclass(slots=True)
@@ -34,6 +44,8 @@ class ForgeProgress:
     per_operator: dict[str, Counter] = field(default_factory=lambda: {})
     results: list[ForkResult] = field(default_factory=list)
     started_at: float = field(default_factory=time.time)
+    # Sites where the operator had no effective edit; not attempts, so not in summary().
+    skipped: Counter = field(default_factory=Counter)
 
     def record(self, result: ForkResult) -> None:
         self.total_attempts += 1
@@ -52,6 +64,9 @@ class ForgeProgress:
     def record_error(self) -> None:
         self.total_attempts += 1
         self.errors += 1
+
+    def record_skip(self, fault_code: str) -> None:
+        self.skipped[fault_code] += 1
 
     @property
     def flaky_rate(self) -> float:
@@ -78,6 +93,25 @@ class ForgeProgress:
 
 def _result_from_json(data: dict[str, Any]) -> ForkResult:
     return ForkResult(**{**data, "label": ForkLabel(data["label"])})
+
+
+def _write_parquet(path: Path, rows: list[dict[str, Any]]) -> None:
+    """Write rows as Parquet with polars or, failing that, pandas+pyarrow; skip if neither loads."""
+    if not rows:
+        return
+    try:
+        import polars as pl
+
+        pl.DataFrame(rows).write_parquet(path)
+        return
+    except Exception as exc:
+        logger.debug("polars Parquet export unavailable: %s", exc)
+    try:
+        import pandas as pd
+
+        pd.DataFrame(rows).to_parquet(path, index=False)
+    except Exception as exc:
+        logger.debug("Parquet export skipped: %s", exc)
 
 
 class ForgeRunner:
@@ -154,7 +188,10 @@ class ForgeRunner:
             try:
                 saved = json.loads(checkpoint_path.read_text(encoding="utf-8"))
                 errors = int(saved.get("summary", {}).get("errors", 0))
-            except (json.JSONDecodeError, TypeError, ValueError):
+                self.progress.skipped.update(
+                    {code: int(count) for code, count in saved.get("skipped", {}).items()}
+                )
+            except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
                 errors = 0
             self.progress.errors += errors
             self.progress.total_attempts += errors
@@ -179,6 +216,7 @@ class ForgeRunner:
             return
         data = {
             "summary": self.progress.summary(),
+            "skipped": dict(self.progress.skipped),
             "completed_fork_ids": [r.fork_id for r in self.progress.results],
             "saved_at": datetime.now(UTC).isoformat(),
         }
@@ -308,6 +346,132 @@ class ForgeRunner:
         logger.info("Forge complete: %s", json.dumps(self.progress.summary(), indent=2))
         return self.progress
 
+    def _log_progress(self) -> None:
+        if self.progress.total_attempts % 10 == 0:
+            logger.info(
+                "Forge progress: %d attempts, %d positive, %d recovered, "
+                "%d flaky, %d unstable, %d errors (%.1fs)",
+                self.progress.total_attempts,
+                self.progress.positive,
+                self.progress.recovered,
+                self.progress.flaky,
+                self.progress.unstable,
+                self.progress.errors,
+                self.progress.elapsed,
+            )
+
+    async def _run_site(
+        self,
+        operator: FaultOperator,
+        site: tuple[str, str, int],
+        *,
+        samples: int,
+        control: bool,
+    ) -> None:
+        """Attempt one operator at one step of one base run, seeded by that site alone."""
+        code = operator.spec.code
+        run_id, addr, variant = site
+        rng = random_module.Random(f"{self.seed}:{code}:{run_id}:{addr}:{variant}")
+        distractor = rng.choice(DISTRACTORS)() if rng.random() < self.distractor_rate else None
+        async with self._semaphore:
+            try:
+                result = await self.injector.inject_site(
+                    operator,
+                    run_id,
+                    addr,
+                    rng,
+                    samples=samples,
+                    control=control,
+                    distractor_operator=distractor,
+                )
+            except Exception:
+                logger.exception("Forge error with operator %s at %s in %s", code, addr, run_id)
+                self.progress.record_error()
+            else:
+                if result is None:
+                    self.progress.record_skip(code)
+                else:
+                    result = replace(result, variant=variant)
+                    self.progress.record(result)
+                    self._append_result(result)
+            self._save_checkpoint()
+            self._log_progress()
+
+    async def run_quotas(
+        self,
+        quotas: Mapping[str, int],
+        *,
+        agent: str,
+        samples: int = 1,
+        control: bool = True,
+        max_attempts_per_operator: int | None = None,
+        variants: Mapping[str, int] | None = None,
+    ) -> ForgeProgress:
+        """Run each operator until it has ``quotas[code]`` positive forks, or runs out of sites.
+
+        Every operator walks its own seeded order of sites, never visiting one twice, so forks
+        of one operator are distinct injections. A site is a step of a base run, or, for an
+        operator listed in ``variants``, one of that many independently drawn edits at the step.
+        Attempts run in waves of exactly as many sites as the operator still lacks positives: a
+        wave can never overshoot its quota, and which sites are tried does not depend on
+        completion order, so a rebuild with the same seed yields the same forks however replays
+        interleave. Resuming counts the positives already recorded and skips the sites used.
+        """
+        registry = {operator.spec.code: operator for operator in all_operators()}
+        unknown = sorted(set(quotas) - set(registry))
+        if unknown:
+            raise ValueError(f"unknown operators in quotas: {unknown}")
+        variants = variants or {}
+
+        queues: dict[str, list[tuple[str, str, int]]] = {}
+        attempts: Counter = Counter()
+        for code in quotas:
+            sites = [
+                (run_id, addr, variant)
+                for run_id, addr in self.injector.candidate_sites(registry[code], agent)
+                for variant in range(variants.get(code, 1))
+            ]
+            random_module.Random(f"{self.seed}:{code}:order").shuffle(sites)
+            used = {
+                (result.base_run_id, result.target_addr, result.variant)
+                for result in self.progress.results
+                if result.fault_code == code
+            }
+            attempts[code] = len(used)
+            queues[code] = [site for site in sites if site not in used]
+            logger.info(
+                "Forge %s: %d sites, %d already used, quota %d",
+                code,
+                len(sites),
+                len(used),
+                quotas[code],
+            )
+
+        while True:
+            wave: list[tuple[FaultOperator, tuple[str, str, int]]] = []
+            for code, quota in quotas.items():
+                positives = self.progress.per_operator.get(code, Counter())["positive"]
+                allowance = (
+                    max_attempts_per_operator - attempts[code]
+                    if max_attempts_per_operator is not None
+                    else len(queues[code])
+                )
+                take = max(0, min(quota - positives, allowance, len(queues[code])))
+                wave.extend((registry[code], queues[code].pop(0)) for _ in range(take))
+                attempts[code] += take
+            if not wave:
+                break
+            await asyncio.gather(
+                *(
+                    self._run_site(operator, site, samples=samples, control=control)
+                    for operator, site in wave
+                )
+            )
+
+        self._save_checkpoint()
+        logger.info("Forge quotas complete: %s", json.dumps(self.progress.summary()))
+        return self.progress
+
     async def run_per_operator(
         self,
         *,
@@ -337,6 +501,10 @@ class ForgeRunner:
         logger.info("Forge per-operator complete: %s", json.dumps(self.progress.summary()))
         return self.progress
 
+    def _natural_ledger(self) -> dict[str, NaturalLabel]:
+        path = self.checkpoint_dir / "natural_labels.jsonl" if self.checkpoint_dir else None
+        return NaturalLedger(path).labels if path is not None and path.exists() else {}
+
     def freeze_dataset(self, output_dir: Path) -> str:
         """Export the dataset to Parquet and JSON, ensuring paired seeds and counts.
 
@@ -347,6 +515,7 @@ class ForgeRunner:
         output_dir.mkdir(parents=True, exist_ok=True)
         database = self.injector.recorder.database
         results_by_fork = {result.fork_id: result for result in self.progress.results}
+        natural = self._natural_ledger()
 
         # Export enriched labels
         labels = database.query("SELECT * FROM labels ORDER BY run_id")
@@ -361,6 +530,7 @@ class ForgeRunner:
             fork_id = run_row.get("fork_id") if run_row else None
             if row["source"] == "injected" and fork_id not in results_by_fork:
                 continue
+            attribution = natural.get(run_id) if row["source"] == "natural_auto" else None
             base_run_id = None
             seed_id = None
             repro_count = 1
@@ -383,6 +553,12 @@ class ForgeRunner:
                         ctrl_rate = fork_row.get("control_pass_rate")
                 if not base_run_id:
                     base_run_id = run_row.get("parent_run_id")
+
+            if attribution is not None:
+                # A natural label is the verdict of one paired replay at K=samples.
+                repro_count = ctrl_count = attribution.samples or 1
+                fix_rate = attribution.fix_pass_rate
+                ctrl_rate = attribution.control_pass_rate
 
             result = results_by_fork.get(fork_id) if fork_id else None
             if result is not None:
@@ -423,18 +599,11 @@ class ForgeRunner:
             encoding="utf-8",
         )
 
-        # Export Parquet if polars or pyarrow is available
-        try:
-            import polars as pl
-
-            if enriched_labels:
-                pl.DataFrame(enriched_labels).write_parquet(output_dir / "labels.parquet")
-            if results_data:
-                pl.DataFrame(
-                    [{**row, "label": str(row["label"].value)} for row in results_data]
-                ).write_parquet(output_dir / "forge_results.parquet")
-        except Exception as exc:
-            logger.debug("Parquet export skipped: %s", exc)
+        _write_parquet(output_dir / "labels.parquet", enriched_labels)
+        _write_parquet(
+            output_dir / "forge_results.parquet",
+            [{**row, "label": row["label"].value} for row in results_data],
+        )
 
         # Compute dataset version hash
         combined = json.dumps(

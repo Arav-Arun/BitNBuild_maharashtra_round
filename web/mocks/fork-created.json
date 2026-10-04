@@ -1,0 +1,104 @@
+{
+  "fork_id": "fk-0001",
+  "base_run_id": "tc-0001",
+  "branch_name": "fresh-fx",
+  "status": "queued",
+  "stream_url": "/forks/fk-0001/stream",
+  "prediction": {
+    "base_run_id": "tc-0001",
+    "mode": "cone",
+    "samples": 5,
+    "total_steps": 16,
+    "reexecute_steps": 6,
+    "total_calls": 13,
+    "reexecute_calls": 4,
+    "per_step": [
+      {
+        "addr": "planner/chat#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "planner/state#1",
+        "expected": "cached",
+        "has_call": false
+      },
+      {
+        "addr": "flight/chat#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "hotel/chat#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "weather/tool#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "fx/tool#1",
+        "expected": "edited",
+        "has_call": true
+      },
+      {
+        "addr": "visa/tool#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "flight/tool#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "hotel/tool#1",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "flight/chat#2",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "hotel/chat#2",
+        "expected": "cached",
+        "has_call": true
+      },
+      {
+        "addr": "budget/tool#1",
+        "expected": "invalidated",
+        "has_call": true
+      },
+      {
+        "addr": "writer/chat#1",
+        "expected": "invalidated",
+        "has_call": true
+      },
+      {
+        "addr": "verifier/chat#1",
+        "expected": "invalidated",
+        "has_call": true
+      },
+      {
+        "addr": "final/state#1",
+        "expected": "invalidated",
+        "has_call": false
+      },
+      {
+        "addr": "checker/state#1",
+        "expected": "invalidated",
+        "has_call": false
+      }
+    ],
+    "estimated_ms": 55.27,
+    "estimated_tokens": 14860,
+    "upper_bound": true,
+    "summary": "Will re-run 4 of 13 calls (6 of 16 steps), about 55 ms.",
+    "blocked": null
+  },
+  "created_at": "2026-10-04T12:00:00Z"
+}

@@ -1,0 +1,582 @@
+{
+  "base_run_id": "tc-0001",
+  "entries": [
+    {
+      "kind": "original",
+      "label": "Original run",
+      "run_id": "tc-0001",
+      "fork_id": null,
+      "parent_fork_id": null,
+      "outcome": "failed",
+      "score": 0.0,
+      "checker_reason": "Incorrect INR total: got 130949.18, expected 134999.04",
+      "pass_rate": null,
+      "verdict": null,
+      "preview": false,
+      "savings": null,
+      "edit_summary": null
+    },
+    {
+      "kind": "control",
+      "label": "Unchanged control (5 samples)",
+      "run_id": "fk-0001-control-0",
+      "fork_id": null,
+      "parent_fork_id": "fk-0001",
+      "outcome": "failed",
+      "score": 0.0,
+      "checker_reason": "Incorrect INR total: got 130949.18, expected 134999.04",
+      "pass_rate": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": null,
+      "preview": false,
+      "savings": null,
+      "edit_summary": null
+    },
+    {
+      "kind": "fork",
+      "label": "fresh-fx",
+      "run_id": "fk-0001-fix-0",
+      "fork_id": "fk-0001",
+      "parent_fork_id": null,
+      "outcome": "passed",
+      "score": 1.0,
+      "checker_reason": "All constraints and fresh-catalog total match",
+      "pass_rate": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "verdict": "VERIFIED",
+      "preview": false,
+      "savings": {
+        "reexecuted": 6,
+        "cached": 10,
+        "invalidated": 6,
+        "total_steps": 16,
+        "calls_reexecuted": 4,
+        "calls_cached": 9,
+        "tokens_saved": 21760,
+        "ms_saved": 214.073
+      },
+      "edit_summary": "fx/tool#1 patch_tool_args {\"fresh\": true}"
+    },
+    {
+      "kind": "control",
+      "label": "Unchanged control (5 samples)",
+      "run_id": "fk-0002-control-0",
+      "fork_id": null,
+      "parent_fork_id": "fk-0002",
+      "outcome": "failed",
+      "score": 0.0,
+      "checker_reason": "Incorrect INR total: got 130949.18, expected 134999.04",
+      "pass_rate": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": null,
+      "preview": false,
+      "savings": null,
+      "edit_summary": null
+    },
+    {
+      "kind": "fork",
+      "label": "correct-budget",
+      "run_id": "fk-0002-fix-0",
+      "fork_id": "fk-0002",
+      "parent_fork_id": null,
+      "outcome": "passed",
+      "score": 1.0,
+      "checker_reason": "All constraints and fresh-catalog total match",
+      "pass_rate": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "verdict": "VERIFIED",
+      "preview": false,
+      "savings": {
+        "reexecuted": 3,
+        "cached": 13,
+        "invalidated": 5,
+        "total_steps": 16,
+        "calls_reexecuted": 1,
+        "calls_cached": 12,
+        "tokens_saved": 29190,
+        "ms_saved": 242.313
+      },
+      "edit_summary": "budget/tool#1 override_output {\"flights_inr\": 96000.0, \"fx_as_of\": \"2026-10-03\", \"hotels_inr\": 26999.04, \"total_inr\": 134999.04, \"visa_inr\": 12000.0}"
+    },
+    {
+      "kind": "control",
+      "label": "Unchanged control (5 samples)",
+      "run_id": "fk-0003-control-0",
+      "fork_id": null,
+      "parent_fork_id": "fk-0003",
+      "outcome": "failed",
+      "score": 0.0,
+      "checker_reason": "Incorrect INR total: got 130949.18, expected 134999.04",
+      "pass_rate": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": null,
+      "preview": false,
+      "savings": null,
+      "edit_summary": null
+    },
+    {
+      "kind": "fork",
+      "label": "writer-prompt-hint",
+      "run_id": "fk-0003-fix-0",
+      "fork_id": "fk-0003",
+      "parent_fork_id": null,
+      "outcome": "failed",
+      "score": 0.0,
+      "checker_reason": "Incorrect INR total: got 130949.18, expected 134999.04",
+      "pass_rate": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "INCONCLUSIVE",
+      "preview": false,
+      "savings": {
+        "reexecuted": 3,
+        "cached": 13,
+        "invalidated": 4,
+        "total_steps": 16,
+        "calls_reexecuted": 1,
+        "calls_cached": 12,
+        "tokens_saved": 25515,
+        "ms_saved": 242.41
+      },
+      "edit_summary": "writer/chat#1 patch_prompt \"Double-check the total before answering.\""
+    }
+  ],
+  "forks": [
+    {
+      "fork_id": "fk-0001",
+      "base_run_id": "tc-0001",
+      "branch_name": "fresh-fx",
+      "status": "complete",
+      "hypothesis": "The SGD to INR rate is months old; re-fetch it with fresh=true.",
+      "edits": [
+        {
+          "addr": "fx/tool#1",
+          "kind": "patch_tool_args",
+          "value": {
+            "fresh": true
+          },
+          "known_good": true
+        }
+      ],
+      "mode": "cone",
+      "samples": 5,
+      "control": true,
+      "created_at": "2026-10-04T12:00:00Z",
+      "completed_at": "2026-10-04T12:00:02Z",
+      "savings": {
+        "reexecuted": 6,
+        "cached": 10,
+        "invalidated": 6,
+        "total_steps": 16,
+        "calls_reexecuted": 4,
+        "calls_cached": 9,
+        "tokens_saved": 21760,
+        "ms_saved": 214.073
+      },
+      "fix": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "VERIFIED",
+      "preview": false,
+      "replay_fidelity": 1.0,
+      "edited_runs": [
+        {
+          "run_id": "fk-0001-fix-0",
+          "sample": 0,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0001-fix-1",
+          "sample": 1,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0001-fix-2",
+          "sample": 2,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0001-fix-3",
+          "sample": 3,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0001-fix-4",
+          "sample": 4,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        }
+      ],
+      "control_runs": [
+        {
+          "run_id": "fk-0001-control-0",
+          "sample": 0,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0001-control-1",
+          "sample": 1,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0001-control-2",
+          "sample": 2,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0001-control-3",
+          "sample": 3,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0001-control-4",
+          "sample": 4,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        }
+      ],
+      "export_available": true,
+      "error": null
+    },
+    {
+      "fork_id": "fk-0002",
+      "base_run_id": "tc-0001",
+      "branch_name": "correct-budget",
+      "status": "complete",
+      "hypothesis": "The budget total is wrong; replace it with the total from a fresh rate.",
+      "edits": [
+        {
+          "addr": "budget/tool#1",
+          "kind": "override_output",
+          "value": {
+            "flights_inr": 96000.0,
+            "hotels_inr": 26999.04,
+            "visa_inr": 12000.0,
+            "total_inr": 134999.04,
+            "fx_as_of": "2026-10-03"
+          },
+          "known_good": true
+        }
+      ],
+      "mode": "cone",
+      "samples": 5,
+      "control": true,
+      "created_at": "2026-10-04T12:05:00Z",
+      "completed_at": "2026-10-04T12:05:02Z",
+      "savings": {
+        "reexecuted": 3,
+        "cached": 13,
+        "invalidated": 5,
+        "total_steps": 16,
+        "calls_reexecuted": 1,
+        "calls_cached": 12,
+        "tokens_saved": 29190,
+        "ms_saved": 242.313
+      },
+      "fix": {
+        "passed": 5,
+        "total": 5,
+        "rate": 1.0,
+        "ci_low": 0.5655175352168251,
+        "ci_high": 1.0
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "VERIFIED",
+      "preview": false,
+      "replay_fidelity": 1.0,
+      "edited_runs": [
+        {
+          "run_id": "fk-0002-fix-0",
+          "sample": 0,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0002-fix-1",
+          "sample": 1,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0002-fix-2",
+          "sample": 2,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0002-fix-3",
+          "sample": 3,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        },
+        {
+          "run_id": "fk-0002-fix-4",
+          "sample": 4,
+          "branch": "fix",
+          "passed": true,
+          "score": 1.0,
+          "reason": "All constraints and fresh-catalog total match"
+        }
+      ],
+      "control_runs": [
+        {
+          "run_id": "fk-0002-control-0",
+          "sample": 0,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0002-control-1",
+          "sample": 1,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0002-control-2",
+          "sample": 2,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0002-control-3",
+          "sample": 3,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0002-control-4",
+          "sample": 4,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        }
+      ],
+      "export_available": true,
+      "error": null
+    },
+    {
+      "fork_id": "fk-0003",
+      "base_run_id": "tc-0001",
+      "branch_name": "writer-prompt-hint",
+      "status": "complete",
+      "hypothesis": "The writer miscopies the total; ask it to double-check.",
+      "edits": [
+        {
+          "addr": "writer/chat#1",
+          "kind": "patch_prompt",
+          "value": "Double-check the total before answering.",
+          "known_good": false
+        }
+      ],
+      "mode": "cone",
+      "samples": 5,
+      "control": true,
+      "created_at": "2026-10-04T12:10:00Z",
+      "completed_at": "2026-10-04T12:10:02Z",
+      "savings": {
+        "reexecuted": 3,
+        "cached": 13,
+        "invalidated": 4,
+        "total_steps": 16,
+        "calls_reexecuted": 1,
+        "calls_cached": 12,
+        "tokens_saved": 25515,
+        "ms_saved": 242.41
+      },
+      "fix": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "control_result": {
+        "passed": 0,
+        "total": 5,
+        "rate": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.43448246478317476
+      },
+      "verdict": "INCONCLUSIVE",
+      "preview": false,
+      "replay_fidelity": 1.0,
+      "edited_runs": [
+        {
+          "run_id": "fk-0003-fix-0",
+          "sample": 0,
+          "branch": "fix",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-fix-1",
+          "sample": 1,
+          "branch": "fix",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-fix-2",
+          "sample": 2,
+          "branch": "fix",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-fix-3",
+          "sample": 3,
+          "branch": "fix",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-fix-4",
+          "sample": 4,
+          "branch": "fix",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        }
+      ],
+      "control_runs": [
+        {
+          "run_id": "fk-0003-control-0",
+          "sample": 0,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-control-1",
+          "sample": 1,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-control-2",
+          "sample": 2,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-control-3",
+          "sample": 3,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        },
+        {
+          "run_id": "fk-0003-control-4",
+          "sample": 4,
+          "branch": "control",
+          "passed": false,
+          "score": 0.0,
+          "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+        }
+      ],
+      "export_available": false,
+      "error": null
+    }
+  ]
+}

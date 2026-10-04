@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import copy
 import random as random_module
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -122,8 +123,33 @@ class FaultOperator(ABC):
 # ---------------------------------------------------------------------------
 
 
+def _is_number(value: Any) -> bool:
+    """True for ints and floats; bools are flags, not quantities."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _numeric_leaves(output: dict[str, Any]) -> list[tuple[Any, ...]]:
+    """Paths to numeric fields: ``(key,)`` at the top level, ``("options", i, key)`` inside options."""
+    paths: list[tuple[Any, ...]] = [(key,) for key, value in output.items() if _is_number(value)]
+    options = output.get("options")
+    if isinstance(options, list):
+        for index, option in enumerate(options):
+            if isinstance(option, dict):
+                paths.extend(("options", index, key) for key, v in option.items() if _is_number(v))
+    return paths
+
+
+def _scaled(value: int | float, factor: float) -> int | float:
+    new_value = value * factor
+    if isinstance(value, int):
+        new_value = int(round(new_value))
+        return new_value if new_value != value else value + 1
+    new_value = round(new_value, 2)
+    return new_value if new_value != value else value + 0.01
+
+
 class T1WrongValue(FaultOperator):
-    """Perturb a numeric or string value in a tool's output."""
+    """Perturb a numeric value in a tool's output, including values inside catalog options."""
 
     spec = FaultSpec(
         code="T1",
@@ -141,6 +167,7 @@ class T1WrongValue(FaultOperator):
             "flights_inr",
             "hotels_inr",
             "visa_inr",
+            "options",
             "text",
             "score",
         ),
@@ -149,47 +176,60 @@ class T1WrongValue(FaultOperator):
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
         if step.get("kind") not in self.spec.step_kinds:
             return False
-        if not isinstance(output, dict):
-            return False
-        return any(isinstance(v, (int, float)) for v in output.values())
+        return isinstance(output, dict) and bool(_numeric_leaves(output))
 
     def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
-        numeric_keys = [k for k, v in perturbed.items() if isinstance(v, (int, float))]
-        if not numeric_keys:
+        paths = _numeric_leaves(perturbed)
+        if not paths:
             raise ValueError("no numeric fields to perturb")
-        key = rng.choice(numeric_keys)
-        original = perturbed[key]
-        # Scale by 1.3–2.5× or 0.3–0.7× so the error is clearly wrong
+        path = rng.choice(paths)
+        target: Any = perturbed
+        for part in path[:-1]:
+            target = target[part]
+        # Scale by 1.3-2.5x or 0.3-0.7x so the error is clearly wrong
         factor = rng.choice([rng.uniform(1.3, 2.5), rng.uniform(0.3, 0.7)])
-        new_val = original * factor
-        if isinstance(original, int):
-            new_val = int(round(new_val))
-        else:
-            new_val = round(new_val, 2)
-        if new_val == original:
-            new_val = original + (1 if isinstance(original, int) else 0.01)
-        perturbed[key] = new_val
+        target[path[-1]] = _scaled(target[path[-1]], factor)
         return override_output(step["addr"], perturbed)
 
 
 class T2StaleData(FaultOperator):
-    """Backdate the as_of timestamp to simulate stale data."""
+    """Serve a snapshot from months ago: an old ``as_of`` and the prices of that time.
+
+    A stale snapshot is wrong in two ways at once: it is dated in the past, and the quantities
+    in it have drifted since. Prices drift by one common factor, so options keep their relative
+    order and only the absolute values are off; fields that carry no price (a weather forecast)
+    are only backdated, which the agent can ignore.
+    """
 
     spec = FaultSpec(
         code="T2",
         family="tool",
         name="stale_data",
-        description="Backdate the as_of field to simulate stale or outdated data",
+        description="Backdate the as_of field and drift the prices to simulate a stale snapshot",
         held_out=True,
         step_kinds=frozenset({"tool"}),
-        changed_fields=("as_of", "rate", "forecast", "score"),
+        changed_fields=(
+            "as_of",
+            "rate",
+            "forecast",
+            "score",
+            "options",
+            "fee_inr_per_adult",
+        ),
     )
+
+    _drifting = ("rate", "fare_inr_per_adult", "nightly_local_per_room", "fee_inr_per_adult")
 
     def applicable(self, step: dict[str, Any], output: Any) -> bool:
         if step.get("kind") not in self.spec.step_kinds:
             return False
         return isinstance(output, dict) and "as_of" in output
+
+    def _drift(self, record: dict[str, Any], factor: float) -> None:
+        for key in self._drifting:
+            if key in record and _is_number(record[key]):
+                record[key] = _scaled(record[key], factor)
 
     def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
@@ -199,9 +239,11 @@ class T2StaleData(FaultOperator):
             original_date = date(2026, 10, 3)
         stale_days = rng.randint(90, 300)
         perturbed["as_of"] = (original_date - timedelta(days=stale_days)).isoformat()
-        # Also skew any numeric rate to simulate drift from staleness
-        if "rate" in perturbed and isinstance(perturbed["rate"], (int, float)):
-            perturbed["rate"] = round(perturbed["rate"] * rng.uniform(0.80, 0.92), 2)
+        factor = rng.uniform(0.80, 0.92)
+        self._drift(perturbed, factor)
+        for option in perturbed.get("options") or []:
+            if isinstance(option, dict):
+                self._drift(option, factor)
         return override_output(step["addr"], perturbed)
 
 
@@ -394,14 +436,35 @@ class R1IrrelevantDocuments(FaultOperator):
         return override_output(step["addr"], perturbed)
 
 
+_SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+")
+_YEAR = re.compile(r"\b(?:1[0-9]{3}|20[0-9]{2})\b")
+_NUMBER = re.compile(r"\b\d+(?:[.,]\d+)*\b")
+_ENTITY = re.compile(r"\b[A-Z][\w'-]*(?:\s+(?:(?:of|the|de|la|von|van)\s+)?[A-Z][\w'-]*)*")
+_FALLBACK_ENTITIES = ("Marlow Hale", "Port Ellery", "Dunmere", "the Calder Institute")
+
+
+def _entities(sentence: str) -> list[re.Match[str]]:
+    """Capitalised phrases that are not the sentence's opening subject."""
+    return [match for match in _ENTITY.finditer(sentence) if match.start() > 0]
+
+
+def _has_fact(sentence: str) -> bool:
+    return bool(_NUMBER.search(sentence) or _entities(sentence))
+
+
 class R2PoisonedFact(FaultOperator):
-    """Inject a false fact into a retrieved document."""
+    """Rewrite one sentence of a retrieved document so that its facts are false.
+
+    Dates, numbers and named entities in the chosen sentence are replaced by others of the same
+    kind (entities come from the document itself), so the text stays fluent and plausible; the
+    sentence is still about the same subject, it just says something untrue about it.
+    """
 
     spec = FaultSpec(
         code="R2",
         family="retrieval",
         name="poisoned_fact",
-        description="Replace text in a retrieved document with a contradictory fact",
+        description="Replace the facts in one sentence of a retrieved document with false ones",
         held_out=True,
         step_kinds=frozenset({"tool"}),
         changed_fields=("text",),
@@ -412,19 +475,49 @@ class R2PoisonedFact(FaultOperator):
             return False
         if not isinstance(output, dict):
             return False
-        return "text" in output and isinstance(output.get("text"), str)
+        # A retrieved document carries an identity next to its text; a bare ``text`` field is
+        # an answer or a message, and rewriting it is a different fault.
+        is_document = "doc_id" in output or "title" in output
+        text = output.get("text")
+        return (
+            is_document
+            and isinstance(text, str)
+            and any(_has_fact(sentence) for sentence in _SENTENCE_BREAK.split(text))
+        )
+
+    @staticmethod
+    def _falsify(sentence: str, pool: list[str], rng: random_module.Random) -> str:
+        def shift(match: re.Match[str]) -> str:
+            value = match.group(0)
+            if _YEAR.fullmatch(value):
+                return str(int(value) + rng.choice([-1, 1]) * rng.randint(3, 40))
+            number = float(value.replace(",", ""))
+            changed = number * rng.choice([2, 3, 0.5]) + 1
+            return str(int(changed)) if number.is_integer() else f"{changed:.1f}"
+
+        def swap(match: re.Match[str]) -> str:
+            name = match.group(0)
+            others = [other for other in pool if other != name]
+            # Prefer a replacement of the same length, so the sentence keeps its shape.
+            similar = [other for other in others if len(other.split()) == len(name.split())]
+            choices = similar or others
+            return rng.choice(choices) if choices else name
+
+        # The opening phrase is the sentence's subject: the fact stays about the same thing.
+        subject = _ENTITY.match(sentence)
+        opening = subject.group(0) if subject else ""
+        rest = _ENTITY.sub(swap, sentence[len(opening) :])
+        return opening + _NUMBER.sub(shift, rest)
 
     def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
-        original = perturbed["text"]
-        # Split into sentences and replace a random one with contradictory info
-        sentences = [s.strip() for s in original.split(".") if s.strip()]
-        if len(sentences) < 2:
-            perturbed["text"] = "This information has been redacted due to a data error."
-        else:
-            idx = rng.randint(0, len(sentences) - 1)
-            sentences[idx] = "Contrary to common belief, the opposite is true"
-            perturbed["text"] = ". ".join(sentences) + "."
+        sentences = _SENTENCE_BREAK.split(perturbed["text"])
+        pool = sorted(
+            {match.group(0) for sentence in sentences for match in _entities(sentence)}
+        ) or list(_FALLBACK_ENTITIES)
+        index = rng.choice([i for i, sentence in enumerate(sentences) if _has_fact(sentence)])
+        sentences[index] = self._falsify(sentences[index], pool, rng)
+        perturbed["text"] = " ".join(sentences)
         return override_output(step["addr"], perturbed)
 
 
@@ -905,36 +998,43 @@ class C3StateCorruption(FaultOperator):
             return False
         return isinstance(output, dict)
 
+    @staticmethod
+    def _corrupt(data: dict[str, Any], rng: random_module.Random) -> None:
+        """Swap two fields holding different values; a swap of equal values corrupts nothing."""
+        pairs = [
+            (a, b)
+            for index, a in enumerate(data)
+            for b in list(data)[index + 1 :]
+            if data[a] != data[b]
+        ]
+        if pairs:
+            a, b = rng.choice(pairs)
+            data[a], data[b] = data[b], data[a]
+            return
+        for key, value in data.items():
+            if _is_number(value):
+                data[key] = value * -1 if value else 1
+                return
+            if isinstance(value, str):
+                data[key] = "CORRUPTED"
+                return
+
     def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
         perturbed = copy.deepcopy(output)
         if perturbed.get("choices"):
-            # LLM output — corrupt the parsed content
+            # LLM output: corrupt the parsed content
             try:
                 import json
 
                 msg = perturbed["choices"][0]["message"]
                 data = json.loads(msg["content"])
                 if isinstance(data, dict):
-                    keys = list(data.keys())
-                    if len(keys) >= 2:
-                        a, b = rng.sample(keys, 2)
-                        data[a], data[b] = data[b], data[a]
+                    self._corrupt(data, rng)
                 msg["content"] = json.dumps(data)
             except (json.JSONDecodeError, TypeError, KeyError, IndexError):
                 pass
         else:
-            # Direct dict output — swap two values
-            keys = list(perturbed.keys())
-            if len(keys) >= 2:
-                a, b = rng.sample(keys, 2)
-                perturbed[a], perturbed[b] = perturbed[b], perturbed[a]
-            elif keys:
-                key = keys[0]
-                val = perturbed[key]
-                if isinstance(val, (int, float)):
-                    perturbed[key] = val * -1
-                elif isinstance(val, str):
-                    perturbed[key] = "CORRUPTED"
+            self._corrupt(perturbed, rng)
         return override_output(step["addr"], perturbed)
 
     def ghost_hint(
