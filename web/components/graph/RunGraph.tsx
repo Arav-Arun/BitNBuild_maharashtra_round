@@ -17,13 +17,15 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import ELK from "elkjs/lib/elk.bundled.js";
-import { memo, useEffect, useMemo, useState } from "react";
+import { Bot, Braces, CircleDot, Database, Flag, Wrench } from "lucide-react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
-import { normaliseKind } from "../ui/badges";
+import { kindLabel, normaliseKind } from "../ui/badges";
 import type { EdgeView, ReplayVisual, StepView } from "../types";
 
-const NODE_W = 196;
-const NODE_H = 62;
+const NODE_W = 210;
+const NODE_H = 76;
+type LayoutDirection = "RIGHT" | "DOWN";
 
 const elk = new ELK();
 // Coordinates are computed once per base run and reused by every fork of it, so replay
@@ -34,6 +36,7 @@ async function computeLayout(
   key: string,
   steps: StepView[],
   edges: EdgeView[],
+  direction: LayoutDirection,
 ): Promise<Record<string, { x: number; y: number }>> {
   const cached = layoutCache.get(key);
   if (cached && steps.every((s) => cached[s.addr])) return cached;
@@ -42,9 +45,9 @@ async function computeLayout(
     id: "root",
     layoutOptions: {
       "elk.algorithm": "layered",
-      "elk.direction": "DOWN",
-      "elk.layered.spacing.nodeNodeBetweenLayers": "56",
-      "elk.spacing.nodeNode": "36",
+      "elk.direction": direction,
+      "elk.layered.spacing.nodeNodeBetweenLayers": "60",
+      "elk.spacing.nodeNode": "22",
       "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
       "elk.layered.crossingMinimization.semiInteractive": "true",
       "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
@@ -99,18 +102,35 @@ const StepNode = memo(function StepNode({ data }: NodeProps<Node<StepNodeData>>)
     .filter(Boolean)
     .join(" ");
   const heat = Math.max(0, Math.min(1, step.suspicion ?? 0));
+  const Icon =
+    kind === "llm" ? Bot :
+      kind === "retrieval" ? Database :
+        kind === "final" ? Flag :
+          kind === "state" ? Braces :
+            kind === "tool" ? Wrench : CircleDot;
   return (
     <div className={classes} title={step.addr}>
-      <Handle type="target" position={Position.Top} />
-      <div className="spread" style={{ gap: 8 }}>
-        <div className="node-title">{prettyName(step)}</div>
+      <Handle type="target" position={Position.Left} />
+      <div className="node-main">
+        <span className="node-icon"><Icon size={15} strokeWidth={1.8} aria-hidden /></span>
+        <div className="node-copy">
+          <div className="node-title" title={prettyName(step)}>{prettyName(step)}</div>
+          <div className="node-sub">{step.addr}</div>
+        </div>
         {visual !== "idle" && visual !== "queued" && <VisualTag visual={visual} />}
       </div>
-      <div className="node-sub">{step.addr}</div>
+      <div className="node-footer">
+        <span className="node-kind">{kindLabel(kind)}</span>
+        {(step.isSuspect || step.isVisibleFailure) && (
+          <span className={`node-flag ${step.isVisibleFailure ? "node-flag-fail" : ""}`}>
+            {step.isVisibleFailure ? "failure" : "root cause"}
+          </span>
+        )}
+      </div>
       <div className="node-heat" aria-label={`suspicion ${Math.round(heat * 100)}%`}>
         <span style={{ width: `${heat * 100}%`, opacity: heat > 0 ? 1 : 0 }} />
       </div>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 });
@@ -171,24 +191,28 @@ function GraphInner({
   visuals,
   highlightPath,
 }: RunGraphProps) {
+  const graphKey = layoutKey;
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }> | null>(
-    () => layoutCache.get(layoutKey) ?? null,
+    () => layoutCache.get(graphKey) ?? null,
   );
   const { fitView } = useReactFlow();
+  const measuredNodes = useRef(new Set<string>());
+  const didAutoFit = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    computeLayout(layoutKey, steps, edges).then((p) => {
+    computeLayout(graphKey, steps, edges, "RIGHT").then((p) => {
       if (!cancelled) setPositions(p);
     });
     return () => {
       cancelled = true;
     };
-  }, [layoutKey, steps, edges]);
+  }, [graphKey, steps, edges]);
 
   useEffect(() => {
-    if (positions) requestAnimationFrame(() => fitView({ padding: 0.18, duration: 0 }));
-  }, [positions, fitView]);
+    measuredNodes.current.clear();
+    didAutoFit.current = false;
+  }, [layoutKey]);
 
   const pathSet = useMemo(() => new Set(highlightPath ?? []), [highlightPath]);
   const dim = pathSet.size > 0;
@@ -218,7 +242,7 @@ function GraphInner({
         id: e.id,
         source: e.source,
         target: e.target,
-        type: "default",
+        type: "smoothstep",
         animated: onPath,
         style: {
           stroke: color,
@@ -245,6 +269,21 @@ function GraphInner({
       nodes={nodes}
       edges={rfEdges}
       nodeTypes={nodeTypes}
+      onNodesChange={(changes) => {
+        for (const change of changes) {
+          if (change.type === "dimensions" && change.dimensions) {
+            measuredNodes.current.add(change.id);
+          }
+        }
+        if (steps.length > 0 && measuredNodes.current.size >= steps.length && !didAutoFit.current) {
+          didAutoFit.current = true;
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              fitView({ padding: 0.1, duration: 0, minZoom: 0.15, maxZoom: 1.25 }),
+            ),
+          );
+        }
+      }}
       onNodeClick={(_, node) => onSelect?.(node.id)}
       nodesConnectable={false}
       nodesDraggable={false}
@@ -254,7 +293,7 @@ function GraphInner({
       proOptions={{ hideAttribution: true }}
       colorMode="dark"
     >
-      <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#262a31" />
+      <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#30343c" />
       <Controls showInteractive={false} position="bottom-right" />
     </ReactFlow>
   );
