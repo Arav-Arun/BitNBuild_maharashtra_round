@@ -248,7 +248,6 @@ def diff(request: Request, a: str, b: str):
         nearest = m.NearestPassingLink(
             run_id=b,
             similarity=1.0,
-            shared_steps=min(len(left.steps), len(right.steps)),
             reason="Compared directly",
         )
     return __import__("blackbox.api.reader", fromlist=["build_diff"]).build_diff(

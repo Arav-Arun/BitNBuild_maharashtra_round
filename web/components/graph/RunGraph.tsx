@@ -191,7 +191,10 @@ function GraphInner({
   visuals,
   highlightPath,
 }: RunGraphProps) {
-  const graphKey = layoutKey;
+  const [direction, setDirection] = useState<LayoutDirection>(() =>
+    typeof window !== "undefined" && window.innerWidth <= 900 ? "DOWN" : "RIGHT",
+  );
+  const graphKey = `${layoutKey}:${direction}`;
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }> | null>(
     () => layoutCache.get(graphKey) ?? null,
   );
@@ -200,19 +203,26 @@ function GraphInner({
   const didAutoFit = useRef(false);
 
   useEffect(() => {
+    const media = window.matchMedia("(max-width: 900px)");
+    const update = () => setDirection(media.matches ? "DOWN" : "RIGHT");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
-    computeLayout(graphKey, steps, edges, "RIGHT").then((p) => {
+    computeLayout(graphKey, steps, edges, direction).then((p) => {
       if (!cancelled) setPositions(p);
     });
     return () => {
       cancelled = true;
     };
-  }, [graphKey, steps, edges]);
+  }, [graphKey, direction, steps, edges]);
 
   useEffect(() => {
     measuredNodes.current.clear();
     didAutoFit.current = false;
-  }, [layoutKey]);
+  }, [graphKey]);
 
   const pathSet = useMemo(() => new Set(highlightPath ?? []), [highlightPath]);
   const dim = pathSet.size > 0;
@@ -290,7 +300,6 @@ function GraphInner({
       elementsSelectable
       minZoom={0.2}
       maxZoom={1.6}
-      proOptions={{ hideAttribution: true }}
       colorMode="dark"
     >
       <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#30343c" />

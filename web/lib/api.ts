@@ -47,8 +47,6 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const fixture = method === "GET" ? recordedFallback(path) : undefined;
-    if (fixture !== undefined) return fixture as T;
     throw new Error(body?.error?.message || `Request failed (${response.status})`);
   }
   return body as T;
