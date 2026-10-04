@@ -161,6 +161,14 @@ def _load_trace(database: SQLiteDatabase, store: Store, run: dict[str, Any]) -> 
     )
 
 
+def load_trace(database: SQLiteDatabase, store: Store, run_id: str) -> Trace:
+    """One recorded run as a label-free trace."""
+    run = database.one("SELECT * FROM runs WHERE run_id = ?", (run_id,))
+    if run is None:
+        raise KeyError(f"unknown run: {run_id}")
+    return _load_trace(database, store, run)
+
+
 def _distractor(edits_json: str | None, root_addr: str) -> str | None:
     for edit in _json(edits_json, []):
         if edit.get("addr") != root_addr:

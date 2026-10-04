@@ -34,6 +34,7 @@ class Edit:
         "swap_model",
         "patch_tool_result",
         "ghost_hint",
+        "rerun",
     ]
     value: Any
     known_good: bool = False
@@ -76,6 +77,11 @@ def ghost_hint(addr: str, hint: str) -> Edit:
     its own style without leaving the instruction in the trace.
     """
     return Edit(addr, "ghost_hint", hint)
+
+
+def rerun(addr: str) -> Edit:
+    """Execute the step live again with its unchanged request (a retry)."""
+    return Edit(addr, "rerun", None)
 
 
 def wilson_interval(
@@ -288,7 +294,7 @@ class _ReplayPolicy:
         edit = self.edits.get(addr)
         if edit is not None and edit.kind in {"override_output", "patch_tool_result"}:
             return edit.value, "edited"
-        if edit is not None and edit.kind == "ghost_hint":
+        if edit is not None and edit.kind in {"ghost_hint", "rerun"}:
             return await live(), "edited"
 
         base = self.base_steps.get(addr)
@@ -299,12 +305,22 @@ class _ReplayPolicy:
         if self.mode == "prefix" and base is not None and base["seq"] >= self.first_edit_seq:
             return await live(), "live"
         if base is None:
+            # A step the base run never reached (it failed earlier) can still be an
+            # exact-hash cassette hit, e.g. one recorded by a verified fix of this run.
+            cassette_hit, cassette_output = self._load_cassette(addr, request_key)
+            if cassette_hit:
+                return cassette_output, "cached"
             return await live(), "live"
         if base["request_key"] == request_key:
             return self._load_recorded(addr), "cached"
         cassette_hit, cassette_output = self._load_cassette(addr, request_key)
         if cassette_hit:
             return cassette_output, "cached"
+        if base["request_key"] is None and base.get("error_type"):
+            # The recorded call raised before completing, so there is no request to
+            # compare and no response to serve: re-running it is the only faithful
+            # reproduction of that crash.
+            return await live(), "live"
         if base["seq"] < self.first_edit_seq:
             raise ReplayDivergence(addr, "request hash changed before the edit")
         return await live(), "live"
@@ -403,11 +419,22 @@ class ReplayEngine:
         mode: ReplayMode = "cone",
         samples: int = 1,
         control: bool = False,
+        control_scope: Literal["cone", "downstream"] = "cone",
         branch_name: str | None = None,
         event_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> ReplayBatch:
+        """Replay ``base_run_id`` with ``edits``, optionally beside no-edit controls.
+
+        A control re-runs the invalidated cone live without the edit. With
+        ``control_scope="cone"`` the edited steps themselves re-run too (the forge's
+        check that a passing run reproduces); with ``"downstream"`` they keep their
+        recorded output, so the control reproduces the run *as recorded*, which is
+        what a verifier compares a fix against.
+        """
         if mode not in {"cone", "prefix", "full"}:
             raise ValueError("mode must be cone, prefix, or full")
+        if control_scope not in {"cone", "downstream"}:
+            raise ValueError("control_scope must be cone or downstream")
         if samples < 1:
             raise ValueError("samples must be positive")
         addresses = [edit.addr for edit in edits]
@@ -423,6 +450,9 @@ class ReplayEngine:
                 raise ValueError(f"ghost hints only apply to LLM steps: {edit.addr}")
         edit_map = {edit.addr: edit for edit in edits}
         invalidated = self._descendants(base_run_id, set(addresses))
+        control_live = (
+            invalidated - set(addresses) if control_scope == "downstream" else set(invalidated)
+        )
         fork_id = uuid.uuid4().hex
         edited_runs: list[ReplayRun] = []
         control_runs: list[ReplayRun] = []
@@ -456,7 +486,7 @@ class ReplayEngine:
                     {},
                     "cone",
                     invalidated,
-                    force_live=set(invalidated),
+                    force_live=set(control_live),
                     event_callback=event_callback,
                 )
                 policies.append(control_policy)
@@ -602,6 +632,7 @@ __all__ = [
     "patch_tool_args",
     "patch_tool_result",
     "replay",
+    "rerun",
     "swap_model",
     "wilson_interval",
 ]

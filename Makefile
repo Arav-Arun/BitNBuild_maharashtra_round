@@ -2,7 +2,7 @@ UV ?= uv
 RUN = $(UV) run --locked --extra dev --extra ml
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval
+.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval diagnose verify-eval regression
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -20,6 +20,9 @@ help:
 	@echo "forge-natural Attribute naturally failed AGENT runs with oracle fixes (test-only)"
 	@echo "forge-freeze  Export AGENT labels and write DATASET_VERSION"
 	@echo "eval    Train the diagnoser, run baselines/ablations/integrity checks into data/eval"
+	@echo "diagnose RUN_ID=<id> Explain and verify one failed run (reasons, damage path, verdict)"
+	@echo "verify-eval Verify the top suspects of 30 S0 runs into data/eval/verifier.json"
+	@echo "regression FORK=<id> Export a VERIFIED fork as an offline test in tests/regressions"
 
 setup:
 	$(UV) sync --locked --extra dev --extra ml
@@ -81,3 +84,11 @@ forge-freeze:
 eval:
 	$(RUN) python -m blackbox.ml eval
 
+diagnose:
+	$(RUN) python -m blackbox.explain diagnose $(RUN_ID) --verify --save --data-dir data/$(AGENT)
+
+verify-eval:
+	$(RUN) python -m blackbox.explain verify-eval --n 30 --data-dir data/$(AGENT)
+
+regression:
+	$(RUN) python -m blackbox.explain export $(FORK) --data-dir data/$(AGENT)

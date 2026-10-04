@@ -48,6 +48,14 @@ class Diagnosis(ContractModel):
     conformal_set: list[str] = Field(default_factory=list)
     abstain: bool = False
     verdict: Literal["VERIFIED", "REFUTED", "INCONCLUSIVE"] | None = None
+    # Evidence (Task 9): every item cites step addresses (and JSON Pointers) in the run.
+    reasons: list[dict[str, Any]] = Field(default_factory=list)
+    damage_path: dict[str, Any] | None = None
+    precedents: dict[str, Any] | None = None
+    verification: list[dict[str, Any]] = Field(default_factory=list)
+    narrative: dict[str, Any] | None = None
+    twin_run_id: str | None = None
+    model_version: str | None = None
 
 
 class ForkEvent(ContractModel):
@@ -66,6 +74,7 @@ class DiffRow(ContractModel):
     status: Literal["same", "cached", "changed", "new", "removed"]
     left: Any = None
     right: Any = None
+    changes: list[dict[str, Any]] = Field(default_factory=list)  # {pointer, left, right}
 
 
 class DiffResponse(ContractModel):
@@ -73,6 +82,8 @@ class DiffResponse(ContractModel):
     right_run_id: str
     first_divergence: str | None = None
     rows: list[DiffRow]
+    state_diff: list[dict[str, Any]] = Field(default_factory=list)  # {key, status, left?, right?}
+    outcome: dict[str, Any] | None = None  # {left, right, flipped}
 
 
 class EvalResponse(ContractModel):

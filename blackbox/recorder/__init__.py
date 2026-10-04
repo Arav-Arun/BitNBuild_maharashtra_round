@@ -78,10 +78,15 @@ class Store:
         }
         return self._save_bytes("checkpoints", canonical_json(manifest))
 
-    def load_checkpoint(self, ref: str) -> dict[str, Any]:
+    def checkpoint_entries(self, ref: str) -> dict[str, str]:
+        """Per-key value hashes of a checkpoint, without loading the values."""
         manifest = json.loads(self._load_bytes("checkpoints", ref))
         if manifest.get("format") != "blackbox-merkle-v1":
             raise ValueError("unsupported checkpoint format")
+        return dict(manifest.get("entries", {}))
+
+    def load_checkpoint(self, ref: str) -> dict[str, Any]:
         return {
-            key: self.load_json(value_ref) for key, value_ref in manifest.get("entries", {}).items()
+            key: self.load_json(value_ref)
+            for key, value_ref in self.checkpoint_entries(ref).items()
         }
