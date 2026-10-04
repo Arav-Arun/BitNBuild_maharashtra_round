@@ -71,18 +71,22 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
         : null;
       setDetail(run);
       setDiagnosis(result);
-      setSelected(
-        result?.responsible_addr ||
-          result?.visible_failure_addr ||
-          result?.ranking[0]?.addr ||
-          run.steps[0]?.addr ||
-          null,
-      );
+      const suggestedAddress = startEditing
+        ? result?.responsible_addr || result?.proposed_fixes[0]?.addr || result?.ranking[0]?.addr
+        : result?.responsible_addr || result?.visible_failure_addr || result?.ranking[0]?.addr;
+      const initialAddress = suggestedAddress || result?.visible_failure_addr || run.steps[0]?.addr || null;
+      setSelected(initialAddress);
+      if (startEditing && initialAddress) {
+        const suggested = result?.proposed_fixes.find((fix) => fix.addr === initialAddress);
+        const step = run.steps.find((item) => item.addr === initialAddress);
+        setKind(suggested?.edit.kind || "override_output");
+        setValue(editValue(suggested?.edit.value ?? step?.output));
+      }
       setError("");
     } catch (caught) {
       setError((caught as Error).message);
     }
-  }, [runId]);
+  }, [runId, startEditing]);
 
   useEffect(() => {
     load();

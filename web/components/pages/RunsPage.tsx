@@ -5,27 +5,27 @@ import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 import type { RunDetail, RunList } from "../../lib/contract";
 
-// These are the three retained TripCrew examples with paired, five-sample
-// validation in the local training/evaluation database. Check availability so
-// the cards never send a user to missing data in another deployment.
+// These three retained TripCrew runs have passing replay pairs in the local
+// demo database. Check availability so other deployments can fall back to the
+// full run history rather than linking to missing data.
 const DEMO_CASES = [
   {
-    id: "375afbca1cdc42299f60b47338cf252d",
-    fixedId: "e719324dea1c4cfb8f5ca691406e8e47-fix-0",
-    title: "Mumbai → Bangkok",
-    detail: "The budget was undercounted after currency conversion.",
+    id: "7fa0eef807db4263b06e48f5a6f5d8a1",
+    fixedId: "06378d7b415e47b0a296c37827984432-fix-0",
+    title: "Hyderabad → London",
+    detail: "The final INR total was lower than the checker expected.",
   },
   {
-    id: "d4e82d3fc62c47e7835bda5a104cdb5a",
-    fixedId: "c668d09128724998b4bbffe88ee98413-fix-0",
-    title: "Mumbai → Paris",
-    detail: "The converted budget did not match the current catalog.",
+    id: "6c1f43f4b87d4765b7e4a82d59ad74f7",
+    fixedId: "244b704a7a1449f4a1bd631763bfe913-fix-0",
+    title: "Chennai → Dubai",
+    detail: "A stale exchange rate caused the budget total to fail.",
   },
   {
-    id: "29434fc3cc024e25a4b4fb5c2c686c8f",
-    fixedId: "d2e4dcbf59c84ffe8191d1db4c80a0ff-fix-0",
-    title: "Bengaluru → Singapore",
-    detail: "A currency mismatch caused the final total to fail.",
+    id: "637518630bf641faad5ced4c1cb500fe",
+    fixedId: "63f17e63d82941628cdb7ac97df713f1-fix-0",
+    title: "Bengaluru → Bangkok",
+    detail: "The converted travel budget did not match the catalog total.",
   },
 ];
 
@@ -105,7 +105,7 @@ export function RunsPage() {
               </article>
             ))}
           </div>
-          <details className="demo-note"><summary>About these examples</summary><p>The model flags exchange-rate conversion as a lead, with low confidence. A controlled replay tests the suggested fix against five samples. All three examples use the same fault in different currencies.</p></details>
+          <details className="demo-note"><summary>About these examples</summary><p>All three runs point to an exchange-rate mismatch. Each has a saved passing replay so you can inspect the diagnosis and compare the changed run.</p></details>
         </section>
 
         {error && <p className="error-box" role="alert">Could not load run history: {error}</p>}
