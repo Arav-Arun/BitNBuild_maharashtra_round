@@ -44,6 +44,7 @@ function replayLabel(row: DiffRow) {
     case "invalidated": return "Replayed after an input changed";
     case "edited": return "Edited at this step";
     case "live": return "Executed for this run";
+    default: return "Recorded run";
   }
 }
 
@@ -120,7 +121,6 @@ export function ComparePage() {
   return (
     <div className="page">
       <div className="page-inner">
-        <p className="label">Compare task runs</p>
         <h1 className="h1">See what changed</h1>
         <p className="muted">Compare outcomes and aligned steps. For a repair claim, compare a failed run with a fork made from that same task.</p>
 
@@ -195,7 +195,7 @@ export function ComparePage() {
               <span className={`badge ${diff.outcome.flipped ? "badge-accent" : "badge-neutral"}`}>
                 {diff.outcome.flipped ? "Result changed" : "Same result"}
               </span>
-              <Link className="btn btn-sm" href={`/investigate/${encodeURIComponent(rightId)}`}>Inspect Run B →</Link>
+              <Link className="btn btn-sm" href={`/investigate/${encodeURIComponent(rightId)}`}>Inspect run B</Link>
             </div>
 
             <div className="compare-table-intro">

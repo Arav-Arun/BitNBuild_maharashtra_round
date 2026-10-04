@@ -3,22 +3,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "check": "tsc --noEmit",
     "build": "next build",
+    "start": "next start",
+    "check": "next typegen && tsc --noEmit",
     "contract": "node scripts/gen-contract.mjs"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
-    "@tanstack/react-table": "^9.2.4",
-    "@tanstack/react-virtual": "^3.14.13",
     "@xyflow/react": "^12.12.0",
     "elkjs": "^0.12.0",
     "lucide-react": "^1.51.0",
-    "monaco-editor": "^0.57.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "recharts": "^3.10.1"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

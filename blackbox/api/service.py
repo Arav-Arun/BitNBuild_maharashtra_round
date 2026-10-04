@@ -7,6 +7,7 @@ adapters over this class, so both always return the same contract models.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import threading
@@ -70,10 +71,6 @@ class AgentData:
                 agent=self.name,
                 stale_fx=False,
                 stale_fx_seeds=tuple(self.replay_args.get("stale_fx_seeds", ())),
-                dataset=Path(
-                    self.replay_args.get("dataset", "data/hoprag/musique_ans_v1.0_dev.jsonl")
-                ),
-                read_k=int(self.replay_args.get("read_k", 1)),
             )
             try:
                 self._adapter = make_adapter(self.recorder, args)
@@ -119,6 +116,8 @@ class BlackBoxService:
         self.notes: list[str] = []
         self.lock = threading.RLock()
         self.cache = _Cache()
+        self._warm_lock = threading.Lock()
+        self._warm_thread: threading.Thread | None = None
         self.agents: dict[str, AgentData] = {}
         self.run_agent: dict[str, str] = {}
         self._open_agents()
@@ -143,9 +142,7 @@ class BlackBoxService:
             config = directory / "replay.json"
             if config.is_file():
                 replay_args = json.loads(config.read_text(encoding="utf-8"))
-            client = RoutingClient(
-                self.settings, Path(replay_args["dataset"]) if "dataset" in replay_args else None
-            )
+            client = RoutingClient(self.settings)
             recorder = Recorder(
                 directory, mode=self.settings.mode, settings=self.settings, llm_client=client
             )
@@ -186,11 +183,15 @@ class BlackBoxService:
 
             detector = lightgbm.Booster(model_file=str(detector_path))
         precedents = PrecedentLibrary.load(self.model_dir / "precedents.json")
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        meta_bytes = meta_path.read_bytes()
+        meta = json.loads(meta_bytes)
         trained = meta.get("trained_at")
+        # Cached diagnoses and index scores are keyed by this version, so it must change on
+        # every retrain; the directory name alone (diagnoser-v1) stays the same.
+        name = str(diagnoser.metadata.get("model_version", self.model_dir.name))
         return ModelBundle(
             diagnoser=diagnoser,
-            version=str(diagnoser.metadata.get("model_version", self.model_dir.name)),
+            version=f"{name}@{hashlib.sha256(meta_bytes).hexdigest()[:8]}",
             detector=detector,
             precedents=precedents,
             trained_at=datetime.fromisoformat(trained) if trained else None,
@@ -262,23 +263,56 @@ class BlackBoxService:
                 self._refresh_run_ids()
         return added
 
-    def warm(self, batch: int = 200) -> int:
-        """Fill the model-derived index columns (risk, top suspect, signature)."""
+    def warm_in_background(self) -> None:
+        """Score stale index rows on a daemon thread so startup is not blocked."""
+        if self.model is None or self.static_bundle:
+            return
+
+        def work() -> None:
+            started = time.perf_counter()
+            try:
+                updated = self.warm()
+            except Exception:  # a failed warm-up leaves the index unscored, not the API down
+                logger.exception("index warm-up failed")
+                return
+            if updated:
+                logger.info(
+                    "Scored %d runs for the index in %.1fs", updated, time.perf_counter() - started
+                )
+
+        self._warm_thread = threading.Thread(target=work, name="index-warm", daemon=True)
+        self._warm_thread.start()
+
+    def warm(self, batch: int = 200, *, run_ids: list[str] | None = None) -> int:
+        """Fill the model-derived index columns (risk, top suspect, signature).
+
+        Only rows scored by another model version (or never scored) are touched; with
+        ``run_ids``, only those runs are considered.
+        """
         if self.model is None:
             return 0
+        with self._warm_lock:
+            return self._warm(batch, run_ids)
+
+    def _warm(self, batch: int, run_ids: list[str] | None) -> int:
         from blackbox.ml.model import run_aggregates
 
+        assert self.model is not None
         version = self.model.version
         diagnoser = self.model.diagnoser
         updated = 0
         for agent in self.agents.values():
-            runs = agent.database.query(
-                """
+            sql = """
                 SELECT r.* FROM runs r JOIN run_index i ON i.run_id = r.run_id
-                WHERE i.model_version IS NULL OR i.model_version != ?
-                """,
-                (version,),
-            )
+                WHERE (i.model_version IS NULL OR i.model_version != ?)
+                """
+            params: tuple[Any, ...] = (version,)
+            if run_ids is not None:
+                if not run_ids:
+                    continue
+                sql += f" AND r.run_id IN ({', '.join('?' for _ in run_ids)})"
+                params += tuple(run_ids)
+            runs = agent.database.query(sql, params)
             for start in range(0, len(runs), batch):
                 chunk = runs[start : start + batch]
                 traces = [_load_trace(agent.database, agent.store, run) for run in chunk]
@@ -615,6 +649,11 @@ class BlackBoxService:
             return None
         edited = {edit["addr"] for edit in json.loads(fork["edits_json"])}
         base_edges = agent.reader.edges(fork["base_run_id"])
+        if f"{row['fork_id']}-control-" in row["run_id"]:
+            # A paired control re-runs the cone unchanged: nothing in it was edited.
+            invalidated = descendants(base_edges, edited) if edited else set()
+            steps = agent.reader.step_details(row["run_id"])
+            return normalise_statuses(steps, invalidated, set())
         invalidated = descendants(base_edges, edited) if edited else set()
         if not edited:  # a re-run-unchanged fork: everything it re-ran was invalidated
             invalidated = {

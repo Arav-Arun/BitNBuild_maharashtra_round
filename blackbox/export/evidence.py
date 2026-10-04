@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -84,12 +85,21 @@ def test_verified_fix_and_invalidation_cone_are_preserved():
     assert changed_calls & edited
 '''
     export_id = uuid.uuid4().hex
-    target = service.data_root / "exports" / export_id
+    # One export directory per fork, so `overwrite` decides whether a re-export replaces it.
+    target = service.data_root / "exports" / f"fork-{fork_id}"
     if target.exists() and not overwrite:
-        raise ApiError("conflict", f"Export directory already exists: {target}")
-    target.mkdir(parents=True, exist_ok=True)
+        raise ApiError(
+            "conflict",
+            f"This fork was already exported to {target}.",
+            hint="Send overwrite=true to regenerate it.",
+            context={"fixture_dir": str(target)},
+        )
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
     fixture_path = target / "fixture.json"
-    test_path = target / "test_regression.py"
+    # A distinct module name per export lets pytest collect several exports in one run.
+    test_path = target / f"test_fork_{fork_id[:12]}.py"
     fixture_path.write_text(json.dumps(fixture, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     test_path.write_text(test_source, encoding="utf-8")
     fixture_hash, test_hash = _digest(fixture_path), _digest(test_path)
@@ -113,6 +123,6 @@ def test_verified_fix_and_invalidation_cone_are_preserved():
         fixture_sha256=fixture_hash,
         files=files,
         invalidation_cone=cone,
-        run_command=f"uv run pytest {test_path}",
+        run_command=f"uv run --extra dev pytest {test_path}",
         created_at=datetime.now(UTC),
     )

@@ -10,6 +10,7 @@ export type ReplayVisual =
   | "invalidated"
   | "live"
   | "edited"
+  | "rerun"
   | "pass"
   | "fail"
   | "diverged";

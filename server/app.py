@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sqlite3
 import uuid
 from contextlib import asynccontextmanager
@@ -11,14 +12,16 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Query, Request, Response
+from fastapi import Depends, FastAPI, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from agents.tripcrew import TravelAPI, TripCrew
-from agents.tripcrew.prompt import parse_trip_prompt
+from agents.tripcrew.prompt import catalog_seed, parse_trip_prompt
 from blackbox.api.errors import ApiError
+from blackbox.api.reader import build_diff
 from blackbox.api.service import BlackBoxService
 from server import models as m
 
@@ -27,12 +30,14 @@ logger = logging.getLogger("blackbox.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    data_dir = Path(__import__("os").environ.get("DATA_DIR", "data"))
+    data_dir = Path(os.environ.get("DATA_DIR", "data"))
     has_recordings = data_dir.is_dir() and any(
         (child / "blackbox.db").is_file() for child in data_dir.iterdir()
     )
     service = BlackBoxService(data_root=data_dir, static_bundle=not has_recordings)
     app.state.service = service
+    # Risk, top suspect and failure groups come from the index; score it without blocking.
+    service.warm_in_background()
     try:
         yield
     finally:
@@ -42,11 +47,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Black Box API", version=m.CONTRACT_VERSION, lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
+    # Browsers send origins without a trailing slash; tolerate one in the setting.
     allow_origins=[
-        origin.strip()
-        for origin in __import__("os")
-        .environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-        .split(",")
+        origin.strip().rstrip("/")
+        for origin in os.environ.get(
+            "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+        ).split(",")
         if origin.strip()
     ],
     allow_methods=["GET", "POST", "OPTIONS"],
@@ -83,6 +89,22 @@ async def request_id(request: Request, call_next):
 @app.exception_handler(ApiError)
 async def api_error_handler(request: Request, error: ApiError):
     return _error(error, getattr(request.state, "request_id", None))
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error_handler(request: Request, error: StarletteHTTPException):
+    # Unknown routes and wrong methods use the same error envelope as every other failure.
+    code = {404: "not_found", 405: "unsupported", 400: "bad_request"}.get(
+        error.status_code, "internal_error"
+    )
+    message = {
+        404: f"No API route matches {request.method} {request.url.path}.",
+        405: f"{request.method} is not supported on {request.url.path}.",
+    }.get(error.status_code, str(error.detail))
+    return _error(
+        ApiError(code, message, status=error.status_code, hint="See /docs for the API routes."),
+        getattr(request.state, "request_id", None),
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -163,10 +185,13 @@ async def run_task(request: Request, body: m.TaskRunRequest):
     if agent_data is None:
         raise ApiError("unavailable", "The TripCrew recorder is not available.")
 
+    # Each run keeps a unique task id (its replay metadata is stored per run), but the
+    # synthetic catalog is seeded from the request text: the same request always prices the
+    # same, so a run with the old exchange rate differs from a clean run only in that rate.
     task_id = f"PROMPT-{uuid.uuid4().hex[:12].upper()}"
-    seed = int(uuid.uuid4().hex[:8], 16)
+    scenario_id, seed = catalog_seed(body.prompt)
     try:
-        scenario = parse_trip_prompt(body.prompt, scenario_id=task_id, seed=seed)
+        scenario = parse_trip_prompt(body.prompt, scenario_id=scenario_id, seed=seed)
     except ValueError as error:
         raise ApiError("bad_request", str(error)) from error
 
@@ -210,7 +235,7 @@ async def run_task(request: Request, body: m.TaskRunRequest):
             )
 
     svc.ensure_index()
-    svc.warm(batch=1)
+    svc.warm(run_ids=[recorded.run_id])
     svc.cache.details.clear()
     detail = svc.run_detail(recorded.run_id)
     return m.TaskRunResponse(
@@ -222,7 +247,7 @@ async def run_task(request: Request, body: m.TaskRunRequest):
 
 
 @app.get("/runs", response_model=m.RunList)
-def runs(request: Request, query: m.RunListQuery = __import__("fastapi").Depends()):
+def runs(request: Request, query: m.RunListQuery = Depends()):
     svc = service(request)
     require_recordings(svc)
     return svc.list_runs(query)
@@ -242,7 +267,8 @@ def run_detail(request: Request, run_id: str, blind: bool = False):
     return svc.run_detail(run_id, blind=blind)
 
 
-@app.get("/runs/{run_id}/steps/{addr}", response_model=m.StepDetail)
+# Step addresses contain "/" (e.g. "fx/tool#1"), so the parameter must accept a path.
+@app.get("/runs/{run_id}/steps/{addr:path}", response_model=m.StepDetail)
 def step(request: Request, run_id: str, addr: str):
     return service(request).step(run_id, addr)
 
@@ -326,9 +352,7 @@ def diff(request: Request, a: str, b: str):
             similarity=1.0,
             reason="Compared directly",
         )
-    return __import__("blackbox.api.reader", fromlist=["build_diff"]).build_diff(
-        left, right, invalidated=None, nearest=nearest
-    )
+    return build_diff(left, right, invalidated=None, nearest=nearest)
 
 
 @app.get("/runs/{run_id}/twin", response_model=m.NearestTwin)
@@ -368,6 +392,9 @@ def crash_report(request: Request, run_id: str):
         else:
             raise
     suspect = diagnosis.responsible_addr if diagnosis else None
+    # When the model abstains, the report still names its leading candidate, labelled as such.
+    leading = suspect or (diagnosis.ranking[0].addr if diagnosis and diagnosis.ranking else None)
+    names = {s.addr: s.name for s in detail.steps}
     reason = detail.run.checker_reason or "The run failed its task checks."
     events = [
         m.ReportEvent(
@@ -375,17 +402,67 @@ def crash_report(request: Request, run_id: str):
             addr=s.addr,
             text=f"{s.name}: {('error: ' + s.error.type) if s.error else ('visible failure' if diagnosis and s.addr == diagnosis.visible_failure_addr else 'recorded step')}",
             tag="root"
-            if s.addr == suspect
+            if s.addr == leading
             else "symptom"
             if diagnosis and s.addr == diagnosis.visible_failure_addr
             else None,
         )
         for s in detail.steps
     ]
+    if suspect:
+        cause_text = f"The most likely cause is {names.get(suspect, suspect)} ({suspect}). {reason}"
+    elif leading:
+        probability = diagnosis.ranking[0].probability if diagnosis else 0.0
+        cause_text = (
+            f"No single step is certain; the leading candidate is "
+            f"{names.get(leading, leading)} ({leading}, {probability:.0%}). {reason}"
+        )
+    else:
+        cause_text = reason
     cause = m.ReportClaim(
-        text=f"The leading candidate is {suspect}. {reason}" if suspect else reason,
-        cites=[m.Citation(addr=suspect, json_pointer=None)] if suspect else [],
+        text=cause_text,
+        cites=[m.Citation(addr=leading, json_pointer=None)] if leading else [],
     )
+    contributing: list[m.ReportClaim] = []
+    recommended = None
+    verification = None
+    if diagnosis:
+        # Other candidates the model could not rule out (its conformal set).
+        for addr in diagnosis.conformal_set:
+            if addr == leading or addr not in names:
+                continue
+            p = next((s.probability for s in diagnosis.ranking if s.addr == addr), 0.0)
+            contributing.append(
+                m.ReportClaim(
+                    text=f"{names[addr]} ({addr}) remains a candidate at {p:.0%}.",
+                    cites=[m.Citation(addr=addr, json_pointer=None)],
+                )
+            )
+            if len(contributing) == 3:
+                break
+        if diagnosis.damage_path and diagnosis.damage_path.reaches_final_answer:
+            contributing.append(
+                m.ReportClaim(
+                    text=f"The value from {diagnosis.damage_path.root_addr} flows into the final "
+                    "answer, so the error propagated instead of being caught.",
+                    cites=[m.Citation(addr=diagnosis.damage_path.root_addr, json_pointer=None)],
+                )
+            )
+        fix = next((f for f in diagnosis.proposed_fixes if f.addr == leading), None) or (
+            diagnosis.proposed_fixes[0] if diagnosis.proposed_fixes else None
+        )
+        if fix:
+            recommended = m.ReportClaim(
+                text=f"{fix.rationale} ({fix.edit.kind.replace('_', ' ')} at {fix.addr}, "
+                f"source: {fix.source.replace('_', ' ')}).",
+                cites=[m.Citation(addr=fix.addr, json_pointer=None)],
+            )
+        if diagnosis.verification and diagnosis.verification.explanation:
+            edit_addr = diagnosis.verification.edit_addr
+            verification = m.ReportClaim(
+                text=diagnosis.verification.explanation,
+                cites=[m.Citation(addr=edit_addr, json_pointer=None)] if edit_addr else [],
+            )
     return m.CrashReport(
         run_id=run_id,
         title=f"Failure report · {detail.run.task}",
@@ -393,7 +470,7 @@ def crash_report(request: Request, run_id: str):
         synopsis=f"{detail.run.agent} failed: {reason}",
         sequence_of_events=events,
         probable_cause=cause,
-        contributing_factors=[],
+        contributing_factors=contributing,
         findings=(
             [
                 m.ReportClaim(text=reason.text, cites=[reason.citation])
@@ -402,12 +479,8 @@ def crash_report(request: Request, run_id: str):
             if diagnosis
             else []
         ),
-        recommended_fix=None,
-        verification=(
-            [m.ReportClaim(text=diagnosis.verification.explanation, cites=[])]
-            if diagnosis and diagnosis.verification
-            else None
-        ),
+        recommended_fix=recommended,
+        verification=verification,
         fixture=False,
     )
 
@@ -419,10 +492,21 @@ def crash_report_markdown(request: Request, run_id: str):
     lines.extend(f"- `{e.addr}` — {e.text}" for e in report.sequence_of_events)
     if report.probable_cause:
         lines.extend(["", "## Probable cause", "", report.probable_cause.text])
+    if report.contributing_factors:
+        lines.extend(["", "## Contributing factors", ""])
+        lines.extend(f"- {c.text}" for c in report.contributing_factors)
     if report.findings:
         lines.extend(["", "## Evidence", ""])
         lines.extend(f"- {f.text}" for f in report.findings)
-    return Response("\n".join(lines) + "\n", media_type="text/markdown")
+    if report.recommended_fix:
+        lines.extend(["", "## Recommended fix", "", report.recommended_fix.text])
+    if report.verification:
+        lines.extend(["", "## Verification", "", report.verification.text])
+    return Response(
+        "\n".join(lines) + "\n",
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="blackbox-{run_id}.md"'},
+    )
 
 
 @app.post("/forks/{fork_id}/export-test", response_model=m.ExportTestResponse)
@@ -534,7 +618,7 @@ def save_label(request: Request, body: m.LabelRequest):
         n=len(double_labelled_runs),
         annotators=len(annotators),
     )
-    total = sum(r["outcome"] == "failed" for r in svc._all_rows())
+    total = sum(r["outcome"] == "failed" and r["origin"] != "fork" for r in svc._all_rows())
     count = len(
         {
             r["run_id"]
@@ -563,7 +647,16 @@ async def ingest_otlp(request: Request):
     # imported, non-replayable trace by the dedicated importer.
     svc = service(request)
     require_recordings(svc)
-    payload = await request.json()
+    try:
+        payload = await request.json()
+    except ValueError as error:
+        raise ApiError(
+            "bad_request",
+            "The request body is not valid JSON.",
+            hint="Send OTLP/HTTP JSON (Content-Type: application/json), not protobuf.",
+        ) from error
+    if not isinstance(payload, dict):
+        raise ApiError("bad_request", "An OTLP export request must be a JSON object.")
     from blackbox.api.otlp import ingest
 
     return ingest(svc, payload)

@@ -30,13 +30,17 @@ logger = logging.getLogger("blackbox.explain")
 
 
 def _adapter_args(agent: str, args: argparse.Namespace) -> argparse.Namespace:
-    return argparse.Namespace(
-        agent=agent, stale_fx=args.stale_fx, dataset=args.dataset, read_k=args.read_k
-    )
+    # replay.json (written by scripts/build_dataset.sh) names the seeds recorded with a stale
+    # FX cache; without them a natural stale-FX failure would be rebuilt with fresh rates.
+    seeds: tuple[int, ...] = ()
+    config = Path(args.data_dir) / "replay.json"
+    if config.is_file():
+        seeds = tuple(json.loads(config.read_text(encoding="utf-8")).get("stale_fx_seeds", ()))
+    return argparse.Namespace(agent=agent, stale_fx=args.stale_fx, stale_fx_seeds=seeds)
 
 
 class Adapters:
-    """One forge adapter per agent, built lazily (HopRAG needs its dataset on disk)."""
+    """One forge adapter per agent, built lazily."""
 
     def __init__(self, recorder: Recorder, args: argparse.Namespace) -> None:
         from blackbox.forge.__main__ import make_adapter
@@ -237,10 +241,6 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("data/eval/verifier.json"))
     parser.add_argument("--tests-dir", type=Path, default=Path("tests/regressions"))
     parser.add_argument("--stale-fx", action="store_true")
-    parser.add_argument(
-        "--dataset", type=Path, default=Path("data/hoprag/musique_ans_v1.0_dev.jsonl")
-    )
-    parser.add_argument("--read-k", type=int, default=1)
     args = parser.parse_args()
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"

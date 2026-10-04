@@ -177,7 +177,7 @@ def _distractor(edits_json: str | None, root_addr: str) -> str | None:
 
 
 def load_corpus(data_dirs: Iterable[str | Path]) -> Corpus:
-    """Load every recorder directory (e.g. ``data/tripcrew``, ``data/hoprag``).
+    """Load every recorder directory (e.g. ``data/tripcrew``).
 
     Each fork contributes one example: K replay samples of a fork are copies of the
     same experiment, and counting them separately would inflate N and could split a

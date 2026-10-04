@@ -16,7 +16,7 @@ from blackbox.ml.dataset import load_corpus
 from blackbox.ml.evaluate import run_evaluation
 from blackbox.ml.model import Diagnoser
 
-DEFAULT_DATA_DIRS = [Path("data/tripcrew"), Path("data/hoprag")]
+DEFAULT_DATA_DIRS = [Path("data/tripcrew")]
 
 
 def main() -> None:

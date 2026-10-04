@@ -14,59 +14,11 @@
       "labelled_by_you": false
     },
     {
-      "run_id": "hr-0001",
-      "agent": "hoprag",
-      "task": "When did the Battle at Choo Hoey's birthplace end?",
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "steps": 12,
-      "labelled_by_you": false
-    },
-    {
-      "run_id": "hr-0002",
-      "agent": "hoprag",
-      "task": "Who is the actress who played the woman who was the Queen of England in 1890 on the n...",
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "steps": 12,
-      "labelled_by_you": false
-    },
-    {
-      "run_id": "hr-0003",
-      "agent": "hoprag",
-      "task": "When did the city where Greenwood Laboratory School is located become capitol of the...",
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "steps": 12,
-      "labelled_by_you": true
-    },
-    {
       "run_id": "tc-0004",
       "agent": "tripcrew",
       "task": "Chennai → London under ₹38,477",
       "checker_reason": "Incorrect INR total: got 33608.44, expected 36186.40",
       "steps": 16,
-      "labelled_by_you": false
-    },
-    {
-      "run_id": "hr-0004",
-      "agent": "hoprag",
-      "task": "What song did Paul McCartney write for the performer of Valotte?",
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "steps": 12,
-      "labelled_by_you": false
-    },
-    {
-      "run_id": "hr-0007",
-      "agent": "hoprag",
-      "task": "What area that abuts the country where the Prunus spinosa leaf much sooner still has...",
-      "checker_reason": "Token F1 0.500 below 0.8",
-      "steps": 12,
-      "labelled_by_you": false
-    },
-    {
-      "run_id": "hr-0010",
-      "agent": "hoprag",
-      "task": "Who is the father of the performer of Je dis aime?",
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "steps": 12,
       "labelled_by_you": false
     },
     {

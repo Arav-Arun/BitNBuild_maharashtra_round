@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
 from blackbox.api.service import BlackBoxService
-from blackbox.export.regression import export_verified
+from blackbox.export.evidence import export_verified
 from server import models as contract
 
 mcp = FastMCP(
@@ -25,7 +26,7 @@ _service: BlackBoxService | None = None
 def service() -> BlackBoxService:
     global _service
     if _service is None:
-        _service = BlackBoxService(data_root=Path(__import__("os").environ.get("DATA_DIR", "data")))
+        _service = BlackBoxService(data_root=Path(os.environ.get("DATA_DIR", "data")))
     return _service
 
 

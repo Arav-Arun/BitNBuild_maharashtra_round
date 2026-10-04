@@ -80,7 +80,7 @@ class NaturalLabeler:
     """Attempt to find the root cause of a naturally failed run.
 
     Strategy (from the plan):
-    1. Get gold answers (solver output for TripCrew, sub-answers for HopRAG).
+    1. Get gold answers (the scenario solver's output for TripCrew).
     2. Propose a minimal fix at each candidate step, earliest first.
     3. Screen candidates at K=3, then run K=5 on the earliest promising step.
     4. Attributed only if edited lower bound > control upper bound.

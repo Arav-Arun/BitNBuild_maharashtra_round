@@ -6704,7 +6704,7 @@
         },
         "samples": {
           "maximum": 10,
-          "minimum": 3,
+          "minimum": 4,
           "type": "integer"
         },
         "candidates": {
@@ -6791,8 +6791,9 @@
         },
         "samples": {
           "default": 5,
+          "description": "K paired samples. Below 4, the Wilson intervals of K/K and 0/K always overlap, so no candidate could ever be VERIFIED.",
           "maximum": 10,
-          "minimum": 3,
+          "minimum": 4,
           "type": "integer"
         }
       },

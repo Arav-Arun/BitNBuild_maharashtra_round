@@ -1473,7 +1473,6 @@ class TestGhostHint(unittest.IsolatedAsyncioTestCase):
         from blackbox.forge.inject import FaultInjector, is_test_double
 
         self.assertTrue(is_test_double("tripcrew-fixture-v1"))
-        self.assertTrue(is_test_double("hoprag-lexical-v1-h3"))
         self.assertFalse(is_test_double("openai/gpt-oss-20b"))
         self.assertFalse(is_test_double(None))
 

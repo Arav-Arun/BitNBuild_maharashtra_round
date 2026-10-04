@@ -65,15 +65,6 @@ class TripCrewProfile(AgentProfile):
         return summary, task.get("original_prompt") or request
 
 
-class HopRAGProfile(AgentProfile):
-    def task(self, task_id: str, first_input: Any) -> tuple[str, str | None]:
-        question = _envelope_task(first_input).get("question")
-        if not isinstance(question, str):
-            return task_id, None
-        short = question if len(question) <= 88 else question[:85].rstrip() + "..."
-        return short, question
-
-
 PROFILES: dict[str, AgentProfile] = {
     "tripcrew": TripCrewProfile(
         "tripcrew",
@@ -81,13 +72,6 @@ PROFILES: dict[str, AgentProfile] = {
         "Multi-agent travel planner: a planner, four parallel scouts (flights, hotels, "
         "weather, FX), a budget calculator, a writer and a verifier.",
         "final_plan",
-    ),
-    "hoprag": HopRAGProfile(
-        "hoprag",
-        "HopRAG",
-        "Sequential multi-hop question answering over MuSiQue: decompose, then search, "
-        "read and answer each hop, then compose the final answer.",
-        "final_answer",
     ),
 }
 

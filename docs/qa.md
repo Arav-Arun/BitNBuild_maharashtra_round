@@ -10,9 +10,9 @@
 
 **What does VERIFIED mean?** The lower 95% Wilson bound for edited samples exceeds the upper bound for paired unchanged controls. It is evidence for the tested task and configuration, not a universal proof.
 
-**Does it beat existing baselines on unseen failures?** Not in the current evaluation. The S1 top-1 score is about 0.55 (n=96); the strongest baseline is about 0.63. Results displays both with intervals.
+**Does it beat existing baselines on unseen failures?** On TripCrew, yes: S1 (fault types never seen in training) top-1 is 0.712 (n=111) against 0.586 for the strongest baseline, a paired difference of +0.126 with a 95% interval of [0.063, 0.198]. That is one synthetic agent; cross-agent generalization is not measured. Results displays both with intervals.
 
-**Why include a model if the baseline is stronger?** The prototype combines localization with provenance, selective replay and intervention evidence. The evaluation is explicit about where the ranker currently underperforms.
+**Why trust a model at all?** Diagnosis is a ranked hypothesis that can abstain. Only the paired replay verdict counts as proof, and natural failures (S4) are not yet a meaningful test because every TripCrew natural failure has the same stale-FX root.
 
 **What happens with a new or unsupported trace?** OpenTelemetry traces are imported as read-only. Replay is unavailable because the original application code and deterministic tool adapters are not part of the trace.
 

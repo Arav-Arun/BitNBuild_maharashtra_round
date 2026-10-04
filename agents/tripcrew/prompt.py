@@ -2,10 +2,53 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from datetime import date
 
 from agents.tripcrew.scenarios import DESTINATIONS, ORIGINS, Scenario, solve
+
+# Common alternative names people type for the supported cities.
+CITY_ALIASES = {
+    "bombay": "Mumbai",
+    "new delhi": "Delhi",
+    "bangalore": "Bengaluru",
+    "madras": "Chennai",
+}
+CURRENCY = r"(?:INR|Rs\.?|rupees|₹)"
+AMOUNT = r"(\d[\d,]*(?:\.\d{1,2})?)\s*(lakhs?|lacs?)?"
+
+
+def catalog_seed(prompt: str) -> tuple[str, int]:
+    """Scenario id and seed for a request, so the same request always gets the same prices."""
+    digest = hashlib.sha256(" ".join(prompt.split()).casefold().encode("utf-8")).hexdigest()
+    return f"PROMPT-{digest[:12].upper()}", int(digest[:8], 16)
+
+
+def _city(text: str, cities: tuple[str, ...] | dict) -> str | None:
+    """The supported city a phrase starts with, so trailing words ("next Friday") are ignored."""
+    phrase = text.strip().casefold()
+    names = {city.casefold(): city for city in cities}
+    names.update({alias: city for alias, city in CITY_ALIASES.items() if city in cities})
+    for name in sorted(names, key=len, reverse=True):
+        if phrase == name or phrase.startswith(name + " "):
+            return names[name]
+    return None
+
+
+def _budget(text: str) -> float | None:
+    """INR budget from 'budget INR 1,60,000', '₹1.6 lakh', 'Rs 90000' or '90000 rupees'."""
+    patterns = (
+        rf"\bbudget\s*(?:is\s*)?(?:of\s*)?(?:about\s*)?{CURRENCY}?\s*{AMOUNT}",
+        rf"{CURRENCY}\s*{AMOUNT}",
+        rf"\b{AMOUNT}\s*(?:INR|rupees)\b",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            value = float(match.group(1).replace(",", ""))
+            return value * 100_000 if match.group(2) else value
+    return None
 
 
 def _preference(prompt: str, name: str, *, implied: bool = False) -> bool:
@@ -28,16 +71,15 @@ def parse_trip_prompt(prompt: str, *, scenario_id: str, seed: int) -> Scenario:
     text = " ".join(prompt.split())
     route = re.search(
         r"\bfrom\s+([A-Za-z][A-Za-z .'-]*?)\s+to\s+([A-Za-z][A-Za-z .'-]*?)"
-        r"(?=\s+(?:departing|depart|leaving|on|for|with|budget)\b|[,;.]|$)",
+        r"(?=\s+(?:departing|depart|leaving|returning|on|for|with|budget|next|this|in|between)\b"
+        r"|\s+\d|[,;.]|$)",
         text,
         re.IGNORECASE,
     )
     if not route:
         raise ValueError("Include a route like ‘from Mumbai to Singapore’.")
-    origins = {city.casefold(): city for city in ORIGINS}
-    destinations = {city.casefold(): city for city in DESTINATIONS}
-    origin = origins.get(route.group(1).strip().casefold())
-    destination = destinations.get(route.group(2).strip().casefold())
+    origin = _city(route.group(1), ORIGINS)
+    destination = _city(route.group(2), tuple(DESTINATIONS))
     if not origin:
         raise ValueError(f"Origin must be one of: {', '.join(ORIGINS)}.")
     if not destination:
@@ -60,15 +102,9 @@ def parse_trip_prompt(prompt: str, *, scenario_id: str, seed: int) -> Scenario:
     if not 1 <= adults <= 6:
         raise ValueError("The offline demo supports 1 to 6 travelers.")
 
-    budget = re.search(
-        r"\bbudget\s*(?:is\s*)?(?:of\s*)?(?:INR\s*)?([\d,]+(?:\.\d{1,2})?)"
-        r"|\bINR\s*([\d,]+(?:\.\d{1,2})?)",
-        text,
-        re.I,
-    )
-    if not budget:
-        raise ValueError("Include a budget, for example ‘budget INR 160000’.")
-    budget_inr = float((budget.group(1) or budget.group(2)).replace(",", ""))
+    budget_inr = _budget(text)
+    if budget_inr is None:
+        raise ValueError("Include a budget, for example ‘budget ₹1,60,000’ or ‘budget 1.6 lakh’.")
     if not 1000 <= budget_inr <= 100_000_000:
         raise ValueError("Budget must be between INR 1,000 and INR 100,000,000.")
 

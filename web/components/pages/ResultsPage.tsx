@@ -15,9 +15,9 @@ export function ResultsPage() {
   return (
     <div className="page">
       <div className="page-inner results-page">
-        <p className="label">Evaluation</p>
         <h1 className="h1">How well does it find the failing step?</h1>
-        <p className="muted results-intro">Localization scores and replay results.</p>
+        {data && !data.fixture && headline(data) && <p className="results-headline">{headline(data)}</p>}
+        {!data && !err && <p className="muted results-intro">Loading the evaluation…</p>}
         {err && <p className="error-box" role="alert">{err}</p>}
         {data && (
           <>
@@ -47,11 +47,11 @@ export function ResultsPage() {
                 <h2 className="h2">Localization by method</h2>
                 <div className="card table-wrap evaluation-table">
                   <table className="table">
-                    <thead><tr><th>Method</th><th>Split</th><th>Samples</th><th>Top 1</th><th>Top 3</th><th>Within 1</th><th>MRR</th></tr></thead>
+                    <thead><tr><th>Method</th><th>Test set</th><th>Runs</th><th>First guess right</th><th>In top 3</th><th>Within 1 step</th><th>MRR</th></tr></thead>
                     <tbody>{data.leaderboard.map((row, index) => (
                       <tr key={`${row.method}-${row.split}-${index}`}>
-                        <td>{row.method}{row.reported_literature && <span className="badge badge-neutral">paper</span>}</td>
-                        <td>{row.split}</td><td>{row.n ?? "—"}</td>
+                        <td>{methodName(row.method)}{row.reported_literature && <span className="badge badge-neutral">paper</span>}</td>
+                        <td title={row.split}>{splitName(row.split)}</td><td>{row.n ?? "–"}</td>
                         <td>{pct(row.top1?.value)}</td><td>{pct(row.top3?.value)}</td>
                         <td>{pct(row.within1?.value)}</td><td>{pct(row.mrr?.value)}</td>
                       </tr>
@@ -63,7 +63,7 @@ export function ResultsPage() {
                   {data.recorder_ablations.map((ablation) => (
                     <section className="card card-pad" key={ablation.id}>
                       <h2 className="h2">{ablation.title}</h2>
-                      <p className="muted">{ablation.split} · {ablation.interpretation?.replaceAll("_", " ") || "incomplete"}</p>
+                      <p className="muted">{splitName(ablation.split)}: {ablation.interpretation?.replaceAll("_", " ") || "incomplete"}</p>
                       {ablation.arms.map((arm) => (
                         <div className="bar-row" key={arm.arm}>
                           <span>{arm.label}</span>
@@ -88,6 +88,44 @@ export function ResultsPage() {
       </div>
     </div>
   );
+}
+
+/** One plain sentence: unseen-fault accuracy against the strongest baseline. */
+function headline(data: EvalResponse): string | null {
+  const card = data.headline.find((item) => item.id === "unseen_fault_top1");
+  if (!card?.value) return null;
+  const ours = pct(card.value.value);
+  return card.comparator
+    ? `On fault types it never saw in training, Black Box names the failing step first ${ours} of the time. The best simple baseline manages ${pct(card.comparator.value)}.`
+    : `On fault types it never saw in training, Black Box names the failing step first ${ours} of the time.`;
+}
+
+const METHODS: Record<string, string> = {
+  blackbox: "Black Box",
+  random: "Random step",
+  "last-step": "Always the last step",
+  "first-error": "First step with an error",
+  "anomaly-max": "Most unusual step",
+  "position-only": "Step position only",
+};
+
+const SPLITS: Record<string, string> = {
+  S0: "Seen fault types",
+  S1: "Unseen fault types",
+  S3: "Unseen agent",
+  S4: "Natural failures",
+  S5: "Zero-shot",
+};
+
+function methodName(method: string) {
+  return METHODS[method] ?? method;
+}
+
+/** "S1" -> "Unseen fault types"; "S3:tripcrew" -> "Unseen agent (tripcrew)". */
+function splitName(split: string) {
+  const [code, detail] = split.split(":");
+  const name = SPLITS[code] ?? code;
+  return detail ? `${name} (${detail})` : name;
 }
 
 const metricTitle: Record<string, string> = {

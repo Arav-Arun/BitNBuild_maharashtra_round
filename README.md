@@ -64,12 +64,12 @@ Also included: OTLP/HTTP JSON GenAI span import (read-only) and MCP tools for co
 
 | Layer | Tools |
 |---|---|
-| **Frontend** | Next.js 16, React 19, TypeScript, React Flow + ELK.js (trace graph), TanStack Table/Virtual, Recharts, Monaco editor |
+| **Frontend** | Next.js 16, React 19, TypeScript, React Flow + ELK.js (trace graph) |
 | **Backend** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2, httpx, SQLite |
 | **ML and retrieval** | LightGBM, scikit-learn, NumPy, BM25 (`rank-bm25`) |
 | **LLMs** | Groq-hosted `gpt-oss-20b` (agent) and `gpt-oss-120b` (judge), optional and only in live mode |
 | **Tooling** | uv, ruff, pytest, Docker Compose, MCP |
-| **Hosting** | Vercel (web), Render (recorded-mode API) |
+| **Hosting** | Vercel (web), Render (API) |
 
 ## 🚀 Quick start
 
@@ -80,8 +80,8 @@ cp .env.example .env
 make setup
 npm --prefix web ci
 
-# Build the local example recordings and model if data/ is empty
-./scripts/build_dataset.sh --fresh
+# Build the local recordings and model if data/ is empty
+make dataset
 
 # Terminal 1
 make dev-api
@@ -95,25 +95,25 @@ Open <http://localhost:3000>. API docs are at <http://127.0.0.1:8000/docs>.
 
 | `MODE` | Behaviour |
 |---|---|
-| `recorded` | Reuses stored responses only. No network, no keys. Used in deployment. |
-| `offline` | Deterministic local stand-ins. The **New task** page uses a small synthetic catalog, not live booking inventory. |
+| `offline` | Default. Deterministic local stand-ins: no network, no keys. Fixes, verification and **New task** all run. The New task page uses a small synthetic catalog, not live booking inventory. |
+| `recorded` | Reuses stored responses only, so it is read-only: forks that re-run a model step and New task are disabled. |
 | `live` | Calls the configured OpenAI-compatible endpoint. Put keys in `.env`, never in the browser or a deployment. |
 
 > **No data? No problem.** If you only want the UI, start both servers without `data/`. The API reports degraded health and the browser shows clearly labelled static fixtures from `web/mocks/`.
 
-The dataset build includes deterministic recordings, injected and natural failures, a trained diagnoser and evaluation artifacts. Data, model files and reports are intentionally ignored by Git. A fresh build may download the public MuSiQue-Ans dataset.
+The dataset build records deterministic TripCrew runs (fresh-FX seeds 7, 13 and 17; stale-FX seeds 11 and 19), injected and natural failures, a trained diagnoser and evaluation artifacts. Data, model files and reports are intentionally ignored by Git; `./scripts/build_dataset.sh --fresh` wipes and rebuilds everything, which changes the demo run IDs.
 
 ## 📈 Evaluation, honestly reported
 
-The frozen artifacts contain **615 evaluated traces**.
+The frozen artifacts contain **860 evaluated TripCrew traces**.
 
-| Split | Ranker top-1 | n |
-|---|---|---|
-| S0 | **0.88** | 75 |
-| S1 | 0.552 (best baseline: 0.625) | 96 |
-| S4 (natural failures) | 0.247 | 85 |
+| Split | Ranker top-1 | Best baseline | n |
+|---|---|---|---|
+| S0 (seen faults) | **0.931** | | 87 |
+| S1 (unseen faults) | **0.712** | 0.586 (`anomaly_max`) | 111 |
+| S4 (natural failures) | 1.0 | 1.0 | 80 |
 
-The current results **do not support a claim that the ranker wins on unseen fault types.** Black Box reports that plainly: the Results page keeps the split and sample size visible next to every number. Regenerate everything with `make eval`.
+On unseen fault types the ranker beats the best baseline by +0.126 (paired 95% interval [0.063, 0.198]). This is one synthetic agent, so it does not establish cross-agent generalization, and S4 is not a meaningful test yet: every TripCrew natural failure has the same stale-FX root. The Results page keeps the split and sample size visible next to every number. Regenerate everything with `make eval`.
 
 ## 🔌 API
 
@@ -144,12 +144,12 @@ make demo-offline          # Docker Compose showcase
 
 ## ☁️ Deployment
 
-The public setup is a **Next.js frontend on Vercel** and a **recorded-mode FastAPI service on Render**.
+The public setup is a **Next.js frontend on Vercel** and a **FastAPI service on Render**.
 
 **1. Package the dataset.** `data/` is git-ignored, so host it where the build can download it, for example as a GitHub Release asset:
 
 ```sh
-tar -czf blackbox-data.tar.gz --exclude=musique_ans_v1.0_dev.jsonl -C data .
+make data-archive   # writes blackbox-data.tar.gz without exports or ad-hoc prompt runs
 ```
 
 **2. Render (API).** Settings for the Python runtime:
@@ -159,13 +159,15 @@ tar -czf blackbox-data.tar.gz --exclude=musique_ans_v1.0_dev.jsonl -C data .
 | Build command | `pip install ".[ml,server]" && python scripts/fetch_data.py "$DATA_URL" data` |
 | Start command | `uvicorn server.app:app --host 0.0.0.0 --port $PORT` |
 | Health check | `/health` |
-| Env | `PYTHON_VERSION=3.12.8`, `MODE=recorded`, `DATA_DIR=data`, `DATA_URL=<archive link>`, `CORS_ORIGINS=<frontend origin>` |
+| Env | `PYTHON_VERSION=3.12.8`, `MODE=offline`, `DATA_DIR=data`, `DATA_URL=<archive link>`, `CORS_ORIGINS=<frontend origin>` |
 
 A Docker deploy also works: set `DATA_URL` as a build argument and the [Dockerfile](Dockerfile) unpacks the dataset into `/app/data`.
 
 **3. Vercel (web).** Set **Root Directory** to `web` and add `NEXT_PUBLIC_API_URL` set to the Render URL. This value is baked in at build time.
 
-**4. CORS.** Set Render's `CORS_ORIGINS` to the exact Vercel origin, with no trailing slash. Separate several origins with commas.
+**4. CORS.** Set Render's `CORS_ORIGINS` to the Vercel origin (a trailing slash is ignored). Separate several origins with commas; add `http://localhost:3000` to point a local frontend at the deployed API with `make dev-web-remote`.
+
+`MODE=offline` is recommended for the public demo: every TripCrew run uses the deterministic stand-in model, so fixes, verification and New task work without any network call or key. Render's free disk is ephemeral, so runs created there disappear on restart. Use `MODE=recorded` for a strictly read-only API.
 
 Without the dataset the API starts in degraded mode, and the browser falls back to labelled mocks. **Never add a live provider key to Render or Vercel.**
 
@@ -182,4 +184,4 @@ docker compose up --build   # run API and web locally in containers
 
 ## 📚 More docs
 
-[Demo script](docs/demo-script.md) · [QA](docs/qa.md) · [Deck outline](docs/deck-outline.md) · [TripCrew](docs/tripcrew.md) · [HopRAG](docs/hoprag.md) · [Problem statement](PROBLEM_STATEMENT.md)
+[Demo script](docs/demo-script.md) · [QA](docs/qa.md) · [Deck outline](docs/deck-outline.md) · [TripCrew](docs/tripcrew.md) · [Problem statement](PROBLEM_STATEMENT.md)

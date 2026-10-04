@@ -1,5 +1,5 @@
 {
-  "total_failed": 15,
+  "total_failed": 8,
   "items": [
     {
       "signature": "tripcrew:fx_rate:total_mismatch",
@@ -12,31 +12,6 @@
         "tc-0001",
         "ij-0001-fix-0",
         "tc-0004"
-      ]
-    },
-    {
-      "signature": "hoprag:unlocalised:wrong_answer",
-      "label": "unlocalised · wrong answer",
-      "agent": "hoprag",
-      "count": 3,
-      "top_suspect_name": null,
-      "fault_type": "natural",
-      "example_run_ids": [
-        "hr-0003",
-        "hr-0007",
-        "hr-0010"
-      ]
-    },
-    {
-      "signature": "hoprag:answerer chat:wrong_answer",
-      "label": "answerer chat · wrong answer",
-      "agent": "hoprag",
-      "count": 2,
-      "top_suspect_name": "answerer chat",
-      "fault_type": "natural",
-      "example_run_ids": [
-        "hr-0001",
-        "hr-0002"
       ]
     },
     {
@@ -73,17 +48,6 @@
       ]
     },
     {
-      "signature": "hoprag:decomposer chat:wrong_answer",
-      "label": "decomposer chat · wrong answer",
-      "agent": "hoprag",
-      "count": 1,
-      "top_suspect_name": "decomposer chat",
-      "fault_type": "natural",
-      "example_run_ids": [
-        "hr-0004"
-      ]
-    },
-    {
       "signature": "tripcrew:hotel chat:invalid_output",
       "label": "hotel chat · invalid output",
       "agent": "tripcrew",
@@ -92,17 +56,6 @@
       "fault_type": "constraint_dropped",
       "example_run_ids": [
         "ij-0005-fix-0"
-      ]
-    },
-    {
-      "signature": "hoprag:answer:crash",
-      "label": "answer · crash",
-      "agent": "hoprag",
-      "count": 1,
-      "top_suspect_name": "answer",
-      "fault_type": "empty_404",
-      "example_run_ids": [
-        "ij-0008-fix-0"
       ]
     },
     {

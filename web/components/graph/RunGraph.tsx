@@ -141,6 +141,7 @@ function VisualTag({ visual }: { visual: ReplayVisual }) {
     invalidated: ["invalidated", "var(--warn)"],
     live: ["running", "var(--warn)"],
     edited: ["edited", "var(--accent)"],
+    rerun: ["re-ran", "var(--warn)"],
     pass: ["done", "var(--pass)"],
     fail: ["done", "var(--fail)"],
     diverged: ["diverged", "var(--fail)"],
@@ -247,7 +248,7 @@ function GraphInner({
   const rfEdges: Edge[] = useMemo(() => {
     return uniqueEdges(edges).map((e) => {
       const onPath = pathSet.has(e.source) && pathSet.has(e.target);
-      const color = onPath ? "var(--accent)" : e.kind === "message" ? "#3d434d" : "#525967";
+      const color = onPath ? "var(--saffron)" : e.kind === "message" ? "var(--edge-message)" : "var(--edge)";
       return {
         id: e.id,
         source: e.source,
@@ -300,9 +301,9 @@ function GraphInner({
       elementsSelectable
       minZoom={0.2}
       maxZoom={1.6}
-      colorMode="dark"
+      colorMode="light"
     >
-      <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#30343c" />
+      <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="var(--grid-dot)" />
       <Controls showInteractive={false} position="bottom-right" />
     </ReactFlow>
   );
