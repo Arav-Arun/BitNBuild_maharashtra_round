@@ -42,7 +42,7 @@ export function NewRunPage() {
     }
   }
 
-  const enabled = mode === "offline" && !staticBundle;
+  const enabled = reachable && mode === "offline" && !staticBundle;
   const unavailable = !reachable
     ? `The API is not reachable. ${UNREACHABLE_HINT}`
     : staticBundle

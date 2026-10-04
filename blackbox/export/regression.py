@@ -72,9 +72,8 @@ def _copy_blob(source: Store, target: Store, kind: str, ref: str | None) -> None
         shutil.copyfile(path, target.root / kind / f"{ref}.json")
 
 
-def _frozen_edits(recorder: Recorder, fork: dict[str, Any]) -> list[dict[str, Any]]:
+def _frozen_edits(recorder: Recorder, fork: dict[str, Any], fix_run: str) -> list[dict[str, Any]]:
     edits = json.loads(fork["edits_json"])
-    fix_run = f"{fork['fork_id']}-fix-0"
     frozen = []
     for edit in edits:
         if edit["kind"] == "ghost_hint":
@@ -131,15 +130,31 @@ def export(
             "no offline replay can reproduce the failure (a crashed tool call re-runs locally, "
             "a model call cannot); re-record the run first"
         )
-    edits = _frozen_edits(recorder, fork)
+    passing = database.one(
+        "SELECT run_id FROM runs WHERE fork_id = ? AND run_id LIKE ? AND outcome = 'passed' "
+        "ORDER BY run_id LIMIT 1",
+        (fork_id, f"{fork_id}-fix-%"),
+    )
+    if passing is None:
+        raise ExportError("the verified fork has no passing edited sample")
+    fix_run = passing["run_id"]
+    edits = _frozen_edits(recorder, fork, fix_run)
+    if not edits:
+        raise ExportError("a regression export needs an intervention to replay")
     addr = edits[0]["addr"]
-    fix_run = f"{fork_id}-fix-0"
 
     stem = f"test_{_slug(run_id)[:24]}_{_slug(addr)}"
     fixture_dir = out_dir / "fixtures" / stem
     if fixture_dir.exists():
         shutil.rmtree(fixture_dir)
     fixture_dir.mkdir(parents=True)
+    if run["task_id"].startswith("PROMPT-"):
+        metadata = recorder.data_dir / "prompt-scenarios" / f"{run['task_id']}.json"
+        if not metadata.is_file():
+            raise ExportError("the prompt's replay metadata is unavailable")
+        target_metadata = fixture_dir / "prompt-scenarios" / metadata.name
+        target_metadata.parent.mkdir()
+        shutil.copyfile(metadata, target_metadata)
     target_store = Store(fixture_dir / "content")
     target = SQLiteDatabase(fixture_dir / "blackbox.db")
     try:

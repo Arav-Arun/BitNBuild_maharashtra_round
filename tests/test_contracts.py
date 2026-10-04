@@ -19,7 +19,7 @@ from server.models import (
 )
 
 
-class TaskOneTests(unittest.TestCase):
+class ContractTests(unittest.TestCase):
     def test_settings_file_and_environment_precedence(self):
         with tempfile.TemporaryDirectory() as directory:
             env_file = Path(directory) / ".env"
@@ -109,6 +109,7 @@ class TaskOneTests(unittest.TestCase):
             update={
                 "state_after": {**final.state_after, "final_plan": new_plan},
                 "hashes": final.hashes.model_copy(update={"state_after": "f" * 64}),
+                "cache_status": "cached",
             }
         )
         fork = detail.model_copy(

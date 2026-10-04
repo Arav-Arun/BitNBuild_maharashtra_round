@@ -1148,7 +1148,7 @@ class Test20ForksPerOperatorSimulation(unittest.IsolatedAsyncioTestCase):
         progress = await runner.run_per_operator(count_per_operator=20)
         summary = progress.summary()
 
-        # Print outcome counts per operator as required by PLAN.md
+        # Summarize outcomes across all fault operators.
         print("\n=== Fault Forge 20 Forks Per Operator Summary ===")
         print(f"Total Attempts: {summary['total_attempts']}")
         print(

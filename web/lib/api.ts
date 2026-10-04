@@ -18,7 +18,7 @@ export const UNREACHABLE_HINT = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|
   ? "Start it with make dev-api, then retry."
   : "A free-tier host can take about a minute to wake up; retry shortly.";
 function recordedFallback(path: string): unknown {
-  const [route] = path.split("?");
+  const [route, query = ""] = path.split("?");
   if (route === "/health") return { ...healthFixture, static_bundle: true,
     capabilities: { ...healthFixture.capabilities, fork: false, verify: false, export_test: false, label: false },
     notes: [...healthFixture.notes, "Static recorded showcase is active; writes are disabled."] };
@@ -27,10 +27,13 @@ function recordedFallback(path: string): unknown {
   if (route === "/failure-groups") return groupsFixture;
   if (route === "/eval") return evalFixture;
   if (route === "/labels/queue") return labelFixture;
-  if (route === "/diff") return diffFixture;
-  if (route.endsWith("/report")) return reportFixture;
-  if (route.endsWith("/diagnosis")) return diagnosisFixture;
-  if (/^\/runs\/[^/]+$/.test(route) && route.includes("tc-")) return detailFixture;
+  if (route === "/diff") {
+    const params = new URLSearchParams(query);
+    if (params.get("a") === diffFixture.left_run_id && params.get("b") === diffFixture.right_run_id) return diffFixture;
+  }
+  if (route === `/runs/${reportFixture.run_id}/report`) return reportFixture;
+  if (route === `/runs/${diagnosisFixture.run_id}/diagnosis`) return diagnosisFixture;
+  if (route === `/runs/${detailFixture.run.run_id}`) return detailFixture;
   return undefined;
 }
 
@@ -66,11 +69,12 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       "Deploy with NEXT_PUBLIC_API_URL pointing at a running Black Box API.");
   }
   let response: Response;
+  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   try {
-    response = await fetch(`${API}${path}`, { ...init, cache: "no-store", headers: {
-      ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers,
-    } });
-  } catch {
+    response = await fetch(`${API}${path}`, { ...init, cache: "no-store", headers });
+  } catch (error) {
+    if (init?.signal?.aborted) throw error;
     const data = fixture();
     if (data !== undefined) return data as T;
     throw new ApiRequestError(`Cannot reach the Black Box API at ${API}.`, 0, "unavailable", UNREACHABLE_HINT);
@@ -83,6 +87,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       body?.error?.code ?? null,
       body?.error?.hint ?? null,
     );
+  }
+  if (body === null) {
+    throw new ApiRequestError("The API returned an invalid JSON response.", response.status, "invalid_response", "Check the configured API URL and retry.");
   }
   return body as T;
 }

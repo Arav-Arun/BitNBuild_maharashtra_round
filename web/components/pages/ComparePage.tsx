@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { DiffResponse, DiffRow, DiffSide, RunDetail, RunList, RunSummary } from "../../lib/contract";
-import { api } from "../../lib/api";
+import { api, errorText } from "../../lib/api";
 
 const STAT_LABELS: Record<string, string> = {
   same: "Unchanged steps",
@@ -15,6 +15,12 @@ const STAT_LABELS: Record<string, string> = {
 
 function outcomeLabel(status: string) {
   return status === "passed" ? "Completed" : status === "failed" ? "Failed" : "Still running";
+}
+
+function runOption(run: RunSummary) {
+  const sample = run.run_id.match(/-(fix|control)-(\d+)$/);
+  const label = sample ? `${sample[1] === "fix" ? "Fix" : "Control"} ${Number(sample[2]) + 1}` : "Run";
+  return `${label} · ${run.task} · ${outcomeLabel(run.status)} · ${run.run_id.slice(0, 8)}`;
 }
 
 function changedLabel(fields: string[]) {
@@ -87,6 +93,9 @@ function stateChangePreview(row: DiffRow, sideName: "left" | "right") {
 
 function DiffResult({ row, sideName }: { row: DiffRow; sideName: "left" | "right" }) {
   const side = row[sideName];
+  if (side && (row.status === "same" || row.status === "cached")) {
+    return <span className="faint">Unchanged result</span>;
+  }
   const value = recordedValue(side);
   const isState = Boolean(
     side && side.output == null && Object.keys(side.state_writes).length > 0,
@@ -107,7 +116,7 @@ function DiffResult({ row, sideName }: { row: DiffRow; sideName: "left" | "right
 function replayLabel(row: DiffRow) {
   if (!row.right) return "Step removed";
   switch (row.right.cache_status) {
-    case "cached": return "Recorded result reused";
+    case "cached": return row.status === "changed" ? "Matching cached result" : "Original result reused";
     case "invalidated": return "Replayed after an input changed";
     case "edited": return "Edited at this step";
     case "live": return "Executed for this run";
@@ -126,6 +135,7 @@ export function ComparePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const params = new URLSearchParams(window.location.search);
     setLeftId(params.get("a") || "");
     setRightId(params.get("b") || "");
@@ -133,10 +143,12 @@ export function ComparePage() {
       api<RunList>("/runs?limit=100"),
       api<RunList>("/runs?origin=fork&limit=100"),
     ]).then(([recorded, replays]) => {
+      if (!active) return;
       const unique = new Map<string, RunSummary>();
       [...recorded.items, ...replays.items].forEach((run) => unique.set(run.run_id, run));
       setRuns([...unique.values()]);
-    }).catch((caught) => setError(caught.message));
+    }).catch((caught) => { if (active) setError(errorText(caught)); });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -156,16 +168,20 @@ export function ComparePage() {
   }, [leftId, rightId]);
 
   useEffect(() => {
+    setDiff(null);
+    setError("");
     if (!leftId || !rightId) {
-      setDiff(null);
+      setLoading(false);
       return;
     }
+    let active = true;
+    const controller = new AbortController();
     setLoading(true);
-    setError("");
-    api<DiffResponse>(`/diff?a=${encodeURIComponent(leftId)}&b=${encodeURIComponent(rightId)}`)
-      .then(setDiff)
-      .catch((caught) => setError(caught.message))
-      .finally(() => setLoading(false));
+    api<DiffResponse>(`/diff?a=${encodeURIComponent(leftId)}&b=${encodeURIComponent(rightId)}`, { signal: controller.signal })
+      .then((result) => { if (active) setDiff(result); })
+      .catch((caught) => { if (active) setError(errorText(caught)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; controller.abort(); };
   }, [leftId, rightId]);
 
   const firstChanged = useMemo(
@@ -203,7 +219,7 @@ export function ComparePage() {
             <span className="label">Run A</span>
             <select className="input" value={leftId} onChange={(event) => setLeftId(event.target.value)}>
               <option value="">Choose a task run</option>
-              {visibleRuns.map((run) => <option key={run.run_id} value={run.run_id}>{run.origin === "fork" ? "Replay · " : "Run · "}{run.task} · {outcomeLabel(run.status)}</option>)}
+              {visibleRuns.map((run) => <option key={run.run_id} value={run.run_id}>{runOption(run)}</option>)}
               {leftId && !visibleRuns.some((run) => run.run_id === leftId) && leftRun && <option value={leftId}>Selected · {leftRun.task}</option>}
             </select>
           </label>
@@ -212,7 +228,7 @@ export function ComparePage() {
             <span className="label">Run B</span>
             <select className="input" value={rightId} onChange={(event) => setRightId(event.target.value)}>
               <option value="">Choose a task run</option>
-              {visibleRuns.map((run) => <option key={run.run_id} value={run.run_id}>{run.origin === "fork" ? "Replay · " : "Run · "}{run.task} · {outcomeLabel(run.status)}</option>)}
+              {visibleRuns.map((run) => <option key={run.run_id} value={run.run_id}>{runOption(run)}</option>)}
               {rightId && !visibleRuns.some((run) => run.run_id === rightId) && rightRun && <option value={rightId}>Selected · {rightRun.task}</option>}
             </select>
           </label>

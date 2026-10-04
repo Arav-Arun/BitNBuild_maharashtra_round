@@ -128,7 +128,8 @@ def parse_trip_prompt(prompt: str, *, scenario_id: str, seed: int) -> Scenario:
         budget_inr=budget_inr,
         vegetarian=_preference(text, "vegetarian", implied=True),
         refundable=_preference(text, "refundable", implied=True),
-        no_red_eye=_preference(text, "no red-eye") or _preference(text, "no red eye", implied=True),
+        no_red_eye=_preference(text, "no red-eye", implied=True)
+        or _preference(text, "no red eye", implied=True),
         expected_total_inr=0,
     )
     return Scenario(**{**draft.__dict__, "expected_total_inr": solve(draft)["total_inr"]})

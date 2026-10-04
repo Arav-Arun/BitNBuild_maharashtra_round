@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "check": "next typegen && tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
     "contract": "node scripts/gen-contract.mjs"
   },
   "dependencies": {

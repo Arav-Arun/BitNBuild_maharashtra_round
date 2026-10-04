@@ -513,7 +513,7 @@ def crash_report_markdown(request: Request, run_id: str):
 def export_test(request: Request, fork_id: str, body: m.ExportTestRequest):
     svc = service(request)
     require_recordings(svc)
-    from blackbox.export.evidence import export_verified
+    from blackbox.api.exports import export_verified
 
     return export_verified(svc, fork_id, overwrite=body.overwrite)
 

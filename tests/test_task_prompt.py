@@ -99,6 +99,20 @@ class PromptParserTests(unittest.TestCase):
                 self.assertEqual((scenario.origin, scenario.destination), (origin, destination))
                 self.assertEqual(scenario.budget_inr, budget)
 
+    def test_no_red_eye_preference_accepts_hyphenated_text_and_explicit_no(self):
+        for preference, expected in (
+            ("No red-eye", True),
+            ("No red eye", True),
+            ("No red-eye: no", False),
+        ):
+            with self.subTest(preference=preference):
+                scenario = parse_trip_prompt(
+                    PROMPT.split(" Vegetarian:")[0] + f" {preference}.",
+                    scenario_id="PROMPT-PREFERENCE",
+                    seed=7,
+                )
+                self.assertEqual(scenario.no_red_eye, expected)
+
 
 # The one-click examples on the web "New task" page (web/components/pages/NewRunPage.tsx).
 DEMO_EXAMPLES = [

@@ -12,7 +12,7 @@ Conventions
 * JSON pointers (RFC 6901) are relative to a *step document*, see `Citation`.
 * `fixture: true` on a payload means hand-authored illustrative content, never a measurement.
 
-`server/contract.md` documents each endpoint; `python -m server.contract_export` turns
+`docs/api.md` describes the API; `python -m server.contract_export` turns
 these models into `server/contract.schema.json` and `web/lib/contract.ts`.
 """
 
@@ -807,7 +807,7 @@ StreamEvent = Union[StepEvent, OutcomeEvent, SummaryEvent, StreamErrorEvent]
 
 
 def check_event_stream(events: list[StreamEvent]) -> list[StreamProblem]:
-    """Verify the ordering and consistency guarantees documented in contract.md.
+    """Verify the ordering and consistency guarantees of the replay event contract.
 
     1. ids run 1..n without gaps.
     2. Per (branch, sample) run, a step address goes queued? -> running? -> done|diverged, once.

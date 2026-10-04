@@ -172,6 +172,7 @@ export function ForkDrawer({ detail, diagnosis, selected, onSelect, labelStep, d
               <input type="checkbox" checked={control} onChange={(event) => {
                 setControl(event.target.checked);
                 if (event.target.checked && samples < 5) setSamples(5);
+                if (!event.target.checked && samples > 5) setSamples(5);
               }} />
               <span><strong>Paired control</strong><small>Also re-run unchanged with the same seeds. Required for a verdict.</small></span>
             </label>

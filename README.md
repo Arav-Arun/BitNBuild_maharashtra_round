@@ -89,7 +89,7 @@ uv sync --locked --extra dev --extra ml --extra server
 npm --prefix web ci
 
 # Copy the local offline-demo settings once (keep any existing .env you rely on).
-cp .env.example .env
+cp -n .env.example .env
 
 # If data/ is empty, build the deterministic TripCrew dataset and model.
 make dataset
@@ -107,19 +107,19 @@ make dev-web
 
 Open <http://localhost:3000>. The API and interactive contract are at <http://127.0.0.1:8000/docs>.
 
-`make dataset` creates the local recordings, labels, trained model and evaluation under `data/`. That directory is ignored by Git. Rebuilding with `./scripts/build_dataset.sh --fresh` clears and rebuilds `data/tripcrew`, `data/eval` and `data/models`, changing demo run IDs. The current diagnoser is TripCrew-only; the demo does not need a separate HOPRAG download.
+`make dataset` creates the local recordings, labels, trained model and evaluation under `data/`. That directory is ignored by Git. Rebuilding with `./scripts/build_dataset.sh --fresh` clears and rebuilds `data/tripcrew`, `data/eval` and `data/models`, changing run IDs. The current diagnoser is trained on TripCrew only.
 
 To run both services in containers, use `docker compose up --build`.
 
-## Demo prompt
+## Create a run
 
 The **New task** page accepts a bounded trip request, for example:
 
-> Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. Budget ₹80,000.
+> Plan a trip from Hyderabad to London departing 2026-12-12, returning 2026-12-17, for 2 adults. Budget ₹80,000.
 
 Supported requests use the listed origin and destination cities, dates in `YYYY-MM-DD` format, 1–6 travellers and a rupee budget. Turn on **Use an old exchange rate** to reproduce a budget failure, then choose **Run and inspect**. The catalog and tool responses are deterministic local stand-ins; this does not book real travel.
 
-See the [demo walkthrough](docs/demo-script.md) for the screen-by-screen pitch.
+After investigation, **Fork and fix** lets you edit a step and test it against an unchanged control. **Compare** shows the changed results and state values. A verified intervention can be exported as a regression test that replays offline.
 
 ## Run modes
 
@@ -127,7 +127,7 @@ See the [demo walkthrough](docs/demo-script.md) for the screen-by-screen pitch.
 |---|---|
 | `offline` | Selected by the checked-in `.env.example`. Deterministic local stand-ins; no API key or external call is needed. New task, diagnosis, replay and verification are available. |
 | `recorded` | Reads saved responses. New task and operations that need fresh model calls are disabled. |
-| `live` | Uses the configured OpenAI-compatible endpoint. Keep provider keys in the server environment, never in the browser. |
+| `live` | Agent commands use the configured OpenAI-compatible endpoint. The New task page uses the offline runner. Keep provider keys in the server environment, never in the browser. |
 
 Without a generated dataset, the API reports degraded health and the UI can show clearly labelled static fixtures from `web/mocks/`. Those fixtures are for browsing; live diagnosis and replay require the API and local data.
 
@@ -137,13 +137,35 @@ Without a generated dataset, the API reports degraded health and the UI can show
 |---|---|
 | Web UI | Next.js 16, React 19, TypeScript, React Flow and ELK.js |
 | API and recorder | Python, FastAPI, Pydantic, SQLite |
-| Diagnosis | LightGBM, scikit-learn, NumPy, BM25 retrieval and rule evidence |
+| Diagnosis | LightGBM, scikit-learn, NumPy, similar-case retrieval and rule evidence |
 | Agent demo | TripCrew travel-planning workflow with deterministic tools |
 | Integrations | OTLP/HTTP JSON import; stdio MCP tools |
 | Tests and tooling | uv, Ruff, unittest/pytest, Docker Compose |
 
 The SDK records calls routed through it. Imported OTLP traces are read-only. The recorder redacts configured secrets and common key, email and phone patterns; review data handling before instrumenting a production agent.
 
-## Useful links
+## Repository layout
 
-[Problem statement](PROBLEM_STATEMENT.md) · [TripCrew workflow](docs/tripcrew.md) · [Demo walkthrough](docs/demo-script.md) · [QA notes](docs/qa.md) · [Pitch outline](docs/deck-outline.md) · [API models](server/models.py)
+| Directory | Purpose |
+|---|---|
+| `blackbox/` | Recorder SDK, trace storage, diagnosis, replay, evaluation and regression export |
+| `agents/tripcrew/` | Synthetic travel agent, local tools and prompt parser |
+| `server/` | FastAPI routes and shared API contracts |
+| `web/` | Next.js interface and labelled static fallback data |
+| `tests/` | Backend and integration tests |
+| `scripts/` | Dataset generation and deployment data packaging |
+| `docs/` | Technical documentation and screenshots |
+
+Local traces, datasets, trained models, credentials, build outputs and generated editor files are excluded from Git.
+
+## Development
+
+```sh
+make check                 # Python lint, formatting and tests
+uv run --extra dev pytest  # Tests only; generated exports are excluded by default
+npm --prefix web test      # API client behaviour
+make web-check
+make web-build
+```
+
+[TripCrew agent](docs/tripcrew.md) · [API reference](docs/api.md) · [Development and deployment](docs/development.md)

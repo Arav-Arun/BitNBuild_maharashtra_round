@@ -13,7 +13,7 @@ The Python source of truth is `server/models.py`. These resources are exposed:
 - `GET /diff?a=...&b=...`
 - `GET /eval`
 
-The fixtures in `web/mocks/` are frozen static data for the web fallback and tests; `tests/test_task1.py` validates them against the Pydantic models.
+The fixtures in `web/mocks/` are frozen static data for the web fallback and tests; `tests/test_contracts.py` validates them against the Pydantic models. See `/docs` on the running API for the complete endpoint reference.
 Replay events keep execution phase separate from cache state:
 
 ```json

@@ -6,6 +6,8 @@ import argparse
 import asyncio
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -137,6 +139,52 @@ class ApiTests(unittest.TestCase):
         again = self.client.post(path, json={"overwrite": True})
         self.assertEqual(again.status_code, 200, again.text)
         self.assertEqual(again.json()["fixture_dir"], first.json()["fixture_dir"])
+        self.assert_export_replays(first.json())
+
+    def assert_export_replays(self, exported):
+        self.assertTrue((Path(exported["fixture_dir"]) / "blackbox.db").is_file())
+        result = subprocess.run(
+            [sys.executable, exported["test_path"]],
+            cwd=ROOT,
+            env={**os.environ, "PYTHONPATH": str(ROOT)},
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_prompt_fix_export_contains_metadata_and_replays_offline(self):
+        created = self.client.post(
+            "/tasks/run",
+            json={
+                "prompt": "Plan a trip from Hyderabad to London departing 2026-12-12, "
+                "returning 2026-12-17, for 2 adults. Budget ₹80,000.",
+                "inject_stale_fx": True,
+            },
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        run_id = created.json()["run_id"]
+        self.assertEqual(created.json()["status"], "failed")
+        agent = self.service.agent_of(run_id)
+        fresh_fx = agent.adapter().oracle_fixes(run_id)["fx/tool#1"]
+        fork = self.client.post(
+            "/forks",
+            json={
+                "base_run_id": run_id,
+                "samples": 4,
+                "control": True,
+                "edits": [{"addr": "fx/tool#1", "kind": "patch_tool_result", "value": fresh_fx}],
+            },
+        )
+        self.assertEqual(fork.status_code, 202, fork.text)
+        fork_id = fork.json()["fork_id"]
+        with self.client.stream("GET", f"/forks/{fork_id}/stream") as stream:
+            list(stream.iter_lines())
+        exported = self.client.post(f"/forks/{fork_id}/export-test", json={})
+        self.assertEqual(exported.status_code, 200, exported.text)
+        files = Path(exported.json()["fixture_dir"]) / "prompt-scenarios"
+        self.assertEqual(len(list(files.glob("*.json"))), 1)
+        self.assert_export_replays(exported.json())
 
     def test_verification_needs_at_least_four_samples(self):
         response = self.client.post(f"/runs/{self.failed}/verify", json={"samples": 3})

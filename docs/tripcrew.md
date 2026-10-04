@@ -1,4 +1,4 @@
-# TripCrew (Task 4)
+# TripCrew agent
 
 TripCrew is a runnable travel-planning agent using the recorder and replay SDK.
 All travel data is synthetic. The five tools only read the local generated
@@ -115,16 +115,18 @@ literal regression expectations in `tests/test_tripcrew.py`.
 The stale-FX demo reports 130,949.18 INR, fails the checker, and repairs to
 134,999.04 INR when fresh FX is fetched.
 
-## Remaining acceptance work
+## Scope
 
-- No Groq key was configured during implementation. Run the 20-scenario live
-  benchmark and measure natural failures before adjusting difficulty toward the
-  plan's approximate 70% target. The fixture deliberately passes clean tasks;
-  its outcomes are not manipulated to imitate an LLM's failure rate.
-- A teammate must review five actual runs and compare the requested constraints,
-  selected IDs, catalog arithmetic and checker verdict. Reports include all those
-  fields and retain `manual_review_status: pending human review of five runs`.
-- The demo is a single deterministic repair, not a statistical VERIFIED claim.
-  The seed-induced prefix divergence is fixed. Task 3's general cross-sample cache
-  reuse still needs separate correction before claiming independent stochastic
-  verification for all agents and edit types.
+The New task page parses requests for the supported synthetic catalog. It does not
+make live model calls or query real travel inventory. Changing only a request's
+budget preserves its generated catalog. Unsupported cities and incomplete requests
+return a validation error.
+
+Live model calls are available through `--client groq`. Offline fixture pass rates
+are not measurements of that model's performance. Current diagnosis evaluation is
+TripCrew-only; natural-failure examples share the stale-FX root cause.
+
+Paired verification compares edited and unchanged branches with matching seeds.
+VERIFIED means the edited pass-rate lower 95% Wilson bound exceeds the control's
+upper bound for the tested task. Equal failing branches are INCONCLUSIVE. A verified
+fix can be exported with its cassettes, state and prompt metadata for offline replay.

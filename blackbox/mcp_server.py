@@ -8,8 +8,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from blackbox.api.exports import export_verified
 from blackbox.api.service import BlackBoxService
-from blackbox.export.evidence import export_verified
 from server import models as contract
 
 mcp = FastMCP(

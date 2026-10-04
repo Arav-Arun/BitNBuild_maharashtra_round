@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, errorText } from "../../lib/api";
 import { useDebounced } from "../../lib/useDebounced";
 import type { LabelQueue, LabelResponse, RunDetail } from "../../lib/contract";
@@ -19,35 +19,46 @@ export function LabelPage() {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const annotator = useDebounced(who.trim(), 400);
+  const queueRequest = useRef(0);
 
   const load = useCallback(async () => {
+    const request = ++queueRequest.current;
     try {
-      if (!annotator) return;
-      setQueue(await api<LabelQueue>(`/labels/queue?annotator=${encodeURIComponent(annotator)}&limit=100`));
+      if (!annotator) {
+        setQueue(null);
+        return;
+      }
+      const next = await api<LabelQueue>(`/labels/queue?annotator=${encodeURIComponent(annotator)}&limit=100`);
+      if (request === queueRequest.current) setQueue(next);
     } catch (caught) {
-      setMsg(errorText(caught));
+      if (request === queueRequest.current) setMsg(errorText(caught));
     }
   }, [annotator]);
 
   useEffect(() => {
+    setQueue(null);
     load();
+    return () => { queueRequest.current++; };
   }, [load]);
 
   const item = queue?.items[0];
 
   useEffect(() => {
+    let active = true;
+    setRun(null);
+    setRoot("");
+    setCertainty("sure");
+    setNotes("");
     if (!item) {
-      setRun(null);
       return;
     }
     // blind=true hides the model's guess and any injected label while the annotator decides.
     api<RunDetail>(`/runs/${encodeURIComponent(item.run_id)}?blind=true`)
       .then((detail) => {
-        setRun(detail);
-        setRoot("");
-        setCertainty("sure");
+        if (active) setRun(detail);
       })
-      .catch((caught) => setMsg(errorText(caught)));
+      .catch((caught) => { if (active) setMsg(errorText(caught)); });
+    return () => { active = false; };
   }, [item?.run_id]);
 
   async function submit() {
@@ -77,7 +88,7 @@ export function LabelPage() {
         {staticBundle && <p className="notice-box">Static showcase mode is read-only. Start the local API to save labels.</p>}
         <div className="row label-toolbar">
           <label className="label" htmlFor="annotator">Annotator</label>
-          <input id="annotator" className="input" value={who} onChange={(event) => setWho(event.target.value)} />
+          <input id="annotator" className="input" value={who} disabled={saving} onChange={(event) => setWho(event.target.value)} />
           <span className="badge badge-neutral">{queue?.progress.labelled || 0}/{queue?.progress.target || 0} labelled</span>
         </div>
         {msg && <p className="muted" role="status">{msg}</p>}
@@ -100,7 +111,7 @@ export function LabelPage() {
                 ))}
               </div>
               <textarea className="input edit-json" placeholder="Reason for your choice (optional)" value={notes} onChange={(event) => setNotes(event.target.value)} />
-              <button className="btn btn-primary" onClick={submit} disabled={staticBundle || saving || !annotator}>{saving ? "Saving…" : "Save label"}</button>
+              <button className="btn btn-primary" onClick={submit} disabled={staticBundle || saving || !annotator || who.trim() !== annotator}>{saving ? "Saving…" : "Save label"}</button>
             </section>
             <section className="thread-pane label-steps">
               <div className="thread-header"><strong>Recorded sequence</strong></div>
