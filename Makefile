@@ -1,8 +1,10 @@
 UV ?= uv
-RUN = $(UV) run --locked --extra dev --extra ml
+EXTRAS = --extra dev --extra ml --extra server
+RUN = $(UV) run --locked $(EXTRAS)
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
 .PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval
+.PHONY: web-build
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -22,7 +24,7 @@ help:
 	@echo "eval    Train the diagnoser, run baselines/ablations/integrity checks into data/eval"
 
 setup:
-	$(UV) sync --locked --extra dev --extra ml
+	$(UV) sync --locked $(EXTRAS)
 
 check: lint test
 
@@ -81,3 +83,5 @@ forge-freeze:
 eval:
 	$(RUN) python -m blackbox.ml eval
 
+web-build:
+	npm --prefix web run build
