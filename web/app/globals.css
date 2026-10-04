@@ -1031,7 +1031,7 @@ textarea.input {
 .edit-json { width:100%; min-height:220px; height:auto; resize:vertical; padding:10px; font-family:var(--font-mono); }
 .drawer-body select.input { width:100%; }
 .compare-select { margin:22px 0; }
-.compare-select select { flex:1; }
+.compare-select select { flex:1; min-width:0; }
 .diff-json { max-width:340px; max-height:100px; overflow:auto; white-space:pre-wrap; font-size:11px; margin:0; color:var(--text-2); }
 .grid-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .bar-row { display:grid; grid-template-columns:minmax(120px,1fr) 2fr 48px; gap:12px; align-items:center; padding:8px 0; border-top:1px solid var(--border); font-size:12px; }
@@ -1047,4 +1047,4 @@ textarea.input {
 .report-events li { display:grid; grid-template-columns:36px 160px 1fr; gap:10px; padding:10px 12px; border-bottom:1px solid var(--border); }
 .report-events li.root { background:var(--accent-soft); }
 .report-events li.symptom { background:var(--fail-soft); }
-@media(max-width:900px){.investigate-work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(400px,58vh) minmax(540px,auto);height:auto;min-height:calc(100vh - 76px)}.investigate-work .canvas-pane{display:block;min-height:400px;border-right:0;border-bottom:1px solid var(--border)}.investigate-work .thread-pane{min-height:540px;overflow:visible}.grid-two,.label-layout{grid-template-columns:1fr}.investigate-top{height:auto;align-items:flex-start;gap:10px;flex-wrap:wrap}.investigate-page{overflow:auto}.investigate-work{height:auto}.shell{min-width:0}}
+@media(max-width:900px){.investigate-work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(400px,58vh) minmax(540px,auto);height:auto;min-height:calc(100vh - 76px)}.investigate-work .canvas-pane{display:block;min-height:400px;border-right:0;border-bottom:1px solid var(--border)}.investigate-work .thread-pane{min-height:540px;overflow:visible}.grid-two,.label-layout{grid-template-columns:1fr}.investigate-top{height:auto;align-items:flex-start;gap:10px;flex-wrap:wrap}.investigate-page{overflow:auto}.investigate-work{height:auto}.shell{min-width:0}.page-inner{min-width:0;padding:20px 16px 36px}.compare-select{display:grid;grid-template-columns:minmax(0,1fr);width:100%}.compare-select>span{display:none}.compare-select select{width:100%;min-width:0}.grid-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
