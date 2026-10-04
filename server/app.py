@@ -327,7 +327,7 @@ def diff(request: Request, a: str, b: str):
             reason="Compared directly",
         )
     return __import__("blackbox.api.reader", fromlist=["build_diff"]).build_diff(
-        left, right, invalidated=set(), nearest=nearest
+        left, right, invalidated=None, nearest=nearest
     )
 
 

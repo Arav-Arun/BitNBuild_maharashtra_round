@@ -6,6 +6,7 @@ from pathlib import Path
 
 import httpx
 
+from blackbox.api.reader import build_diff
 from blackbox.config import Settings
 from blackbox.llm import AsyncLLMClient, parse_duration
 from blackbox.store import SQLiteDatabase
@@ -63,6 +64,36 @@ class TaskOneTests(unittest.TestCase):
         self.assertTrue(EvalResponse.model_validate(load("eval")).model_dump())
         events = load("fork-events-verified")["events"]
         self.assertEqual(events[-1]["event"], "summary")
+
+    def test_api_diff_marks_dependency_path_from_first_changed_step(self):
+        root = Path(__file__).parents[1]
+        detail = RunDetail.model_validate(
+            json.loads((root / "web/mocks/run-detail.json").read_text())
+        )
+        steps = list(detail.steps)
+        fx_index = next(index for index, step in enumerate(steps) if step.addr == "fx/tool#1")
+        fx = steps[fx_index]
+        steps[fx_index] = fx.model_copy(
+            update={
+                "hashes": fx.hashes.model_copy(update={"output": "f" * 64}),
+                "cache_status": "edited",
+            }
+        )
+        fork = detail.model_copy(
+            update={
+                "run": detail.run.model_copy(
+                    update={"run_id": "tc-fork", "parent_run_id": detail.run.run_id}
+                ),
+                "steps": steps,
+            }
+        )
+
+        diff = build_diff(detail, fork, invalidated=None, nearest=None)
+        self.assertEqual(diff.first_divergence, "fx/tool#1")
+        inside = {row.addr for row in diff.rows if row.in_cone}
+        self.assertIn("fx/tool#1", inside)
+        self.assertIn("budget/tool#1", inside)
+        self.assertIn("writer/chat#1", inside)
 
     def test_llm_client_retries_429_and_honours_openai_shape(self):
         attempts = 0

@@ -686,7 +686,7 @@ def build_diff(
     left: m.RunDetail,
     right: m.RunDetail,
     *,
-    invalidated: set[str],
+    invalidated: set[str] | None,
     nearest: m.NearestPassingLink | None,
 ) -> m.DiffResponse:
     lefts = {step.addr: step for step in left.steps}
@@ -695,6 +695,25 @@ def build_diff(
     order += [
         step.addr for step in sorted(right.steps, key=lambda s: s.seq) if step.addr not in lefts
     ]
+
+    if invalidated is None:
+        first_changed = next(
+            (
+                addr
+                for addr in order
+                if (a := lefts.get(addr)) is None
+                or (b := rights.get(addr)) is None
+                or a.hashes.input != b.hashes.input
+                or a.hashes.output != b.hashes.output
+                or _own_state_changed(a, b)
+            ),
+            None,
+        )
+        invalidated = (
+            descendants([*left.edges, *right.edges], [first_changed])
+            if first_changed is not None
+            else set()
+        )
 
     def side(step: m.StepDetail, *, payload: bool) -> m.DiffSide:
         return m.DiffSide(

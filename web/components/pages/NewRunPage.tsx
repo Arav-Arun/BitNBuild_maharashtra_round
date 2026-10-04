@@ -39,15 +39,11 @@ export function NewRunPage() {
   return (
     <div className="page">
       <div className="page-inner new-run-page">
-        <p className="label">TripCrew / New run</p>
-        <h1 className="h1">Give the agent a task</h1>
-        <p className="muted new-run-intro">
-          The local demo runner turns a supported trip request into a recorded multi-agent workflow.
-          You can inspect every model, tool, and state step when it finishes.
-        </p>
+        <h1 className="h1">Plan a trip</h1>
+        <p className="muted new-run-intro">Enter a request. Inspect each step after the run.</p>
 
         <form className="new-run-form card card-pad" onSubmit={submit}>
-          <label className="label" htmlFor="task-prompt">Task prompt</label>
+          <label className="label" htmlFor="task-prompt">Your request</label>
           <textarea
             id="task-prompt"
             className="input prompt-input"
@@ -60,26 +56,20 @@ export function NewRunPage() {
             placeholder={SAMPLE}
           />
           <div className="spread prompt-meta">
-            <span className="faint">{prompt.length}/1200 · Edit the example or write your own</span>
-            <button type="button" className="btn btn-sm" onClick={() => setPrompt(SAMPLE)}>Use example</button>
+            <span className="faint">{prompt.length}/1200</span>
+            <button type="button" className="btn btn-sm" onClick={() => setPrompt(SAMPLE)}>Reset example</button>
           </div>
 
-          <div className="prompt-help">
-            Include an origin and destination, two dates in YYYY-MM-DD format, traveler count, and
-            INR budget. Offline catalog: Mumbai, Delhi, Bengaluru, Chennai, or Hyderabad to
-            Singapore, Bangkok, Dubai, London, Tokyo, or Paris. Preferences such as “vegetarian: yes”
-            are optional.
-          </div>
+          <div className="prompt-help">Include a route, dates, travelers, and budget.</div>
 
           <label className="prompt-checkbox">
             <input type="checkbox" checked={injectStaleFx} onChange={(event) => setInjectStaleFx(event.target.checked)} />
-            <span><strong>Inject a stale exchange-rate fixture</strong><small>Create a reproducible failure to investigate. Synthetic data only.</small></span>
+            <span><strong>Use an old exchange rate</strong><small>Add a reproducible budget error.</small></span>
           </label>
 
           {error && <p className="error-box" role="alert">{error}</p>}
-          {!enabled && <p className="muted">Prompt runs need the local API in OFFLINE mode. The current recorder is {mode?.toUpperCase() || "connecting"}.</p>}
+          {!enabled && <p className="muted">Local runner unavailable. Check that the API is running.</p>}
           <div className="row prompt-actions">
-            <span className="faint">Offline deterministic runner · no booking or external calls</span>
             <span className="spacer" />
             <button className="btn btn-primary" type="submit" disabled={!enabled || busy || prompt.trim().length < 24}>
               {busy ? "Recording run…" : "Run and inspect →"}
