@@ -11,7 +11,7 @@ export default function Home() {
         <span className="mode">RECORDED</span>
       </header>
       <section aria-label="Recorded agent runs" className="runs">
-        {runs.map((run) => (
+        {runs.items.map((run) => (
           <article className="run" key={run.run_id}>
             <span className={`status ${run.status}`}>{run.status}</span>
             <div>
@@ -22,11 +22,19 @@ export default function Home() {
             </div>
             <div className="suspect">
               <span>Top suspect</span>
-              <strong>{run.top_suspect ?? "No confident culprit"}</strong>
+              <strong>
+                {suspectName(run.top_suspect as unknown)}
+              </strong>
             </div>
           </article>
         ))}
       </section>
     </main>
   );
+}
+
+function suspectName(suspect: unknown): string {
+  if (typeof suspect === "string") return suspect;
+  if (suspect && typeof suspect === "object" && "name" in suspect) return String(suspect.name);
+  return "No confident culprit";
 }
