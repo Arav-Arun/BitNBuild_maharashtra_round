@@ -1,0 +1,1 @@
+import{ReportPage}from"../../../components/pages/ReportPage";export default async function Page({params}:{params:Promise<{run_id:string}>}){const{run_id}=await params;return <ReportPage runId={run_id}/>;}

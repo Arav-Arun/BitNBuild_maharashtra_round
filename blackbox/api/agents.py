@@ -40,7 +40,8 @@ def _envelope_task(first_input: Any) -> dict[str, Any]:
 
 TRIP_REQUEST = re.compile(
     r"travel from (?P<origin>.+?) to (?P<destination>.+?) departing (?P<depart>[\d-]+), "
-    r"returning (?P<ret>[\d-]+), for (?P<adults>\d+) adults\. Budget INR (?P<budget>[\d.]+)"
+    r"returning (?P<ret>[\d-]+), for (?P<adults>\d+) adults\. Budget INR "
+    r"(?P<budget>[\d,]+(?:\.\d+)?)(?![\d.])"
 )
 
 
@@ -55,7 +56,8 @@ class TripCrewProfile(AgentProfile):
         adults = int(match["adults"])
         summary = (
             f"{match['origin']} → {match['destination']}, {adults} "
-            f"{'adult' if adults == 1 else 'adults'}, under {indian_money(float(match['budget']))}"
+            f"{'adult' if adults == 1 else 'adults'}, under "
+            f"{indian_money(float(match['budget'].replace(',', '')))}"
         )
         return summary, request
 

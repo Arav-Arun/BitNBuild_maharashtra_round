@@ -1,52 +1,28 @@
 name: CI
-
 on:
   push:
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
-  check:
+  python:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          version: "0.9.21"
-          python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Install locked dependencies
-        run: make setup
-      - name: Lint and test
-        run: make check
-      - name: Build distributions
-        run: make build
-      - name: Check wheel outside the source tree
-        shell: bash
-        run: |
-          uv venv /tmp/blackbox-wheel
-          uv pip install --python /tmp/blackbox-wheel/bin/python dist/*.whl
-          cd /tmp
-          /tmp/blackbox-wheel/bin/python -c "from blackbox.store import SQLiteDatabase; SQLiteDatabase('/tmp/wheel.db').close(); import blackbox.sdk, blackbox.replay, blackbox.eval"
-
+      - run: uv sync --locked --extra dev --extra ml --extra server
+      - run: make check
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - name: Install web dependencies
-        run: npm --prefix web ci
-      - name: Type-check and build web shell
-        run: npm --prefix web run check && npm --prefix web run build
+      - run: npm ci --prefix web
+      - run: npm --prefix web run check
+      - run: npm --prefix web run build

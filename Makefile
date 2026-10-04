@@ -2,8 +2,8 @@ UV ?= uv
 EXTRAS = --extra dev --extra ml --extra server
 RUN = $(UV) run --locked $(EXTRAS)
 
-.PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval diagnose verify-eval regression
+.PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo contract demo-offline mcp
+.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval
 .PHONY: web-build
 
 help:
@@ -14,6 +14,7 @@ help:
 	@echo "db-init Initialize the configured SQLite database"
 	@echo "dev-api Run the API module (available after Task 10)"
 	@echo "dev-web Run the Next.js development server"
+	@echo "mcp     Run the local stdio MCP server"
 	@echo "tripcrew Run 20 offline TripCrew scenarios"
 	@echo "tripcrew-demo Demonstrate stale-FX repair with selective replay"
 	@echo "hoprag-data Download and verify the MuSiQue-Ans development dataset"
@@ -46,7 +47,16 @@ db-init:
 	$(RUN) python -m blackbox.store
 
 dev-api:
-	$(RUN) python -m server
+	$(RUN) uvicorn server.app:app --reload --host 127.0.0.1 --port 8000
+
+mcp:
+	$(RUN) python -m blackbox.mcp_server
+
+contract:
+	$(RUN) python -m server.contract_export
+
+demo-offline:
+	docker compose up --build
 
 web-install:
 	npm --prefix web install

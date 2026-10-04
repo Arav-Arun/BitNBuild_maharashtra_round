@@ -1,104 +1,74 @@
 # Black Box
 
-A flight recorder for AI agents. It records agent runs, learns which step caused a
-failure, explains why, and proves the fix by replaying only the steps the change
-affects.
+Black Box is a flight recorder and failure debugger for instrumented AI agents. It records calls, state and provenance, ranks likely failure causes, selectively replays the dependency cone of an edit, and compares that intervention with unchanged controls.
 
-- [PROBLEM_STATEMENT.md](PROBLEM_STATEMENT.md): Bit N Build 2026, problem statement #2
-- [PLAN.md](PLAN.md): architecture, tech stack, data and model design, evaluation
-  protocol, 48h timeline, demo script
+## Start locally
 
-## What exists so far
-
-| Module | Status |
-| --- | --- |
-| `blackbox/config.py`, `blackbox/llm.py` | `.env` configuration and rate-limit-aware OpenAI-compatible async client |
-| `blackbox/store/` | WAL-mode SQLite schema with serialized access |
-| `blackbox/recorder/` | Content-addressed blobs and Merkle state checkpoints |
-| `blackbox/sdk/` | Run/step recording, LLM and tool wrappers, versioned state, redaction and provenance |
-| `blackbox/replay/` | Immutable cone/prefix/full replay, exact caching, controls and verdict intervals |
-| `blackbox/eval/` | Localization metrics: Recall@1, Recall@3, MRR |
-| `agents/tripcrew/` | Seeded scenarios, mock travel APIs, parallel 16-step agent, independent checker, offline fixture and live Groq runners |
-| `agents/hoprag/` | MuSiQue-Ans adapter, local BM25 search, multi-hop agent, alias-aware scoring, gold oracle export, offline baseline and live Groq runners |
-| `server/models.py`, `web/` | Typed API contract fixtures and the first Next.js recorded-runs shell |
-
-Tasks 1–3 and the Task 4 implementation are present. TripCrew passes its offline
-acceptance checks; the live-model pass-rate target and five-run human review are
-pending. Task 5's HopRAG implementation has recorded and replayed 50 real MuSiQue
-questions using its offline lexical baseline; live-model evaluation remains
-pending. ShopDesk is an unimplemented stretch goal. Tasks 6 onward follow [PLAN.md](PLAN.md).
-
-## TripCrew
+Requirements: Python 3.11+, `uv`, Node.js 22+, and npm.
 
 ```sh
-make tripcrew       # run 20 scenarios with the deterministic offline fixture
-make tripcrew-demo  # repair a stale FX quote, replaying only affected calls
-# After configuring GROQ_API_KEY in your local .env:
-uv run --locked --extra dev python -m agents.tripcrew run --client groq --count 20
-```
-
-The fixture is a test double, not an LLM benchmark. The real runner uses
-`AGENT_MODEL` from configuration. Reports and recorded runs go into the ignored
-`data/tripcrew/` directory. See [docs/tripcrew.md](docs/tripcrew.md) for the graph,
-scenario export, worked arithmetic checks, and remaining live validation.
-
-## HopRAG
-
-```sh
-make hoprag-data    # one-time, checksum-verified download (about 30 MB)
-make hoprag         # 50 real questions with offline baseline + unchanged replay
-# With GROQ_API_KEY configured locally:
-uv run --locked --extra dev python -m agents.hoprag run --client groq --count 50 \
-  --verify-replay --report data/hoprag/live.json
-```
-
-The offline baseline is a small lexical algorithm, not a model-quality benchmark.
-Its measured result is 2/50 (4%); all 50 unchanged replays are fully cached and
-preserve the outcome and final state. Dataset files, oracle sub-answers and reports
-are saved under ignored `data/hoprag/`. [docs/hoprag.md](docs/hoprag.md) describes
-the dataset source, label boundary, tools, graph, and validation results.
-
-## Development
-
-Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
-
-```sh
-make setup   # install the locked dev environment into .venv
-make check   # ruff lint + format check, unit tests
-make format  # apply ruff formatting and import sorting
+cp .env.example .env
+make setup
 npm --prefix web ci
-npm --prefix web run check
-npm --prefix web run build
+
+# Build the local example recordings/model if data/ is empty:
+./scripts/build_dataset.sh --fresh
+
+# Terminal 1
+make dev-api
+# Terminal 2
+make dev-web
 ```
 
-Minimal recorder usage:
+Open <http://localhost:3000>. The API docs are at <http://127.0.0.1:8000/docs>. `MODE=recorded` only reuses stored responses. Use `MODE=offline` for deterministic local stand-ins. `MODE=live` can call the configured OpenAI-compatible endpoint; put any key in `.env`, never in the browser or a deployment. Replaying hosted-model runs in live mode requires the matching provider key.
 
-```python
-import asyncio
-import blackbox as bb
+The dataset build includes deterministic TripCrew and HopRAG recordings, injected and natural failures, a trained diagnoser, and evaluation artifacts. Data, model files and reports are intentionally ignored by Git. A fresh build may download the public MuSiQue-Ans dataset. If you only need the UI, start both servers without data: the API reports degraded health and the browser can show clearly labelled static fixtures from `web/mocks/`.
 
+## Product flow
 
-async def main():
-    recorder = bb.configure("data", mode="live")
-    try:
-        with bb.run("my-agent", "task-1", seed=7) as run:
-            with bb.step("lookup/tool#1", "tool"):
-                result = await bb.tool(lookup, query="example")
-                run.state["result"] = result
-            run.set_outcome(True)
-    finally:
-        recorder.close()
+- **Runs:** search and filter the indexed recordings by agent, outcome, split and origin.
+- **Investigate:** inspect the dependency graph, ranked suspects, rule evidence and recorded payloads; select a value to follow its origin.
+- **Fork and fix:** edit a recorded step and stream a selective cone replay alongside an unchanged control.
+- **Compare:** align runs by stable step address and inspect changed payloads, state and outcomes.
+- **Results:** view measured evaluation artifacts, intervals, ablations and explicit not-run items. Fixture values are labelled.
+- **Label:** review a failed run with model and oracle labels hidden, then store an annotator judgment.
+- **Crash report:** view and download a Markdown incident report.
 
+The API also accepts OTLP/HTTP JSON GenAI spans as read-only imported runs. MCP tools are available over stdio with `uv run blackbox-mcp`.
 
-asyncio.run(main())
+## API routes
+
+`GET /health`, `/agents`, `/runs`, `/failure-groups`, `/runs/{id}`, `/runs/{id}/steps/{addr}`, `/runs/{id}/provenance`, `/runs/{id}/diagnosis`, `/runs/{id}/forks`, `/runs/{id}/twin`, `/runs/{id}/report`, `/runs/{id}/report.md`, `/diff`, `/eval`, `/forks/{id}`, `/forks/{id}/stream`, `/jobs/{id}`, `/labels/queue`; `POST /forks`, `/replay/predict`, `/runs/{id}/verify`, `/forks/{id}/export-test`, `/labels`, `/v1/traces`.
+
+Every request and response is defined in [server/models.py](server/models.py), and the generated TypeScript types live in [web/lib/contract.ts](web/lib/contract.ts). Errors use the same JSON envelope. Interactive OpenAPI docs are served by FastAPI.
+
+## Checks and commands
+
+```sh
+make check                 # lint, format verification, unit tests
+npm --prefix web run check # TypeScript
+npm --prefix web run build # production Next.js build
+make eval                  # regenerate model and evaluation artifacts
+make build                 # Python source and wheel
+make demo-offline          # Docker Compose showcase
 ```
 
-After editing `pyproject.toml`, run `uv lock` and commit `uv.lock`. Use
-`uv sync --locked --extra dev --extra ml` for ML work.
+For local Docker Compose, create `data/` first with the dataset script. To expose MCP tools to a coding agent, configure stdio with `uv run --project /path/to/DeployForGood_maharashtra_round blackbox-mcp` and set `DATA_DIR` to the generated data path.
 
-Ground rules (details in PLAN.md):
-- Keep fault metadata and labels out of model features.
-- Split by task or source run, never by step.
-- Fit preprocessing and success-run references on training data only.
-- Never mutate an original run; record replay provenance separately.
-- Generated data (`data/`, `*.db`), models and credentials stay out of Git.
+## Deployment
+
+The public path is a static-friendly Next.js frontend on Vercel and a recorded-mode FastAPI service on Render. Set Vercel's `NEXT_PUBLIC_API_URL` to the API URL and set Render's `CORS_ORIGINS` to the frontend origin. The Render image must be built with the ignored `data/` directory present to serve the trained dataset; without those immutable build inputs, it starts in degraded mode and the browser uses the explicitly labelled mock fallback. Never add a live provider key to Render or Vercel.
+
+```sh
+docker compose up --build
+```
+
+See [docs/demo-script.md](docs/demo-script.md), [docs/qa.md](docs/qa.md), [docs/deck-outline.md](docs/deck-outline.md), [docs/tripcrew.md](docs/tripcrew.md), and [docs/hoprag.md](docs/hoprag.md).
+
+## Evaluation facts
+
+The currently frozen artifacts contain 615 evaluated traces. The ranker reaches S0 top-1 0.88 (n=75), S1 top-1 0.552 (n=96), and S4 natural-failure top-1 0.247 (n=85). The best reported S1 baseline reaches 0.625. The current results therefore do not support a claim that the ranker wins on unseen fault types. Results files are generated by `make eval`; the Results page keeps the split and sample size visible.
+
+## Data and safety boundaries
+
+The SDK sees only calls routed through it. Included agent tools are local deterministic fixtures. Redaction masks common key, email and phone patterns before persistence. Original runs are immutable. Exported regression artifacts contain recorded outcome and hash assertions and run without network access; they do not invoke a live LLM or external tool.
