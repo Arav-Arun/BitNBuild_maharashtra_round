@@ -1311,6 +1311,10 @@
             }
           ]
         },
+        "state_writes": {
+          "additionalProperties": true,
+          "type": "object"
+        },
         "input_hash": {
           "anyOf": [
             {
@@ -1349,6 +1353,7 @@
         "cache_status",
         "input",
         "output",
+        "state_writes",
         "input_hash",
         "output_hash",
         "state_after_hash"

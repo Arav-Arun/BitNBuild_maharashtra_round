@@ -126,7 +126,7 @@ function StepInspector({
   onValueClick?: (click: ValueClick) => void;
   forcedTab: Tab | null;
 }) {
-  const [tab, setTab] = useState<Tab>("output");
+  const [tab, setTab] = useState<Tab>(normaliseKind(step.kind) === "state" ? "state" : "output");
   useEffect(() => {
     if (forcedTab) setTab(forcedTab);
   }, [forcedTab]);
@@ -147,11 +147,27 @@ function StepInspector({
 
   return (
     <div>
+      {(step.failureMessage || step.error) && (
+        <div className="error-box" role="alert" style={{ marginTop: 8, padding: "6px 10px" }}>
+          <strong>{step.isVisibleFailure ? "Failure surfaced here" : "Step error"}</strong>
+          {" · "}{step.failureMessage || step.error}
+        </div>
+      )}
       {step.violations && step.violations.length > 0 && (
         <div className="stack" style={{ gap: 4, marginTop: 8 }}>
           {step.violations.map((v) => (
-            <div key={v.pointer + v.message} className="error-box" style={{ padding: "6px 10px" }}>
-              <span className="mono">{v.pointer || "/"}</span> · {v.message}
+            <div
+              key={v.pointer + v.message}
+              className={v.severity === "error" ? "error-box" : "notice-box"}
+              role={v.severity === "error" ? "alert" : "note"}
+              style={{ padding: "6px 10px" }}
+            >
+              <strong>
+                {v.source === "diagnosis"
+                  ? v.severity === "error" ? "Rule failure" : "Rule warning"
+                  : v.severity === "error" ? "Recorded error" : "Recorded note"}
+              </strong>
+              {" · "}<span className="mono">{v.pointer || "/"}</span> · {v.message}
             </div>
           ))}
         </div>
@@ -273,6 +289,7 @@ function rawStep(step: StepView): Record<string, unknown> {
     latency_ms: step.latencyMs,
     tokens: step.tokens,
     error: step.error,
+    failure_message: step.failureMessage,
     cache_status: step.cacheStatus,
   };
 }

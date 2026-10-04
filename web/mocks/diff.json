@@ -25,7 +25,8 @@
         "output": null,
         "input_hash": "e3ef619e06bd8064717886fe31591ac220d0e9e3c04d9199a010746139240dbe",
         "output_hash": "4f512b588b9dc1390d1abaab292cfae987dc2aecd49f43cdec2451075775d57d",
-        "state_after_hash": "d61460591cacb4dab5f9e4cf47e9201350e422b2720ccb7119b9bbfe7fcf4a67"
+        "state_after_hash": "d61460591cacb4dab5f9e4cf47e9201350e422b2720ccb7119b9bbfe7fcf4a67",
+        "state_writes": {}
       },
       "right": {
         "seq": 0,
@@ -36,7 +37,8 @@
         "output": null,
         "input_hash": "e3ef619e06bd8064717886fe31591ac220d0e9e3c04d9199a010746139240dbe",
         "output_hash": "4f512b588b9dc1390d1abaab292cfae987dc2aecd49f43cdec2451075775d57d",
-        "state_after_hash": "d61460591cacb4dab5f9e4cf47e9201350e422b2720ccb7119b9bbfe7fcf4a67"
+        "state_after_hash": "d61460591cacb4dab5f9e4cf47e9201350e422b2720ccb7119b9bbfe7fcf4a67",
+        "state_writes": {}
       }
     },
     {
@@ -53,7 +55,8 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "f25aba33b7940751f488f482c40055e31569adb02f9e43262669bb67c2cd895a"
+        "state_after_hash": "f25aba33b7940751f488f482c40055e31569adb02f9e43262669bb67c2cd895a",
+        "state_writes": {}
       },
       "right": {
         "seq": 1,
@@ -64,7 +67,8 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "f25aba33b7940751f488f482c40055e31569adb02f9e43262669bb67c2cd895a"
+        "state_after_hash": "f25aba33b7940751f488f482c40055e31569adb02f9e43262669bb67c2cd895a",
+        "state_writes": {}
       }
     },
     {
@@ -81,7 +85,8 @@
         "output": null,
         "input_hash": "018ee9fc623ad757f12a5032b2ff2f0fe8e936619944100f301e673548801251",
         "output_hash": "87cd1611f8010d6a5e5098df33210ead79723ad1283d05e34a1b71794f40b789",
-        "state_after_hash": "f67d7d0d18407a0f6998ed0c0128d2244b5c74f2ee9d22254d69e3b50c54bdab"
+        "state_after_hash": "f67d7d0d18407a0f6998ed0c0128d2244b5c74f2ee9d22254d69e3b50c54bdab",
+        "state_writes": {}
       },
       "right": {
         "seq": 2,
@@ -92,7 +97,8 @@
         "output": null,
         "input_hash": "018ee9fc623ad757f12a5032b2ff2f0fe8e936619944100f301e673548801251",
         "output_hash": "87cd1611f8010d6a5e5098df33210ead79723ad1283d05e34a1b71794f40b789",
-        "state_after_hash": "f67d7d0d18407a0f6998ed0c0128d2244b5c74f2ee9d22254d69e3b50c54bdab"
+        "state_after_hash": "f67d7d0d18407a0f6998ed0c0128d2244b5c74f2ee9d22254d69e3b50c54bdab",
+        "state_writes": {}
       }
     },
     {
@@ -109,7 +115,8 @@
         "output": null,
         "input_hash": "db0b98fc8e93be9bd6111a811b9719ff43ed80367a2499e3e71eac0e26a0e6dd",
         "output_hash": "eb0d368f9606f3ab9deca465c92b93d49592beee8770eacf115bbcdfee993e5e",
-        "state_after_hash": "8ec5e1b14763bf090c5344865c9716e165d7631152f48f16637fea7745de0a38"
+        "state_after_hash": "8ec5e1b14763bf090c5344865c9716e165d7631152f48f16637fea7745de0a38",
+        "state_writes": {}
       },
       "right": {
         "seq": 3,
@@ -120,7 +127,8 @@
         "output": null,
         "input_hash": "db0b98fc8e93be9bd6111a811b9719ff43ed80367a2499e3e71eac0e26a0e6dd",
         "output_hash": "eb0d368f9606f3ab9deca465c92b93d49592beee8770eacf115bbcdfee993e5e",
-        "state_after_hash": "8ec5e1b14763bf090c5344865c9716e165d7631152f48f16637fea7745de0a38"
+        "state_after_hash": "8ec5e1b14763bf090c5344865c9716e165d7631152f48f16637fea7745de0a38",
+        "state_writes": {}
       }
     },
     {
@@ -137,7 +145,8 @@
         "output": null,
         "input_hash": "b7df2a76d7d8e6c9d6a6770a9fbe891fb95ffcfced1a9ae054ae6cbae6be2b3f",
         "output_hash": "7e73a83365d970c9fb3ac631a246aa4344158885e4f2f4dc3117a3cd5e2b5361",
-        "state_after_hash": "8a35a5ddd6785a6aa411a67c59e7c14c36f3b36d7a6c4ea786bb74395c77072f"
+        "state_after_hash": "8a35a5ddd6785a6aa411a67c59e7c14c36f3b36d7a6c4ea786bb74395c77072f",
+        "state_writes": {}
       },
       "right": {
         "seq": 4,
@@ -148,7 +157,8 @@
         "output": null,
         "input_hash": "b7df2a76d7d8e6c9d6a6770a9fbe891fb95ffcfced1a9ae054ae6cbae6be2b3f",
         "output_hash": "7e73a83365d970c9fb3ac631a246aa4344158885e4f2f4dc3117a3cd5e2b5361",
-        "state_after_hash": "8a35a5ddd6785a6aa411a67c59e7c14c36f3b36d7a6c4ea786bb74395c77072f"
+        "state_after_hash": "8a35a5ddd6785a6aa411a67c59e7c14c36f3b36d7a6c4ea786bb74395c77072f",
+        "state_writes": {}
       }
     },
     {
@@ -181,7 +191,15 @@
         },
         "input_hash": "8d0be977404c5c643c800866fb68c5f30a206473a33864a6f44f0782f1486976",
         "output_hash": "d9deaec148cd6a2d768a13b2d9ae85f50e97d2b1e9a10aeb309ccb45534feb63",
-        "state_after_hash": "e35a7e0ea41d7948ab6e749f588a15e7f84b91eb743168c2a5518d4d4fe3c829"
+        "state_after_hash": "e35a7e0ea41d7948ab6e749f588a15e7f84b91eb743168c2a5518d4d4fe3c829",
+        "state_writes": {
+          "fx": {
+            "as_of": "2026-03-03",
+            "currency": "SGD",
+            "rate": 54.4,
+            "to": "INR"
+          }
+        }
       },
       "right": {
         "seq": 5,
@@ -205,7 +223,15 @@
         },
         "input_hash": "287706f411c981c6dfd97b83cf06a37c87b5fbc5107c2ff56d0a544969822b8c",
         "output_hash": "36576725290df36d3d4380b687ceeea06313375b3cdc57f96adbacfed1f19a41",
-        "state_after_hash": "219839a429901e6854e4c145320757554611764b6d1f1cdc1f1fa1da6b9ff8c2"
+        "state_after_hash": "219839a429901e6854e4c145320757554611764b6d1f1cdc1f1fa1da6b9ff8c2",
+        "state_writes": {
+          "fx": {
+            "as_of": "2026-10-03",
+            "currency": "SGD",
+            "rate": 64.0,
+            "to": "INR"
+          }
+        }
       }
     },
     {
@@ -222,7 +248,8 @@
         "output": null,
         "input_hash": "bbae9130331a26d45534b6e1395b5ff85f1e15e894d68c61ebc5b5fbbca3dbce",
         "output_hash": "5c7f1444470abf57deacaf8523c774e8e9ef78de6768c6d7b66b32c8dc97dcf5",
-        "state_after_hash": "b611ce22f433569e9f0a1b7efa3e12a1e780b49a954e1a3217580de430cdc147"
+        "state_after_hash": "b611ce22f433569e9f0a1b7efa3e12a1e780b49a954e1a3217580de430cdc147",
+        "state_writes": {}
       },
       "right": {
         "seq": 6,
@@ -233,7 +260,8 @@
         "output": null,
         "input_hash": "bbae9130331a26d45534b6e1395b5ff85f1e15e894d68c61ebc5b5fbbca3dbce",
         "output_hash": "5c7f1444470abf57deacaf8523c774e8e9ef78de6768c6d7b66b32c8dc97dcf5",
-        "state_after_hash": "bc75dbdcd3c1c53449bcb2112394ef2137e74fcdac4c3213cdffcb336c10e672"
+        "state_after_hash": "bc75dbdcd3c1c53449bcb2112394ef2137e74fcdac4c3213cdffcb336c10e672",
+        "state_writes": {}
       }
     },
     {
@@ -250,7 +278,8 @@
         "output": null,
         "input_hash": "b120a96621d246dced61872187896b595d945036aa1142d86baf9728f9a50001",
         "output_hash": "e0c7ed9bafffc34a597e0633218371afa6581e75111c33222184868d53e612f5",
-        "state_after_hash": "5e39ec8d0724f48bf21b63939ee347c1989c1cc031193cb0d0b10a9a708a9117"
+        "state_after_hash": "5e39ec8d0724f48bf21b63939ee347c1989c1cc031193cb0d0b10a9a708a9117",
+        "state_writes": {}
       },
       "right": {
         "seq": 7,
@@ -261,7 +290,8 @@
         "output": null,
         "input_hash": "b120a96621d246dced61872187896b595d945036aa1142d86baf9728f9a50001",
         "output_hash": "e0c7ed9bafffc34a597e0633218371afa6581e75111c33222184868d53e612f5",
-        "state_after_hash": "4572599065b316b686a0aa75fb240ee1ef30fed13998a34ca19f978049c1b229"
+        "state_after_hash": "4572599065b316b686a0aa75fb240ee1ef30fed13998a34ca19f978049c1b229",
+        "state_writes": {}
       }
     },
     {
@@ -278,7 +308,8 @@
         "output": null,
         "input_hash": "84bbafd05c02c5ff0b6cf9858a57d2deae23bd1850e7ca1ea762c68af1b4c145",
         "output_hash": "6b39fdcb66d8f8c8c5267d3118d6aab21aeda56d31837b33ae1e781164e55687",
-        "state_after_hash": "32359304789b11f974392927d51333f81cfad38b0a94db4fb0bb0dc5b97fee1d"
+        "state_after_hash": "32359304789b11f974392927d51333f81cfad38b0a94db4fb0bb0dc5b97fee1d",
+        "state_writes": {}
       },
       "right": {
         "seq": 8,
@@ -289,7 +320,8 @@
         "output": null,
         "input_hash": "84bbafd05c02c5ff0b6cf9858a57d2deae23bd1850e7ca1ea762c68af1b4c145",
         "output_hash": "6b39fdcb66d8f8c8c5267d3118d6aab21aeda56d31837b33ae1e781164e55687",
-        "state_after_hash": "be79667f22aa73d1c0ad4993957ef72e6100f3897910876fb899559dffc95f1b"
+        "state_after_hash": "be79667f22aa73d1c0ad4993957ef72e6100f3897910876fb899559dffc95f1b",
+        "state_writes": {}
       }
     },
     {
@@ -306,7 +338,8 @@
         "output": null,
         "input_hash": "de411fb42a0bfc9cdbb3af7484012cf9f6703ba227dbdbb48bfa51af224a9f18",
         "output_hash": "02021e7cceee0256e9a82b6da2ab45b7ed20b23963c3c0e2068b26fe98816403",
-        "state_after_hash": "f235de90f2221d64722e8848a9ecd29b78e39b3a67254b554659ef71a0665798"
+        "state_after_hash": "f235de90f2221d64722e8848a9ecd29b78e39b3a67254b554659ef71a0665798",
+        "state_writes": {}
       },
       "right": {
         "seq": 9,
@@ -317,7 +350,8 @@
         "output": null,
         "input_hash": "de411fb42a0bfc9cdbb3af7484012cf9f6703ba227dbdbb48bfa51af224a9f18",
         "output_hash": "02021e7cceee0256e9a82b6da2ab45b7ed20b23963c3c0e2068b26fe98816403",
-        "state_after_hash": "9ca6943ebeacd52b54c4c94bf0f60867d32b3905293b12f6af6944b5ceb6dad8"
+        "state_after_hash": "9ca6943ebeacd52b54c4c94bf0f60867d32b3905293b12f6af6944b5ceb6dad8",
+        "state_writes": {}
       }
     },
     {
@@ -334,7 +368,8 @@
         "output": null,
         "input_hash": "eb85d506d499aeb69cdd4e1502cf98ead3d21aa34fca21fff2af552d3e775fe7",
         "output_hash": "4b7644f2da97fa51b7b553e681d5617bcd90aa0ad4b5b37c9f1a7f0f8301937d",
-        "state_after_hash": "450394f2bd638b13d4792ab6b6be71a3f1f3a7b2d76d33c5f1b9aa14e51f53bf"
+        "state_after_hash": "450394f2bd638b13d4792ab6b6be71a3f1f3a7b2d76d33c5f1b9aa14e51f53bf",
+        "state_writes": {}
       },
       "right": {
         "seq": 10,
@@ -345,7 +380,8 @@
         "output": null,
         "input_hash": "eb85d506d499aeb69cdd4e1502cf98ead3d21aa34fca21fff2af552d3e775fe7",
         "output_hash": "4b7644f2da97fa51b7b553e681d5617bcd90aa0ad4b5b37c9f1a7f0f8301937d",
-        "state_after_hash": "8a8db060029fafeaba3a46df18ac2b7ebc27e46151f509279696be08a6990f95"
+        "state_after_hash": "8a8db060029fafeaba3a46df18ac2b7ebc27e46151f509279696be08a6990f95",
+        "state_writes": {}
       }
     },
     {
@@ -405,7 +441,16 @@
         },
         "input_hash": "800084dd447a5dda236f647213236debd796419536fe0c50ae1aee5897125c86",
         "output_hash": "1394dbc17a8f8d8a60c4a8234479f190ba1451ad71e75522e9db96cbaf473b73",
-        "state_after_hash": "0da819865722edf107fba9033260258e32fa1cc71bba5bca9016bb3bfdf17e12"
+        "state_after_hash": "0da819865722edf107fba9033260258e32fa1cc71bba5bca9016bb3bfdf17e12",
+        "state_writes": {
+          "budget": {
+            "flights_inr": 96000.0,
+            "fx_as_of": "2026-03-03",
+            "hotels_inr": 22949.18,
+            "total_inr": 130949.18,
+            "visa_inr": 12000.0
+          }
+        }
       },
       "right": {
         "seq": 11,
@@ -455,7 +500,16 @@
         },
         "input_hash": "ed04c10787455ff1227138d85e327c412fca0c08506a2f2bf72d06d69057d851",
         "output_hash": "c867f87c452b11aa10ce399c7b9c2b461072255566b19bbf577a8a4a94a1cb13",
-        "state_after_hash": "2b2ee4dda769d3f0b2bf5499e86a331bbe3cc1b031eef5896715f1c5b87873ef"
+        "state_after_hash": "2b2ee4dda769d3f0b2bf5499e86a331bbe3cc1b031eef5896715f1c5b87873ef",
+        "state_writes": {
+          "budget": {
+            "flights_inr": 96000.0,
+            "fx_as_of": "2026-10-03",
+            "hotels_inr": 26999.04,
+            "total_inr": 134999.04,
+            "visa_inr": 12000.0
+          }
+        }
       }
     },
     {
@@ -509,7 +563,21 @@
         },
         "input_hash": "422531d71eae377d1c79394c80d35e0d844e3018030a22c0d7159e9474aabb83",
         "output_hash": "b78d9e504052e701532dfe746ceed587049780e0a81d4c942476bb4044a2a1a5",
-        "state_after_hash": "8e6ce4e942d3c81fef94afa85b4f255ce9f40d9908fd330020ae522d8a0db601"
+        "state_after_hash": "8e6ce4e942d3c81fef94afa85b4f255ce9f40d9908fd330020ae522d8a0db601",
+        "state_writes": {
+          "draft": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 130949.18
+          }
+        }
       },
       "right": {
         "seq": 12,
@@ -553,7 +621,21 @@
         },
         "input_hash": "b0644f25a2fcdae54b164fbf69fece5378a567b7da7bb6b80f0c9c30a0ac0049",
         "output_hash": "df7601b26ce40d939b4b540b22df7a46bfc2bcca8b25feabfa1dd25d0c6a290c",
-        "state_after_hash": "5e3bb5db294fe20eaaefd3c2dc4fb39764835f2cd577341e4fefb373feb10ce4"
+        "state_after_hash": "5e3bb5db294fe20eaaefd3c2dc4fb39764835f2cd577341e4fefb373feb10ce4",
+        "state_writes": {
+          "draft": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 134999.04
+          }
+        }
       }
     },
     {
@@ -607,7 +689,21 @@
         },
         "input_hash": "258bccc4fdd8243a6df21ed2c9018d63bf2fe6bd27888d9d8c3207f8da9ffc1d",
         "output_hash": "280a87c93455a44fa0aaea9ef923a028eaea08f5385d1fd58f44eed709382882",
-        "state_after_hash": "196b55ab3d6c7820d3ae854be0ff59ed3ef4cfa6ae22f460903d552430bd759c"
+        "state_after_hash": "196b55ab3d6c7820d3ae854be0ff59ed3ef4cfa6ae22f460903d552430bd759c",
+        "state_writes": {
+          "verified_plan": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 130949.18
+          }
+        }
       },
       "right": {
         "seq": 13,
@@ -651,7 +747,21 @@
         },
         "input_hash": "bd91e52b2c7f319bb2f779b924663ace4477cbb87c66f4e0722499ce581d0cc0",
         "output_hash": "2b899b743a9a4c516cc3139f9680ef09e05b99d4d4ca3a21d8dffbc3f492f915",
-        "state_after_hash": "bf8411500343150abc618d1fc90f97bc0152d1aadc3c21590e7e3748d449710a"
+        "state_after_hash": "bf8411500343150abc618d1fc90f97bc0152d1aadc3c21590e7e3748d449710a",
+        "state_writes": {
+          "verified_plan": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 134999.04
+          }
+        }
       }
     },
     {
@@ -670,7 +780,21 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "2a0694d411858412a9b15a407dc40e95c3db51c63622f0043234f7c631c8d545"
+        "state_after_hash": "2a0694d411858412a9b15a407dc40e95c3db51c63622f0043234f7c631c8d545",
+        "state_writes": {
+          "final_plan": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 130949.18
+          }
+        }
       },
       "right": {
         "seq": 14,
@@ -681,7 +805,21 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "4e5b70a77b72add103d249cb92c9f83928b758bf8023a9849a5e1f6a6264cbe5"
+        "state_after_hash": "4e5b70a77b72add103d249cb92c9f83928b758bf8023a9849a5e1f6a6264cbe5",
+        "state_writes": {
+          "final_plan": {
+            "adults": 4,
+            "departure": "2026-12-12",
+            "destination": "Singapore",
+            "flight_id": "F-basic",
+            "hotel_id": "H-basic",
+            "itinerary": "Fly to the destination, check in, explore, and return on the requested date.",
+            "origin": "Mumbai",
+            "return_date": "2026-12-15",
+            "scenario_id": "TC-7-0001",
+            "total_inr": 134999.04
+          }
+        }
       }
     },
     {
@@ -700,7 +838,14 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "f70f32c1b144599c078f5f7d572240586c32aa77511b49b3ffec3a1ffd45961f"
+        "state_after_hash": "f70f32c1b144599c078f5f7d572240586c32aa77511b49b3ffec3a1ffd45961f",
+        "state_writes": {
+          "check": {
+            "expected_total_inr": 134999.04,
+            "passed": false,
+            "reason": "Incorrect INR total: got 130949.18, expected 134999.04"
+          }
+        }
       },
       "right": {
         "seq": 15,
@@ -711,7 +856,14 @@
         "output": null,
         "input_hash": null,
         "output_hash": null,
-        "state_after_hash": "0898a0185b537b7f2736dab145006aed747878d0a4944cd81cf67945262f6905"
+        "state_after_hash": "0898a0185b537b7f2736dab145006aed747878d0a4944cd81cf67945262f6905",
+        "state_writes": {
+          "check": {
+            "expected_total_inr": 134999.04,
+            "passed": true,
+            "reason": "All constraints and fresh-catalog total match"
+          }
+        }
       }
     }
   ],

@@ -18,6 +18,8 @@ export type ReplayVisual =
 export interface Violation {
   pointer: string;
   message: string;
+  severity: "error" | "warning" | "info";
+  source: "recorded" | "diagnosis";
 }
 
 export interface StepView {
@@ -34,6 +36,7 @@ export interface StepView {
   latencyMs?: number | null;
   tokens?: number | null;
   error?: string | null;
+  failureMessage?: string | null;
   cacheStatus?: string | null;
   suspicion?: number | null;
   isSuspect?: boolean;

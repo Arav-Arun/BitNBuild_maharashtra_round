@@ -571,6 +571,9 @@ export interface DiffSide {
   cache_status: "cached" | "invalidated" | "live" | "edited";
   input: unknown;
   output: unknown;
+  state_writes: {
+    [k: string]: unknown;
+  };
   input_hash: string | null;
   output_hash: string | null;
   state_after_hash: string | null;

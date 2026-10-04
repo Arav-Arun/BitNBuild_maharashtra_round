@@ -718,7 +718,10 @@ def build_diff(
             else set()
         )
 
-    def side(step: m.StepDetail, *, payload: bool) -> m.DiffSide:
+    def side(
+        step: m.StepDetail, *, payload: bool, state_keys: set[str] | None = None
+    ) -> m.DiffSide:
+        written_keys = state_keys or {write.rsplit("@", 1)[0] for write in step.writes}
         return m.DiffSide(
             seq=step.seq,
             kind=step.kind,
@@ -726,6 +729,15 @@ def build_diff(
             cache_status=step.cache_status,
             input=step.input if payload else None,
             output=step.output if payload else None,
+            state_writes=(
+                {
+                    key: step.state_after[key]
+                    for key in sorted(written_keys)
+                    if key in step.state_after
+                }
+                if payload
+                else {}
+            ),
             input_hash=step.hashes.input,
             output_hash=step.hashes.output,
             state_after_hash=step.hashes.state_after,
@@ -749,14 +761,17 @@ def build_diff(
             ]
             status = "cached" if b.cache_status == "cached" else "changed" if changed else "same"
         payload = status in {"changed", "new", "removed"}
+        state_keys = {
+            write.rsplit("@", 1)[0] for step in (a, b) if step is not None for write in step.writes
+        }
         rows.append(
             m.DiffRow(
                 addr=addr,
                 status=status,
                 in_cone=addr in invalidated,
                 changed=changed,
-                left=side(a, payload=payload) if a else None,
-                right=side(b, payload=payload) if b else None,
+                left=side(a, payload=payload, state_keys=state_keys) if a else None,
+                right=side(b, payload=payload, state_keys=state_keys) if b else None,
             )
         )
 

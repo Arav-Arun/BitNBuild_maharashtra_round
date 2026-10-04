@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { DiffResponse, DiffRow, RunDetail, RunList, RunSummary } from "../../lib/contract";
+import type { DiffResponse, DiffRow, DiffSide, RunDetail, RunList, RunSummary } from "../../lib/contract";
 import { api } from "../../lib/api";
 
 const STAT_LABELS: Record<string, string> = {
@@ -35,6 +35,73 @@ function outputPreview(value: unknown) {
     .slice(0, 4)
     .map(([key, item]) => `${key}: ${typeof item === "object" && item !== null ? "…" : String(item)}`)
     .join(" · ");
+}
+
+function recordedValue(side: DiffSide | null): unknown {
+  if (!side) return null;
+  if (side.output !== null && side.output !== undefined) return side.output;
+  if (Object.keys(side.state_writes).length > 0) return side.state_writes;
+  return side.output;
+}
+
+function changedStateLeaves(
+  left: unknown,
+  right: unknown,
+  path: string,
+  changes: Array<{ path: string; left: unknown; right: unknown }>,
+) {
+  if (JSON.stringify(left) === JSON.stringify(right)) return;
+
+  const leftObject = left !== null && typeof left === "object" && !Array.isArray(left);
+  const rightObject = right !== null && typeof right === "object" && !Array.isArray(right);
+  if (leftObject && rightObject) {
+    const leftRecord = left as Record<string, unknown>;
+    const rightRecord = right as Record<string, unknown>;
+    const keys = new Set([...Object.keys(leftRecord), ...Object.keys(rightRecord)]);
+    for (const key of keys) {
+      changedStateLeaves(leftRecord[key], rightRecord[key], path ? `${path}.${key}` : key, changes);
+    }
+    return;
+  }
+
+  changes.push({ path, left, right });
+}
+
+function stateChangePreview(row: DiffRow, sideName: "left" | "right") {
+  const left = row.left?.state_writes ?? {};
+  const right = row.right?.state_writes ?? {};
+  const changes: Array<{ path: string; left: unknown; right: unknown }> = [];
+  changedStateLeaves(left, right, "", changes);
+
+  const preview = changes
+    .slice(0, 3)
+    .map(({ path, left: leftValue, right: rightValue }) => {
+      const value = sideName === "left" ? leftValue : rightValue;
+      const text =
+        value === undefined ? "(missing)" : typeof value === "string" ? value : JSON.stringify(value);
+      return `${path}: ${text.length > 72 ? `${text.slice(0, 69)}…` : text}`;
+    })
+    .join(" · ");
+  return preview || "State recorded; no field-level difference";
+}
+
+function DiffResult({ row, sideName }: { row: DiffRow; sideName: "left" | "right" }) {
+  const side = row[sideName];
+  const value = recordedValue(side);
+  const isState = Boolean(
+    side && side.output == null && Object.keys(side.state_writes).length > 0,
+  );
+  return (
+    <>
+      {isState && <div className="faint">Agent state</div>}
+      <details className="diff-output">
+        <summary>{isState ? stateChangePreview(row, sideName) : outputPreview(value)}</summary>
+        <pre className="diff-json">
+          {value === null || value === undefined ? "—" : JSON.stringify(value, null, 2)}
+        </pre>
+      </details>
+    </>
+  );
 }
 
 function replayLabel(row: DiffRow) {
@@ -212,8 +279,8 @@ export function ComparePage() {
                       <td><span className={`badge ${row.status === "changed" ? "badge-warn" : "badge-neutral"}`}>{row.status === "changed" ? "Changed" : row.status === "same" ? "Same" : row.status === "cached" ? "Reused" : row.status === "new" ? "Added" : "Removed"}</span>{row.changed.length > 0 && <div className="faint">{changedLabel(row.changed)}</div>}</td>
                       <td>{replayLabel(row)}</td>
                       <td>{row.in_cone ? "Inside" : "Outside"}</td>
-                      <td><details className="diff-output"><summary>{outputPreview(row.left?.output)}</summary><pre className="diff-json">{JSON.stringify(row.left?.output, null, 2) || "—"}</pre></details></td>
-                      <td><details className="diff-output"><summary>{outputPreview(row.right?.output)}</summary><pre className="diff-json">{JSON.stringify(row.right?.output, null, 2) || "—"}</pre></details></td>
+                      <td><DiffResult row={row} sideName="left" /></td>
+                      <td><DiffResult row={row} sideName="right" /></td>
                     </tr>
                   ))}
                 </tbody>

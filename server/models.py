@@ -1252,6 +1252,7 @@ class DiffSide(ContractModel):
     cache_status: CacheStatus
     input: Any | None
     output: Any | None
+    state_writes: dict[str, Any]
     input_hash: str | None
     output_hash: str | None
     state_after_hash: str | None

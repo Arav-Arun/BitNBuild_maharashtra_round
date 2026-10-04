@@ -172,14 +172,32 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
         latencyMs: step.latency_ms,
         tokens: step.tokens ? step.tokens.input + step.tokens.output : null,
         error: step.error?.message || null,
+        failureMessage:
+          diagnosis?.visible_failure_addr === step.addr ? detail.run.checker_reason : null,
         cacheStatus: step.cache_status,
         suspicion: diagnosis?.ranking.find((item) => item.addr === step.addr)?.probability,
         isSuspect: diagnosis?.responsible_addr === step.addr,
         isVisibleFailure: diagnosis?.visible_failure_addr === step.addr,
-        violations: step.rule_violations.map((violation) => ({
-          pointer: violation.citation.json_pointer || "",
-          message: violation.message,
-        })),
+        violations: [
+          ...step.rule_violations.map((violation) => ({
+            pointer: violation.citation.json_pointer || "",
+            message: violation.message,
+            severity: violation.severity,
+            source: "recorded" as const,
+          })),
+          ...(diagnosis?.rule_evidence ?? [])
+            .filter((finding) => finding.citation.addr === step.addr)
+            .map((finding) => ({
+              pointer: finding.citation.json_pointer || "",
+              message: finding.message,
+              severity: finding.severity,
+              source: "diagnosis" as const,
+            })),
+        ].filter((finding, index, all) =>
+          all.findIndex((other) =>
+            other.pointer === finding.pointer && other.message === finding.message,
+          ) === index,
+        ),
       })) || [],
     [detail, diagnosis],
   );

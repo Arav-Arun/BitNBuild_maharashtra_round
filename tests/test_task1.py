@@ -95,6 +95,39 @@ class TaskOneTests(unittest.TestCase):
         self.assertIn("budget/tool#1", inside)
         self.assertIn("writer/chat#1", inside)
 
+    def test_api_diff_returns_written_state_for_changed_state_steps(self):
+        root = Path(__file__).parents[1]
+        detail = RunDetail.model_validate(
+            json.loads((root / "web/mocks/run-detail.json").read_text())
+        )
+        steps = list(detail.steps)
+        index = next(i for i, step in enumerate(steps) if step.addr == "final/state#1")
+        final = steps[index]
+        old_plan = final.state_after["final_plan"]
+        new_plan = {**old_plan, "total_inr": old_plan["total_inr"] + 1}
+        steps[index] = final.model_copy(
+            update={
+                "state_after": {**final.state_after, "final_plan": new_plan},
+                "hashes": final.hashes.model_copy(update={"state_after": "f" * 64}),
+            }
+        )
+        fork = detail.model_copy(
+            update={
+                "run": detail.run.model_copy(
+                    update={"run_id": "tc-state-fork", "parent_run_id": detail.run.run_id}
+                ),
+                "steps": steps,
+            }
+        )
+
+        diff = build_diff(detail, fork, invalidated=None, nearest=None)
+        row = next(row for row in diff.rows if row.addr == "final/state#1")
+        self.assertEqual(row.status, "changed")
+        self.assertIsNone(row.left.output)
+        self.assertIsNone(row.right.output)
+        self.assertEqual(row.left.state_writes["final_plan"], old_plan)
+        self.assertEqual(row.right.state_writes["final_plan"], new_plan)
+
     def test_llm_client_retries_429_and_honours_openai_shape(self):
         attempts = 0
 
