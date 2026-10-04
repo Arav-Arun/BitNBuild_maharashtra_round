@@ -2,7 +2,7 @@ UV ?= uv
 RUN = $(UV) run --locked --extra dev
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag forge
+.PHONY: hoprag-data hoprag forge forge-natural forge-freeze
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -16,6 +16,9 @@ help:
 	@echo "tripcrew-demo Demonstrate stale-FX repair with selective replay"
 	@echo "hoprag-data Download and verify the MuSiQue-Ans development dataset"
 	@echo "hoprag Record 50 HopRAG questions and verify unchanged replay (offline baseline)"
+	@echo "forge   Inject faults into passing AGENT=tripcrew|hoprag runs (resumes automatically)"
+	@echo "forge-natural Attribute naturally failed AGENT runs with oracle fixes (test-only)"
+	@echo "forge-freeze  Export AGENT labels and write DATASET_VERSION"
 
 setup:
 	$(UV) sync --locked --extra dev
@@ -63,6 +66,14 @@ hoprag-data:
 hoprag:
 	$(RUN) python -m agents.hoprag run --count 50 --verify-replay
 
+AGENT ?= tripcrew
+
 forge:
-	$(RUN) python -m blackbox.forge --target 360 --concurrency 4
+	$(RUN) python -m blackbox.forge inject --agent $(AGENT) --target 360 --concurrency 4
+
+forge-natural:
+	$(RUN) python -m blackbox.forge natural --agent $(AGENT)
+
+forge-freeze:
+	$(RUN) python -m blackbox.forge freeze --agent $(AGENT)
 

@@ -530,6 +530,40 @@ class TestLabeler(unittest.TestCase):
         )
         self.assertEqual(result.label, ForkLabel.FLAKY)
 
+    def test_partial_failure_is_unstable_not_positive(self):
+        db = MagicMock()
+        db.query.return_value = []
+        labeler = Labeler(db)
+        batch = self._make_batch(
+            ["failed", "passed", "passed", "passed", "passed"],
+            ["passed"] * 5,
+        )
+        result = labeler.classify(
+            batch, target_addr="fx/tool#1", fault_code="T1", fault_type="wrong_value"
+        )
+        self.assertEqual(result.label, ForkLabel.UNSTABLE)
+        db.execute.assert_not_called()
+
+    def test_one_failed_control_is_flaky(self):
+        db = MagicMock()
+        db.query.return_value = []
+        labeler = Labeler(db)
+        batch = self._make_batch(["failed"] * 3, ["passed", "failed", "passed"])
+        result = labeler.classify(
+            batch, target_addr="fx/tool#1", fault_code="T1", fault_type="wrong_value"
+        )
+        self.assertEqual(result.label, ForkLabel.FLAKY)
+        db.execute.assert_not_called()
+
+    def test_positive_labels_every_sample(self):
+        db = MagicMock()
+        db.query.return_value = [{"addr": "fx/tool#1", "seq": 5}]
+        labeler = Labeler(db)
+        batch = self._make_batch(["failed"] * 3, ["passed"] * 3)
+        labeler.classify(batch, target_addr="fx/tool#1", fault_code="T1", fault_type="wrong_value")
+        labelled = [call.args[1][0] for call in db.execute.call_args_list]
+        self.assertEqual(labelled, ["fork-fix-0", "fork-fix-1", "fork-fix-2"])
+
     def test_positive_has_root_addr(self):
         db = MagicMock()
         db.query.return_value = [
@@ -762,6 +796,7 @@ class TestForgeProgress(unittest.TestCase):
             "positive",
             "recovered",
             "flaky",
+            "unstable",
             "errors",
             "flaky_rate",
             "elapsed_seconds",
@@ -1246,6 +1281,293 @@ class TestNaturalLabelerReproduction(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(
                     reproduced_count, 10, "Natural labeler did not reproduce all 10 known roots"
                 )
+            finally:
+                recorder.close()
+
+
+def _fake_result(code="T1", label=ForkLabel.POSITIVE, fork_id="fork"):
+    return ForkResult(
+        base_run_id="run",
+        fork_id=fork_id,
+        target_addr="fx/tool#1",
+        fault_code=code,
+        fault_type="wrong_value",
+        label=label,
+        fix_pass_rate=0.0,
+        control_pass_rate=1.0,
+        manifest_addr=None,
+        distractor_addr=None,
+        distractor_fault_code=None,
+        samples=1,
+        held_out=False,
+        created_at="now",
+    )
+
+
+class TestForgeRunnerConcurrencyAndResume(unittest.IsolatedAsyncioTestCase):
+    def _injector(self, delay=0.01):
+        injector = MagicMock()
+        state = {"active": 0, "max_active": 0, "calls": 0}
+
+        async def inject(op, rng, **kwargs):
+            state["active"] += 1
+            state["calls"] += 1
+            state["max_active"] = max(state["max_active"], state["active"])
+            try:
+                import asyncio
+
+                await asyncio.sleep(delay)
+                return _fake_result(op.spec.code, fork_id=f"fork-{state['calls']}")
+            finally:
+                state["active"] -= 1
+
+        injector.inject_random = inject
+        injector.inject_with_distractor = lambda op, dist, rng, **kw: inject(op, rng, **kw)
+        return injector, state
+
+    async def test_run_keeps_concurrency_attempts_in_flight(self):
+        from blackbox.forge.runner import ForgeRunner
+
+        injector, state = self._injector()
+        runner = ForgeRunner(injector, concurrency=4)
+        progress = await runner.run(target_positive=12, max_attempts=100)
+        self.assertEqual(state["max_active"], 4)
+        # No attempt starts once the target is met, so the overshoot is bounded.
+        self.assertGreaterEqual(progress.positive, 12)
+        self.assertLess(progress.positive, 12 + 4)
+
+    async def test_restarted_runner_resumes_counts_and_results(self):
+        from blackbox.forge.runner import ForgeRunner
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            injector, state = self._injector(delay=0)
+            first = ForgeRunner(injector, concurrency=1, checkpoint_dir=Path(tmpdir))
+            await first.run(target_positive=5, max_attempts=100)
+            self.assertEqual(state["calls"], 5)
+
+            injector, state = self._injector(delay=0)
+            second = ForgeRunner(injector, concurrency=1, checkpoint_dir=Path(tmpdir))
+            self.assertEqual(second.progress.positive, 5)
+            self.assertEqual(len(second.progress.results), 5)
+            await second.run(target_positive=8, max_attempts=100)
+            self.assertEqual(state["calls"], 3)
+            self.assertEqual(second.progress.positive, 8)
+            lines = (Path(tmpdir) / "forge_results.jsonl").read_text().splitlines()
+            self.assertEqual(len(lines), 8)
+
+            injector, state = self._injector(delay=0)
+            fresh = ForgeRunner(injector, concurrency=1, checkpoint_dir=Path(tmpdir), resume=False)
+            self.assertEqual(fresh.progress.total_attempts, 0)
+
+    async def test_max_attempts_counts_resumed_attempts(self):
+        from blackbox.forge.runner import ForgeRunner
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            injector, _ = self._injector(delay=0)
+            await ForgeRunner(injector, concurrency=2, checkpoint_dir=Path(tmpdir)).run(
+                target_positive=6, max_attempts=6
+            )
+            injector, state = self._injector(delay=0)
+            await ForgeRunner(injector, concurrency=2, checkpoint_dir=Path(tmpdir)).run(
+                target_positive=100, max_attempts=6
+            )
+            self.assertEqual(state["calls"], 0)
+
+
+class HintAwareLLM:
+    """Answers WRONG only when the hidden hint reaches it, with reasoning that repeats it."""
+
+    def __init__(self):
+        self.requests = []
+
+    async def chat(self, **request):
+        self.requests.append(request)
+        hinted = any("HIDDEN HINT" in m.get("content", "") for m in request["messages"])
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": "WRONG" if hinted else "RIGHT",
+                        "reasoning": "The system said HIDDEN HINT" if hinted else "ok",
+                    },
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+
+
+class TestGhostHint(unittest.IsolatedAsyncioTestCase):
+    async def test_hint_reaches_the_model_but_is_never_stored(self):
+        from blackbox.replay import ReplayEngine, ghost_hint
+        from blackbox.sdk import Recorder
+
+        def echo(text):
+            return text
+
+        async def agent(run):
+            with run.step("plan/chat#1", "llm"):
+                response = await run.chat(
+                    [{"role": "system", "content": "plan"}, {"role": "user", "content": "go"}],
+                    model="real-model",
+                )
+                run.state["plan"] = response["choices"][0]["message"]["content"]
+            with run.step("act/tool#1", "tool"):
+                run.state["act"] = await run.tool(echo, text=run.state["plan"])
+            run.set_outcome(run.state["act"] == "RIGHT")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            client = HintAwareLLM()
+            recorder = Recorder(tmpdir, mode="live", llm_client=client)
+            try:
+                with recorder.run("toy", "task", 1, run_id="base", model="real-model") as run:
+                    await agent(run)
+                self.assertEqual(run.outcome, "passed")
+
+                engine = ReplayEngine(recorder)
+                batch = await engine.replay(
+                    "base", agent, edits=[ghost_hint("plan/chat#1", "HIDDEN HINT")]
+                )
+                self.assertEqual(batch.edited[0].outcome, "failed")
+                self.assertEqual(batch.edited[0].statuses["plan/chat#1"], "edited")
+                self.assertIn("HIDDEN HINT", json.dumps(client.requests[-1]))
+
+                # Not in any blob (inputs, outputs, reasoning, snapshots) or fork metadata.
+                for blob in Path(tmpdir, "content").rglob("*"):
+                    if blob.is_file():
+                        self.assertNotIn(b"HIDDEN HINT", blob.read_bytes(), blob)
+                fork = recorder.database.one("SELECT edits_json FROM forks")
+                self.assertNotIn("HIDDEN HINT", fork["edits_json"])
+
+                # The clean request still replays the clean, recorded answer.
+                again = await engine.replay("base", agent)
+                self.assertEqual(again.edited[0].outcome, "passed")
+                self.assertEqual(set(again.edited[0].statuses.values()), {"cached"})
+            finally:
+                recorder.close()
+
+    async def test_ghost_hint_rejects_tool_steps(self):
+        from blackbox.replay import ReplayEngine, ghost_hint
+        from blackbox.sdk import Recorder
+
+        def one():
+            return 1
+
+        async def agent(run):
+            with run.step("a/tool#1", "tool"):
+                await run.tool(one)
+            run.set_outcome(True)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            recorder = Recorder(tmpdir, mode="live")
+            try:
+                with recorder.run("toy", "task", 1, run_id="base") as run:
+                    await agent(run)
+                with self.assertRaises(ValueError):
+                    await ReplayEngine(recorder).replay(
+                        "base", agent, edits=[ghost_hint("a/tool#1", "x")]
+                    )
+            finally:
+                recorder.close()
+
+    def test_injector_uses_hints_only_for_real_models(self):
+        from blackbox.forge.inject import FaultInjector, is_test_double
+
+        self.assertTrue(is_test_double("tripcrew-fixture-v1"))
+        self.assertTrue(is_test_double("hoprag-lexical-v1-h3"))
+        self.assertFalse(is_test_double("openai/gpt-oss-20b"))
+        self.assertFalse(is_test_double(None))
+
+        recorder = MagicMock()
+        injector = FaultInjector(recorder, lambda run_id: None)
+        step = _llm_step()
+        recorder.database.one.return_value = {"model": "openai/gpt-oss-20b"}
+        self.assertTrue(injector._uses_ghost_hint("r", step, "hint"))
+        self.assertFalse(injector._uses_ghost_hint("r", _tool_step(), "hint"))
+        recorder.database.one.return_value = {"model": "tripcrew-fixture-v1"}
+        self.assertFalse(injector._uses_ghost_hint("r", step, "hint"))
+
+
+class TestForgeCliTripCrew(unittest.IsolatedAsyncioTestCase):
+    """Real TripCrew replays through the CLI adapter, routing client and runner."""
+
+    async def _record(self, directory, count, *, stale_fx=False):
+        from agents.tripcrew import TravelAPI, TripCrew, generate_scenarios
+        from agents.tripcrew.fixture_client import FixtureClient
+        from blackbox.sdk import Recorder
+
+        scenarios = generate_scenarios(count)
+        recorder = Recorder(directory, mode="offline", llm_client=FixtureClient())
+        api = TravelAPI(scenarios, stale_fx=stale_fx)
+        try:
+            for scenario in scenarios:
+                agent = TripCrew(scenario, api, model="tripcrew-fixture-v1")
+                with recorder.run(
+                    "tripcrew", scenario.scenario_id, 7, model="tripcrew-fixture-v1"
+                ) as run:
+                    await agent(run)
+        finally:
+            recorder.close()
+
+    def _forge(self, directory, *, stale_fx=False):
+        import argparse
+
+        from blackbox.config import Settings
+        from blackbox.forge.__main__ import RoutingClient, make_adapter
+        from blackbox.sdk import Recorder
+
+        settings = Settings.load()
+        recorder = Recorder(
+            directory, mode="offline", settings=settings, llm_client=RoutingClient(settings)
+        )
+        args = argparse.Namespace(agent="tripcrew", stale_fx=stale_fx)
+        return recorder, make_adapter(recorder, args)
+
+    async def test_injection_on_recorded_tripcrew_runs(self):
+        from blackbox.forge.runner import ForgeRunner
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            await self._record(tmpdir, 3)
+            recorder, adapter = self._forge(tmpdir)
+            try:
+                from blackbox.forge.inject import FaultInjector
+
+                injector = FaultInjector(recorder, adapter.factory, default_samples=3)
+                runner = ForgeRunner(injector, concurrency=3, checkpoint_dir=Path(tmpdir, "f"))
+                progress = await runner.run(
+                    target_positive=3,
+                    max_attempts=12,
+                    operators=[T3Empty404(), T1WrongValue()],
+                    agent="tripcrew",
+                    samples=3,
+                )
+                self.assertEqual(progress.errors, 0, progress.summary())
+                self.assertGreaterEqual(progress.positive, 3)
+                self.assertEqual(progress.flaky, 0)
+                labels = recorder.database.query("SELECT * FROM labels")
+                self.assertTrue(labels)
+                self.assertEqual(len(labels) % 3, 0)  # one row per edited sample
+
+                version = runner.freeze_dataset(Path(tmpdir, "frozen"))
+                exported = json.loads(Path(tmpdir, "frozen", "labels.json").read_text())
+                self.assertEqual(len(exported), len(labels))
+                self.assertTrue(all(item["confidence"] == "high" for item in exported))
+                self.assertEqual(len(version), 64)
+            finally:
+                recorder.close()
+
+    async def test_natural_labeler_attributes_stale_fx(self):
+        from blackbox.forge.natural_label import NaturalLabeler
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            await self._record(tmpdir, 1, stale_fx=True)
+            recorder, adapter = self._forge(tmpdir, stale_fx=True)
+            try:
+                labeler = NaturalLabeler(recorder, adapter.factory)
+                labels = await labeler.label_all("tripcrew", adapter.oracle_fixes)
+                self.assertEqual(len(labels), 1)
+                self.assertEqual(labels[0].verdict, "attributed")
+                self.assertEqual(labels[0].candidate_addr, "fx/tool#1")
+                self.assertEqual(labels[0].control_pass_rate, 0.0)
             finally:
                 recorder.close()
 

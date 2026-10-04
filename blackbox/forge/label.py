@@ -1,4 +1,9 @@
-"""Fork labeling: classify replay outcomes as POSITIVE, RECOVERED, or FLAKY."""
+"""Fork labeling: classify replay outcomes as POSITIVE, RECOVERED, FLAKY, or UNSTABLE.
+
+A label is a property of the whole fork, not of one sample: POSITIVE needs every
+edited sample to fail and every paired control to pass, so a single unlucky sample
+can never become a training example.
+"""
 
 from __future__ import annotations
 
@@ -14,13 +19,16 @@ class ForkLabel(str, Enum):
     """Outcome classification of a fault-injection fork."""
 
     POSITIVE = "positive"
-    """The edited fork reproducibly fails and the paired control passes."""
+    """Every edited sample fails and every paired control passes."""
 
     RECOVERED = "recovered"
-    """The fork still passes despite the fault — a hard negative."""
+    """Every edited sample still passes despite the fault — a hard negative."""
 
     FLAKY = "flaky"
-    """The no-edit control also fails, so the example is unreliable."""
+    """At least one no-edit control fails, so the base pass is not reproducible."""
+
+    UNSTABLE = "unstable"
+    """Controls pass but edited samples disagree; discarded like FLAKY."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,18 +70,15 @@ class Labeler:
         distractor_fault_code: str | None = None,
     ) -> ForkResult:
         """Classify the batch and persist the label to the database."""
-        # Determine label
-        fix_failed = batch.fix_pass_rate < 1.0
-        control_passed = True
-        if batch.control_pass_rate is not None:
-            control_passed = batch.control_pass_rate > 0.0
-
-        if not control_passed:
+        controls_reproduce = batch.control_pass_rate is None or batch.control_pass_rate == 1.0
+        if not controls_reproduce:
             label = ForkLabel.FLAKY
-        elif fix_failed:
+        elif batch.fix_pass_rate == 0.0:
             label = ForkLabel.POSITIVE
-        else:
+        elif batch.fix_pass_rate == 1.0:
             label = ForkLabel.RECOVERED
+        else:
+            label = ForkLabel.UNSTABLE
 
         # Find manifestation step: first step that diverged from original
         manifest_addr = self._find_manifestation(batch, target_addr)
@@ -96,27 +101,17 @@ class Labeler:
             confidence="high" if len(batch.edited) >= 3 else "low",
         )
 
-        # Persist label to the labels table for each edited run
-        if label == ForkLabel.POSITIVE:
+        # Every edited sample agrees for these labels, so each sample run carries
+        # the fork's label; FLAKY and UNSTABLE forks never reach the labels table.
+        if label in {ForkLabel.POSITIVE, ForkLabel.RECOVERED}:
             for run in batch.edited:
-                if run.outcome == "failed":
-                    self._persist_label(
-                        run.run_id,
-                        target_addr,
-                        fault_type,
-                        manifest_addr,
-                        recovered=0,
-                    )
-        elif label == ForkLabel.RECOVERED:
-            for run in batch.edited:
-                if run.outcome == "passed":
-                    self._persist_label(
-                        run.run_id,
-                        target_addr,
-                        fault_type,
-                        manifest_addr,
-                        recovered=1,
-                    )
+                self._persist_label(
+                    run.run_id,
+                    target_addr,
+                    fault_type,
+                    manifest_addr,
+                    recovered=int(label == ForkLabel.RECOVERED),
+                )
 
         return result
 

@@ -10,11 +10,18 @@ from typing import Any
 
 from blackbox.forge.label import ForkResult, Labeler
 from blackbox.forge.operators import FaultOperator
-from blackbox.replay import Edit, ReplayEngine
+from blackbox.replay import Edit, ReplayEngine, ghost_hint
 from blackbox.sdk import Recorder
 from blackbox.sdk.runtime import RunSession
 
 logger = logging.getLogger(__name__)
+
+# Deterministic agent test doubles ignore prompts, so a ghost hint would change nothing.
+TEST_DOUBLE_MODEL_PREFIXES = ("tripcrew-fixture-", "hoprag-lexical-")
+
+
+def is_test_double(model: str | None) -> bool:
+    return bool(model) and model.startswith(TEST_DOUBLE_MODEL_PREFIXES)
 
 
 @dataclass(slots=True)
@@ -38,6 +45,7 @@ class FaultInjector:
         *,
         default_samples: int = 1,
         default_control: bool = True,
+        ghost_hints: bool = True,
     ) -> None:
         self.recorder = recorder
         self.engine = ReplayEngine(recorder)
@@ -45,6 +53,13 @@ class FaultInjector:
         self.agent_fn_factory = agent_fn_factory
         self.default_samples = default_samples
         self.default_control = default_control
+        self.ghost_hints = ghost_hints
+
+    def _uses_ghost_hint(self, run_id: str, step: dict[str, Any], hint: str) -> bool:
+        if not self.ghost_hints or not hint or step.get("kind") != "llm":
+            return False
+        run = self.recorder.database.one("SELECT model FROM runs WHERE run_id = ?", (run_id,))
+        return run is not None and not is_test_double(run.get("model"))
 
     def _passing_runs(self, agent: str | None = None) -> list[dict[str, Any]]:
         """Query all passing base runs (not forks)."""
@@ -102,7 +117,13 @@ class FaultInjector:
             return None
 
         step, output = rng.choice(candidates)
-        edit = operator.apply(step, output, rng)
+        # Decision/coordination faults on a real model: let the LLM write the mistake
+        # itself from a hidden instruction. Otherwise apply the operator's own edit.
+        hint = operator.ghost_hint(step, rng)
+        if self._uses_ghost_hint(run_id, step, hint):
+            edit = ghost_hint(step["addr"], hint)
+        else:
+            edit = operator.apply(step, output, rng)
 
         return InjectionPlan(
             base_run_id=run_id,
@@ -143,8 +164,13 @@ class FaultInjector:
             branch_name=f"forge-{plan.operator.spec.code}",
         )
 
-        # Verify anti-cheating: only declared fields changed
-        if plan.original_output is not None and plan.edit.value is not None:
+        # Verify anti-cheating: only declared fields changed. A ghost-hint edit has
+        # no precomputed output; the model writes it during replay.
+        if (
+            plan.edit.kind != "ghost_hint"
+            and plan.original_output is not None
+            and plan.edit.value is not None
+        ):
             if not plan.operator.verify_change(plan.original_output, plan.edit.value):
                 logger.warning(
                     "Anti-cheating check failed for %s at %s: undeclared fields changed",

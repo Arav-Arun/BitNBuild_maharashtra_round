@@ -312,6 +312,21 @@ def chat_request_key(request: dict[str, Any], addr: str) -> str:
     return content_hash({"kind": "llm", "request": _normalize_tool_call_ids(request, addr)})
 
 
+def _strip_reasoning(response: Any) -> Any:
+    if not isinstance(response, dict):
+        return response
+    cleaned = {key: value for key, value in response.items() if key != "reasoning"}
+    choices = []
+    for choice in response.get("choices", []):
+        if isinstance(choice, dict) and isinstance(choice.get("message"), dict):
+            message = {k: v for k, v in choice["message"].items() if k != "reasoning"}
+            choice = {**choice, "message": message}
+        choices.append(choice)
+    if "choices" in response:
+        cleaned["choices"] = choices
+    return cleaned
+
+
 class RunSession:
     def __init__(
         self,
@@ -491,13 +506,19 @@ class RunSession:
         if self.replay_policy is not None:
             request = self.replay_policy.transform_chat(scope.addr, request)
         request_key = chat_request_key(request, scope.addr)
+        hinted = False
 
         async def live() -> dict[str, Any]:
+            nonlocal hinted
             if self.recorder.mode == "recorded":
                 raise RuntimeError("recorded mode refuses live LLM calls")
             if self.recorder.llm_client is None:
                 raise RuntimeError("no LLM client configured")
-            return await self.recorder.llm_client.chat(**request)
+            call = request
+            if self.replay_policy is not None:
+                call = self.replay_policy.live_chat_request(scope.addr, request)
+                hinted = call is not request
+            return await self.recorder.llm_client.chat(**call)
 
         response, status = await self._resolve(
             addr=scope.addr,
@@ -505,6 +526,9 @@ class RunSession:
             request_key=request_key,
             live=live,
         )
+        if hinted:
+            # The model's reasoning may restate the hidden instruction; never store it.
+            response = _strip_reasoning(response)
         usage = response.get("usage", {}) if isinstance(response, dict) else {}
         choice = response.get("choices", [{}])[0] if isinstance(response, dict) else {}
         message = choice.get("message", {}) if isinstance(choice, dict) else {}
@@ -523,13 +547,16 @@ class RunSession:
             )
         )
         response_hash = self.store.save_json(self.redactor(response))
-        self.database.execute(
-            """
-            INSERT OR IGNORE INTO cassette(request_key, kind, response_hash, model, created_at)
-            VALUES (?, 'llm', ?, ?, ?)
-            """,
-            (request_key, response_hash, request["model"], _utc_now()),
-        )
+        # An edited response is not the answer to its request; caching it would
+        # poison exact-hash hits for every later replay of the same request.
+        if status != "edited":
+            self.database.execute(
+                """
+                INSERT OR IGNORE INTO cassette(request_key, kind, response_hash, model, created_at)
+                VALUES (?, 'llm', ?, ?, ?)
+                """,
+                (request_key, response_hash, request["model"], _utc_now()),
+            )
         return response
 
     async def tool(self, function: Callable[..., Any], /, **args: Any) -> Any:
@@ -553,13 +580,14 @@ class RunSession:
         )
         scope.capture(CallCapture(request_key, request, output, status))
         response_hash = self.store.save_json(self.redactor(output))
-        self.database.execute(
-            """
-            INSERT OR IGNORE INTO cassette(request_key, kind, response_hash, model, created_at)
-            VALUES (?, 'tool', ?, NULL, ?)
-            """,
-            (request_key, response_hash, _utc_now()),
-        )
+        if status != "edited":
+            self.database.execute(
+                """
+                INSERT OR IGNORE INTO cassette(request_key, kind, response_hash, model, created_at)
+                VALUES (?, 'tool', ?, NULL, ?)
+                """,
+                (request_key, response_hash, _utc_now()),
+            )
         return output
 
     async def _recorded_value(self, name: str, factory: Callable[[], Any]) -> Any:

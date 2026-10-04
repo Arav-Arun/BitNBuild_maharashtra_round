@@ -33,6 +33,7 @@ class Edit:
         "patch_prompt",
         "swap_model",
         "patch_tool_result",
+        "ghost_hint",
     ]
     value: Any
     known_good: bool = False
@@ -41,7 +42,8 @@ class Edit:
         return {
             "addr": self.addr,
             "kind": self.kind,
-            "value": self.value,
+            # A ghost hint must never be persisted, or the trace would carry the answer.
+            "value": "<hidden>" if self.kind == "ghost_hint" else self.value,
             "known_good": self.known_good,
         }
 
@@ -64,6 +66,16 @@ def swap_model(addr: str, model: str, *, known_good: bool = False) -> Edit:
 
 def patch_tool_result(addr: str, value: Any, *, known_good: bool = False) -> Edit:
     return Edit(addr, "patch_tool_result", value, known_good)
+
+
+def ghost_hint(addr: str, hint: str) -> Edit:
+    """Re-run an LLM step live with a hidden instruction that is never recorded.
+
+    The stored request, request key and cassette stay those of the clean prompt;
+    only the live provider call sees the hint, so the model writes the fault in
+    its own style without leaving the instruction in the trace.
+    """
+    return Edit(addr, "ghost_hint", hint)
 
 
 def wilson_interval(
@@ -238,6 +250,13 @@ class _ReplayPolicy:
             raise TypeError("tool argument patch must be a mapping")
         return {**request, "args": {**request["args"], **dict(edit.value)}}
 
+    def live_chat_request(self, addr: str, request: dict[str, Any]) -> dict[str, Any]:
+        """The request actually sent to the provider; differs only for ghost hints."""
+        edit = self.edits.get(addr)
+        if edit is None or edit.kind != "ghost_hint":
+            return request
+        return _apply_prompt_patch(request, str(edit.value))
+
     def _load_recorded(self, addr: str) -> Any:
         step = self.base_steps.get(addr)
         if step is None or not step.get("output_hash"):
@@ -269,6 +288,8 @@ class _ReplayPolicy:
         edit = self.edits.get(addr)
         if edit is not None and edit.kind in {"override_output", "patch_tool_result"}:
             return edit.value, "edited"
+        if edit is not None and edit.kind == "ghost_hint":
+            return await live(), "edited"
 
         base = self.base_steps.get(addr)
         if addr in self.force_live:
@@ -397,6 +418,9 @@ class ReplayEngine:
         unknown = set(addresses) - set(base_steps)
         if unknown:
             raise ValueError(f"edit addresses are absent from the base run: {sorted(unknown)}")
+        for edit in edits:
+            if edit.kind == "ghost_hint" and base_steps[edit.addr]["kind"] != "llm":
+                raise ValueError(f"ghost hints only apply to LLM steps: {edit.addr}")
         edit_map = {edit.addr: edit for edit in edits}
         invalidated = self._descendants(base_run_id, set(addresses))
         fork_id = uuid.uuid4().hex
@@ -569,8 +593,10 @@ async def replay(
 __all__ = [
     "Edit",
     "ReplayBatch",
+    "ReplayRun",
     "ReplayDivergence",
     "ReplayEngine",
+    "ghost_hint",
     "override_output",
     "patch_prompt",
     "patch_tool_args",
