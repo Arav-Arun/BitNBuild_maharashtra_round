@@ -980,7 +980,13 @@ class VerifyRequest(ContractModel):
     """POST /runs/{id}/verify. The verifier picks the fix for each candidate itself."""
 
     suspects: list[Addr] | None = Field(default=None, max_length=3)
-    samples: int = Field(default=5, ge=3, le=10)
+    samples: int = Field(
+        default=5,
+        ge=4,
+        le=10,
+        description="K paired samples. Below 4, the Wilson intervals of K/K and 0/K always "
+        "overlap, so no candidate could ever be VERIFIED.",
+    )
 
 
 class VerifyCandidate(ContractModel):
@@ -1001,7 +1007,7 @@ class VerifyJob(ContractModel):
     job_id: str
     run_id: RunId
     status: JobStatus
-    samples: int = Field(ge=3, le=10)
+    samples: int = Field(ge=4, le=10)
     candidates: list[VerifyCandidate]
     best_addr: Addr | None = Field(description="Strongest VERIFIED candidate, if any.")
     created_at: AwareDatetime

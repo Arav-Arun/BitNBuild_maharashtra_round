@@ -1,2 +1,124 @@
-"use client";import{useEffect,useState}from"react";import{api}from"../../lib/api";import type{LabelQueue,LabelResponse,RunDetail}from"../../lib/contract";import{useAppContext}from"../shell/AppContext";
-export function LabelPage(){const{staticBundle}=useAppContext();const[who,setWho]=useState("annotator-1"),[q,setQ]=useState<LabelQueue|null>(null),[index,setIndex]=useState(0),[run,setRun]=useState<RunDetail|null>(null),[root,setRoot]=useState(""),[notes,setNotes]=useState(""),[msg,setMsg]=useState("");async function load(){try{const next=await api<LabelQueue>(`/labels/queue?annotator=${encodeURIComponent(who)}&limit=100`);setQ(next);setIndex(0)}catch(e){setMsg((e as Error).message)}}useEffect(()=>{load()},[who]);const item=q?.items[index];useEffect(()=>{if(item)api<RunDetail>(`/runs/${encodeURIComponent(item.run_id)}?blind=true`).then(d=>{setRun(d);setRoot(d.steps[0]?.addr||"")}).catch(e=>setMsg(e.message));else setRun(null)},[item?.run_id]);async function submit(){if(!item)return;try{const result=await api<LabelResponse>("/labels",{method:"POST",body:JSON.stringify({run_id:item.run_id,annotator:who,root_addr:root||null,certainty:"sure",notes:notes||null})});setMsg(`Saved label · ${result.progress.labelled}/${result.progress.target}`);setNotes("");await load()}catch(e){setMsg((e as Error).message)}}return <div className="page"><div className="page-inner"><p className="label">Human review / Label mode</p><h1 className="h1">Mark the step that caused the failure</h1><p className="muted">The model guess and injected labels stay hidden while you review.</p>{staticBundle&&<p className="error-box">Static showcase mode is read-only. Start the local API to save labels.</p>}<div className="row" style={{margin:"18px 0"}}><label className="label">Annotator</label><input className="input" value={who} onChange={e=>setWho(e.target.value)} /><span className="badge badge-neutral">{q?.progress.labelled||0}/{q?.progress.target||0} labelled</span></div>{msg&&<p className="muted">{msg}</p>}{item&&run?<div className="label-layout"><section className="card card-pad"><div className="spread"><span className="badge badge-fail">failed</span><span className="mono faint">{item.run_id}</span></div><h2 className="h2" style={{marginTop:14}}>{item.task}</h2><p className="muted">Observed result: {item.checker_reason||"Run failed"}</p><label className="label">Root cause step (or no responsible step)</label><select className="input full" value={root} onChange={e=>setRoot(e.target.value)}><option value="">No responsible step</option>{run.steps.map(s=><option key={s.addr} value={s.addr}>{s.seq}. {s.name} · {s.addr}</option>)}</select><textarea className="input edit-json" placeholder="Reason for your choice" value={notes} onChange={e=>setNotes(e.target.value)}/><button className="btn btn-primary" onClick={submit} disabled={staticBundle}>Save label</button></section><section className="thread-pane label-steps"><div className="thread-header"><strong>Recorded sequence</strong></div><div className="thread-body">{run.steps.map(s=><button className={`label-step ${root===s.addr?"active":""}`} onClick={()=>setRoot(s.addr)} key={s.addr}><span className="mono faint">{String(s.seq).padStart(2,"0")}</span><strong>{s.name}</strong><span className="mono faint">{s.addr}</span></button>)}</div></section></div>:<div className="card empty">No unlabeled failed runs are waiting for this annotator.</div>}</div></div>}
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { api, errorText } from "../../lib/api";
+import { useDebounced } from "../../lib/useDebounced";
+import type { LabelQueue, LabelResponse, RunDetail } from "../../lib/contract";
+import { useAppContext } from "../shell/AppContext";
+
+type Certainty = "sure" | "unsure";
+
+export function LabelPage() {
+  const { staticBundle } = useAppContext();
+  const [who, setWho] = useState("annotator-1");
+  const [queue, setQueue] = useState<LabelQueue | null>(null);
+  const [run, setRun] = useState<RunDetail | null>(null);
+  const [root, setRoot] = useState("");
+  const [certainty, setCertainty] = useState<Certainty>("sure");
+  const [notes, setNotes] = useState("");
+  const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+  const annotator = useDebounced(who.trim(), 400);
+
+  const load = useCallback(async () => {
+    try {
+      if (!annotator) return;
+      setQueue(await api<LabelQueue>(`/labels/queue?annotator=${encodeURIComponent(annotator)}&limit=100`));
+    } catch (caught) {
+      setMsg(errorText(caught));
+    }
+  }, [annotator]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const item = queue?.items[0];
+
+  useEffect(() => {
+    if (!item) {
+      setRun(null);
+      return;
+    }
+    // blind=true hides the model's guess and any injected label while the annotator decides.
+    api<RunDetail>(`/runs/${encodeURIComponent(item.run_id)}?blind=true`)
+      .then((detail) => {
+        setRun(detail);
+        setRoot("");
+        setCertainty("sure");
+      })
+      .catch((caught) => setMsg(errorText(caught)));
+  }, [item?.run_id]);
+
+  async function submit() {
+    if (!item) return;
+    setSaving(true);
+    try {
+      const result = await api<LabelResponse>("/labels", {
+        method: "POST",
+        body: JSON.stringify({ run_id: item.run_id, annotator, root_addr: root || null, certainty, notes: notes || null }),
+      });
+      const kappa = result.agreement.kappa;
+      setMsg(`Saved · ${result.progress.labelled}/${result.progress.target} labelled${kappa != null ? ` · agreement κ ${kappa.toFixed(2)} over ${result.agreement.n} shared runs` : ""}`);
+      setNotes("");
+      await load();
+    } catch (caught) {
+      setMsg(errorText(caught));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="page">
+      <div className="page-inner">
+        <h1 className="h1">Mark the step that caused the failure</h1>
+        <p className="muted">The model’s guess and injected labels stay hidden while you review, so labels can measure the model honestly.</p>
+        {staticBundle && <p className="notice-box">Static showcase mode is read-only. Start the local API to save labels.</p>}
+        <div className="row label-toolbar">
+          <label className="label" htmlFor="annotator">Annotator</label>
+          <input id="annotator" className="input" value={who} onChange={(event) => setWho(event.target.value)} />
+          <span className="badge badge-neutral">{queue?.progress.labelled || 0}/{queue?.progress.target || 0} labelled</span>
+        </div>
+        {msg && <p className="muted" role="status">{msg}</p>}
+        {item && run ? (
+          <div className="label-layout">
+            <section className="card card-pad stack">
+              <div className="spread"><span className="badge badge-fail">failed</span><span className="mono faint">{item.run_id}</span></div>
+              <h2 className="h2">{item.task}</h2>
+              <p className="muted">Observed result: {item.checker_reason || "Run failed"}</p>
+              <label className="label" htmlFor="root-step">Root cause step</label>
+              <select id="root-step" className="input full" value={root} onChange={(event) => setRoot(event.target.value)}>
+                <option value="">No responsible step</option>
+                {run.steps.map((step) => <option key={step.addr} value={step.addr}>{step.seq + 1}. {step.name} · {step.addr}</option>)}
+              </select>
+              <div className="segmented" role="radiogroup" aria-label="How certain are you?">
+                {(["sure", "unsure"] as const).map((option) => (
+                  <button key={option} type="button" role="radio" aria-checked={certainty === option} className={certainty === option ? "active" : ""} onClick={() => setCertainty(option)}>
+                    {option === "sure" ? "I’m sure" : "Not sure"}
+                  </button>
+                ))}
+              </div>
+              <textarea className="input edit-json" placeholder="Reason for your choice (optional)" value={notes} onChange={(event) => setNotes(event.target.value)} />
+              <button className="btn btn-primary" onClick={submit} disabled={staticBundle || saving || !annotator}>{saving ? "Saving…" : "Save label"}</button>
+            </section>
+            <section className="thread-pane label-steps">
+              <div className="thread-header"><strong>Recorded sequence</strong></div>
+              <div className="thread-body">
+                {run.steps.map((step) => (
+                  <button className={`label-step ${root === step.addr ? "active" : ""}`} onClick={() => setRoot(step.addr)} key={step.addr}>
+                    <span className="mono faint">{String(step.seq + 1).padStart(2, "0")}</span>
+                    <strong>{step.name}</strong>
+                    <span className="mono faint">{step.addr}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        ) : (
+          <div className="card empty">{queue ? "No unlabelled failed runs are waiting for this annotator." : "Loading the review queue…"}</div>
+        )}
+      </div>
+    </div>
+  );
+}

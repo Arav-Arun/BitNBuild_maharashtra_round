@@ -226,7 +226,7 @@ class RunMeta:
     label_confidence: Literal["high", "low"] | None = None
 
 
-STANDIN_MODELS = re.compile(r"^(tripcrew-fixture-|hoprag-reader-fixture-|hoprag-lexical-)")
+STANDIN_MODELS = re.compile(r"^tripcrew-fixture-")
 
 
 def client_kind(model: str | None, mode: str | None = None) -> m.ClientKind:
@@ -250,6 +250,9 @@ def display_name(row: Mapping[str, Any], request: Any) -> str:
         return f"{row['agent_role']} chat"
     if row["kind"] == "state" and row["agent_role"]:
         return f"{row['agent_role']} state"
+    if row["kind"] in {"tool", "retrieval"} and row["agent_role"]:
+        # A call that crashed before recording its request has no function name.
+        return f"{row['agent_role']} {row['kind']}"
     return str(row["name"])
 
 

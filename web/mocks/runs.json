@@ -1,5 +1,5 @@
 {
-  "total": 28,
+  "total": 18,
   "limit": 50,
   "offset": 0,
   "next_offset": null,
@@ -99,53 +99,6 @@
       }
     },
     {
-      "run_id": "hr-0001",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "2hop__765180_123956",
-      "task": "When did the Battle at Choo Hoey's birthplace end?",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.703,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1613,
-        "tokens_out": 82,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T13:46:00Z",
-      "ended_at": "2026-10-04T13:46:00.020703Z",
-      "score": 0.0,
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "split": "S4",
-      "risk": 0.91,
-      "top_suspect": {
-        "addr": "final/chat#1",
-        "name": "answerer chat",
-        "probability": 0.78
-      },
-      "failure_signature": "hoprag:answerer chat:wrong_answer",
-      "label": {
-        "source": "natural_auto",
-        "root_addr": "final/chat#1",
-        "fault_code": null,
-        "fault_type": "natural",
-        "fault_family": null,
-        "held_out": null,
-        "recovered": false,
-        "manifest_addr": null,
-        "verified": true,
-        "confidence": null
-      }
-    },
-    {
       "run_id": "tc-0002",
       "status": "passed",
       "agent": "tripcrew",
@@ -225,53 +178,6 @@
       }
     },
     {
-      "run_id": "hr-0002",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "3hop2__49541_140712_51068",
-      "task": "Who is the actress who played the woman who was the Queen of England in 1890 on the n...",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.988,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1683,
-        "tokens_out": 147,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T13:13:00Z",
-      "ended_at": "2026-10-04T13:13:00.020988Z",
-      "score": 0.0,
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "split": "S4",
-      "risk": 0.95,
-      "top_suspect": {
-        "addr": "final/chat#1",
-        "name": "answerer chat",
-        "probability": 0.66
-      },
-      "failure_signature": "hoprag:answerer chat:wrong_answer",
-      "label": {
-        "source": "natural_auto",
-        "root_addr": "final/chat#1",
-        "fault_code": null,
-        "fault_type": "natural",
-        "fault_family": null,
-        "held_out": null,
-        "recovered": false,
-        "manifest_addr": null,
-        "verified": true,
-        "confidence": null
-      }
-    },
-    {
       "run_id": "tc-0003",
       "status": "passed",
       "agent": "tripcrew",
@@ -348,49 +254,6 @@
         "manifest_addr": "hotel/chat#2",
         "verified": false,
         "confidence": "low"
-      }
-    },
-    {
-      "run_id": "hr-0003",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "4hop3__524186_219173_638950_72134",
-      "task": "When did the city where Greenwood Laboratory School is located become capitol of the...",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.44,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1587,
-        "tokens_out": 165,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T12:40:00Z",
-      "ended_at": "2026-10-04T12:40:00.020440Z",
-      "score": 0.0,
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "split": "S4",
-      "risk": 0.88,
-      "top_suspect": null,
-      "failure_signature": "hoprag:unlocalised:wrong_answer",
-      "label": {
-        "source": "natural_auto",
-        "root_addr": "final/chat#1",
-        "fault_code": null,
-        "fault_type": "natural",
-        "fault_family": null,
-        "held_out": null,
-        "recovered": false,
-        "manifest_addr": null,
-        "verified": true,
-        "confidence": null
       }
     },
     {
@@ -488,53 +351,6 @@
       }
     },
     {
-      "run_id": "hr-0004",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "2hop__789398_74735",
-      "task": "What song did Paul McCartney write for the performer of Valotte?",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.734,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1854,
-        "tokens_out": 99,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T12:07:00Z",
-      "ended_at": "2026-10-04T12:07:00.020734Z",
-      "score": 0.0,
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "split": "S4",
-      "risk": 0.93,
-      "top_suspect": {
-        "addr": "decompose/chat#1",
-        "name": "decomposer chat",
-        "probability": 0.78
-      },
-      "failure_signature": "hoprag:decomposer chat:wrong_answer",
-      "label": {
-        "source": "natural_auto",
-        "root_addr": "decompose/chat#1",
-        "fault_code": null,
-        "fault_type": "natural",
-        "fault_family": null,
-        "held_out": null,
-        "recovered": false,
-        "manifest_addr": null,
-        "verified": true,
-        "confidence": null
-      }
-    },
-    {
       "run_id": "tc-0005",
       "status": "passed",
       "agent": "tripcrew",
@@ -614,38 +430,6 @@
       }
     },
     {
-      "run_id": "hr-0034",
-      "status": "passed",
-      "agent": "hoprag",
-      "task_id": "2hop__593397_224832",
-      "task": "What league includes the operating group of Al Janoub Stadium?",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 21.385,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1724,
-        "tokens_out": 102,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T11:34:00Z",
-      "ended_at": "2026-10-04T11:34:00.021385Z",
-      "score": 1.0,
-      "checker_reason": "Exact match",
-      "split": null,
-      "risk": 0.03,
-      "top_suspect": null,
-      "failure_signature": null,
-      "label": null
-    },
-    {
       "run_id": "tc-0006",
       "status": "passed",
       "agent": "tripcrew",
@@ -721,38 +505,6 @@
       }
     },
     {
-      "run_id": "hr-0044",
-      "status": "passed",
-      "agent": "hoprag",
-      "task_id": "3hop1__865037_214799_259594",
-      "task": "Border troops of the country of literature of the country of citizenship of Rainer Er...",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 21.517,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 2327,
-        "tokens_out": 132,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T11:01:00Z",
-      "ended_at": "2026-10-04T11:01:00.021517Z",
-      "score": 1.0,
-      "checker_reason": "Exact match",
-      "split": null,
-      "risk": 0.06,
-      "top_suspect": null,
-      "failure_signature": null,
-      "label": null
-    },
-    {
       "run_id": "tc-0007",
       "status": "passed",
       "agent": "tripcrew",
@@ -785,81 +537,6 @@
       "label": null
     },
     {
-      "run_id": "ij-0007-fix-0",
-      "status": "passed",
-      "agent": "hoprag",
-      "task_id": "2hop__593397_224832",
-      "task": "What league includes the operating group of Al Janoub Stadium?",
-      "origin": "injected",
-      "parent_run_id": "hr-0034",
-      "fork_id": "ij-0007",
-      "mode": "replay",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.186,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1724,
-        "tokens_out": 102,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T10:39:00Z",
-      "ended_at": "2026-10-04T10:39:00.020186Z",
-      "score": 1.0,
-      "checker_reason": "Exact match",
-      "split": "S3",
-      "risk": 0.21,
-      "top_suspect": null,
-      "failure_signature": null,
-      "label": {
-        "source": "injected",
-        "root_addr": "hop1/read#1",
-        "fault_code": "R2",
-        "fault_type": "poisoned_fact",
-        "fault_family": "retrieval",
-        "held_out": true,
-        "recovered": true,
-        "manifest_addr": "hop1/answer#1",
-        "verified": false,
-        "confidence": "low"
-      }
-    },
-    {
-      "run_id": "hr-0007",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "2hop__13353_17738",
-      "task": "What area that abuts the country where the Prunus spinosa leaf much sooner still has...",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 22.096,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 2365,
-        "tokens_out": 150,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T10:28:00Z",
-      "ended_at": "2026-10-04T10:28:00.022096Z",
-      "score": 0.5,
-      "checker_reason": "Token F1 0.500 below 0.8",
-      "split": "S4",
-      "risk": 0.72,
-      "top_suspect": null,
-      "failure_signature": "hoprag:unlocalised:wrong_answer",
-      "label": null
-    },
-    {
       "run_id": "tc-0008",
       "status": "passed",
       "agent": "tripcrew",
@@ -889,85 +566,6 @@
       "risk": 0.03,
       "top_suspect": null,
       "failure_signature": null,
-      "label": null
-    },
-    {
-      "run_id": "ij-0008-fix-0",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "3hop1__865037_214799_259594",
-      "task": "Border troops of the country of literature of the country of citizenship of Rainer Er...",
-      "origin": "injected",
-      "parent_run_id": "hr-0044",
-      "fork_id": "ij-0008",
-      "mode": "replay",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 19.648,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 2327,
-        "tokens_out": 132,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T10:06:00Z",
-      "ended_at": "2026-10-04T10:06:00.019648Z",
-      "score": 0.0,
-      "checker_reason": "'text'",
-      "split": "S3",
-      "risk": 0.91,
-      "top_suspect": {
-        "addr": "answer/tool#1",
-        "name": "answer",
-        "probability": 0.7
-      },
-      "failure_signature": "hoprag:answer:crash",
-      "label": {
-        "source": "injected",
-        "root_addr": "answer/tool#1",
-        "fault_code": "T3",
-        "fault_type": "empty_404",
-        "fault_family": "tool",
-        "held_out": false,
-        "recovered": false,
-        "manifest_addr": null,
-        "verified": false,
-        "confidence": "low"
-      }
-    },
-    {
-      "run_id": "hr-0010",
-      "status": "failed",
-      "agent": "hoprag",
-      "task_id": "2hop__478978_124498",
-      "task": "Who is the father of the performer of Je dis aime?",
-      "origin": "natural",
-      "parent_run_id": null,
-      "fork_id": null,
-      "mode": "offline",
-      "model": "hoprag-lexical-v1-h3",
-      "client": "deterministic_standin",
-      "seed": 7,
-      "steps": 12,
-      "duration_ms": 20.326,
-      "cost": {
-        "llm_calls": 5,
-        "tokens_in": 1890,
-        "tokens_out": 96,
-        "tokens_cached": 0,
-        "usd": null
-      },
-      "started_at": "2026-10-04T09:55:00Z",
-      "ended_at": "2026-10-04T09:55:00.020326Z",
-      "score": 0.0,
-      "checker_reason": "Token F1 0.000 below 0.8",
-      "split": "S4",
-      "risk": 0.72,
-      "top_suspect": null,
-      "failure_signature": "hoprag:unlocalised:wrong_answer",
       "label": null
     },
     {
@@ -1101,22 +699,20 @@
   ],
   "facets": {
     "agents": {
-      "tripcrew": 18,
-      "hoprag": 10
+      "tripcrew": 18
     },
     "outcomes": {
-      "failed": 15,
-      "passed": 13
+      "failed": 8,
+      "passed": 10
     },
     "origins": {
-      "natural": 20,
-      "injected": 8
+      "natural": 12,
+      "injected": 6
     },
     "splits": {
-      "S4": 9,
+      "S4": 3,
       "S1": 2,
-      "S0": 4,
-      "S3": 2
+      "S0": 4
     }
   },
   "fixture": true

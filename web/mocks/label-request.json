@@ -1,7 +1,0 @@
-{
-  "run_id": "hr-0003",
-  "annotator": "annotator-a",
-  "root_addr": "hop1/answer#1",
-  "certainty": "unsure",
-  "notes": "Hop 1 returned a name from the wrong paragraph."
-}

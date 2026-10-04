@@ -4,21 +4,17 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RunGraph } from "../graph/RunGraph";
 import { StepThread } from "../thread/StepThread";
-import type { EdgeView, StepView, ValueClick } from "../types";
-import type {
-  Diagnosis,
-  ForkCreated,
-  ForkEdit,
-  ForkRequest,
-  ForkSummary,
-  RunDetail,
-} from "../../lib/contract";
-import { API, api } from "../../lib/api";
+import { DiagnosisDetails } from "../diagnosis/DiagnosisDetails";
+import { ProvenanceCard } from "../diagnosis/ProvenanceCard";
+import { ForkDrawer } from "../fork/ForkDrawer";
+import { ForkResult, type ForkProgress } from "../fork/ForkResult";
+import { ForkTimeline } from "../fork/ForkTimeline";
+import type { EdgeView, ReplayVisual, StepView, ValueClick } from "../types";
+import type { Diagnosis, ForkCreated, ForkRequest, ForkSummary, ForkTimeline as Timeline, RunDetail, ValueProvenance } from "../../lib/contract";
+import { API, api, errorText } from "../../lib/api";
 import { useAppContext } from "../shell/AppContext";
 
-function editValue(value: unknown) {
-  return JSON.stringify(value ?? {}, null, 2);
-}
+type Tab = "input" | "output" | "state" | "reasoning" | "raw";
 
 function stageLabel(stage: string) {
   const labels: Record<string, string> = {
@@ -48,43 +44,68 @@ function taskPromptFromInput(input: unknown): string | null {
   return null;
 }
 
+function tabFor(pointer: string): Tab {
+  if (pointer.startsWith("/input")) return "input";
+  if (pointer.startsWith("/state")) return "state";
+  return "output";
+}
+
+/** Graph state for one replayed step event (edited branch only, so the graph tells one story). */
+function visualFor(phase: string, cacheStatus: string | null): ReplayVisual {
+  if (phase === "queued") return "queued";
+  if (phase === "running") return "live";
+  if (phase === "diverged") return "diverged";
+  if (cacheStatus === "cached") return "cached";
+  if (cacheStatus === "edited") return "edited";
+  return "rerun";
+}
+
+function parse(event: Event): Record<string, any> | null {
+  if (!(event instanceof MessageEvent) || !event.data) return null;
+  try {
+    return JSON.parse(event.data);
+  } catch {
+    return null; // a malformed event is skipped; GET /forks/{id} stays the source of truth
+  }
+}
+
+const EMPTY_PROGRESS: ForkProgress = { k: 0, control: true, fixDone: 0, fixPassed: 0, controlDone: 0, controlPassed: 0, current: "Queued" };
+
 export function InvestigatePage({ runId, startEditing = false }: { runId: string; startEditing?: boolean }) {
-  const { staticBundle } = useAppContext();
+  const { staticBundle, mode } = useAppContext();
   const [detail, setDetail] = useState<RunDetail | null>(null);
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
+  const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState(startEditing);
-  const [kind, setKind] = useState<ForkEdit["kind"]>("override_output");
-  const [value, setValue] = useState("{}");
-  const [status, setStatus] = useState("");
   const [forkId, setForkId] = useState("");
   const [fork, setFork] = useState<ForkSummary | null>(null);
-  const [selectedPointer, setSelectedPointer] = useState<ValueClick | null>(null);
+  const [progress, setProgress] = useState<ForkProgress>(EMPTY_PROGRESS);
+  const [forkError, setForkError] = useState("");
+  const [visuals, setVisuals] = useState<Record<string, ReplayVisual>>({});
+  const [provenance, setProvenance] = useState<{ data: ValueProvenance | null; loading: boolean; error: string } | null>(null);
+  const [highlight, setHighlight] = useState<{ addr: string; pointer: string } | null>(null);
+  const [forcedTab, setForcedTab] = useState<{ addr: string; tab: Tab } | null>(null);
 
   const load = useCallback(async () => {
     try {
       const run = await api<RunDetail>(`/runs/${encodeURIComponent(runId)}`);
+      // A replayed run reuses its base run's diagnosis: step addresses are stable across forks.
       const diagnosisRunId = run.run.status === "failed" ? runId : run.run.parent_run_id;
-      const result = diagnosisRunId
-        ? await api<Diagnosis>(`/runs/${encodeURIComponent(diagnosisRunId)}/diagnosis`)
-        : null;
+      const [result, forks] = await Promise.all([
+        diagnosisRunId ? api<Diagnosis>(`/runs/${encodeURIComponent(diagnosisRunId)}/diagnosis`).catch(() => null) : null,
+        api<Timeline>(`/runs/${encodeURIComponent(runId)}/forks`).catch(() => null),
+      ]);
       setDetail(run);
       setDiagnosis(result);
-      const suggestedAddress = startEditing
+      setTimeline(forks);
+      setSelected((current) => current ?? (startEditing
         ? result?.responsible_addr || result?.proposed_fixes[0]?.addr || result?.ranking[0]?.addr
-        : result?.responsible_addr || result?.visible_failure_addr || result?.ranking[0]?.addr;
-      const initialAddress = suggestedAddress || result?.visible_failure_addr || run.steps[0]?.addr || null;
-      setSelected(initialAddress);
-      if (startEditing && initialAddress) {
-        const suggested = result?.proposed_fixes.find((fix) => fix.addr === initialAddress);
-        const step = run.steps.find((item) => item.addr === initialAddress);
-        setKind(suggested?.edit.kind || "override_output");
-        setValue(editValue(suggested?.edit.value ?? step?.output));
-      }
+        : result?.responsible_addr || result?.visible_failure_addr || result?.ranking[0]?.addr) ?? run.steps[0]?.addr ?? null);
       setError("");
     } catch (caught) {
-      setError((caught as Error).message);
+      setError(errorText(caught));
     }
   }, [runId, startEditing]);
 
@@ -92,45 +113,46 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
     load();
   }, [load]);
 
+  // Follow the paired replay: tally outcomes and animate the edited branch on the graph.
   useEffect(() => {
     if (!forkId) return;
     const source = new EventSource(`${API}/forks/${encodeURIComponent(forkId)}/stream`);
-    const update = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (event.type === "step") {
-          setStatus(
-            `Sample ${data.sample + 1}: ${data.addr} · ${data.phase}${data.cache_status ? ` · ${data.cache_status}` : ""}`,
-          );
-        }
-        if (event.type === "outcome") {
-          setStatus(`Sample ${data.sample + 1} ${data.branch}: ${data.passed ? "completed" : "failed"}`);
-        }
-        if (event.type === "summary") {
-          setStatus(`Comparison complete · ${data.verdict || "preview"} · ${data.cached} recorded steps reused`);
-          source.close();
-          api<ForkSummary>(`/forks/${encodeURIComponent(forkId)}`).then(setFork).catch(() => {});
-          load();
-        }
-      } catch {
-        // Ignore malformed stream events; the status endpoint remains the source of truth.
+    let finished = false;
+    const finish = () => {
+      finished = true;
+      source.close();
+      api<ForkSummary>(`/forks/${encodeURIComponent(forkId)}`).then(setFork).catch((caught) => setForkError(errorText(caught)));
+      load();
+    };
+    const onStep = (event: Event) => {
+      const data = parse(event);
+      if (!data) return;
+      setProgress((current) => ({ ...current, current: `Sample ${data.sample + 1} · ${data.branch === "fix" ? "with change" : "unchanged"} · ${data.addr} ${data.phase}` }));
+      if (data.branch === "fix") setVisuals((current) => ({ ...current, [data.addr]: visualFor(data.phase, data.cache_status) }));
+    };
+    const onOutcome = (event: Event) => {
+      const data = parse(event);
+      if (!data) return;
+      setProgress((current) => data.branch === "fix"
+        ? { ...current, fixDone: current.fixDone + 1, fixPassed: current.fixPassed + (data.passed ? 1 : 0) }
+        : { ...current, controlDone: current.controlDone + 1, controlPassed: current.controlPassed + (data.passed ? 1 : 0) });
+    };
+    const onError = (event: Event) => {
+      // A server-sent `error` event carries the contract error body; a bare Event is a dropped connection.
+      const body = parse(event);
+      if (body) {
+        setForkError(`${body.message}${body.hint ? ` ${body.hint}` : ""}`);
+        finish();
+      } else if (!finished) {
+        api<ForkSummary>(`/forks/${encodeURIComponent(forkId)}`)
+          .then((result) => { if (result.status === "complete" || result.status === "error") { setFork(result); finish(); } })
+          .catch(() => {});
       }
     };
-    for (const name of ["step", "outcome", "summary", "error"]) {
-      source.addEventListener(name, update as EventListener);
-    }
-    source.onerror = () => {
-      api<ForkSummary>(`/forks/${encodeURIComponent(forkId)}`)
-        .then((result) => {
-          setFork(result);
-          if (result.status === "complete" || result.status === "error") {
-            source.close();
-            setStatus(`Comparison ${result.status} · ${result.verdict || result.error?.message || ""}`);
-            load();
-          }
-        })
-        .catch(() => {});
-    };
+    source.addEventListener("step", onStep);
+    source.addEventListener("outcome", onOutcome);
+    source.addEventListener("summary", finish);
+    source.addEventListener("error", onError);
     return () => source.close();
   }, [forkId, load]);
 
@@ -173,6 +195,36 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
     [detail],
   );
 
+  // The damage path lists every step; only the root and its symptoms are on the path.
+  const damagePath = useMemo(
+    () => diagnosis?.damage_path?.nodes.filter((node) => node.tag !== "unaffected").map((node) => node.addr),
+    [diagnosis],
+  );
+
+  const stepName = useCallback((addr: string | null) => {
+    const step = detail?.steps.find((item) => item.addr === addr);
+    return step ? `${step.name} (step ${step.seq + 1})` : addr || "an unknown step";
+  }, [detail]);
+
+  const labelStep = useCallback((addr: string | null) => {
+    const step = detail?.steps.find((item) => item.addr === addr);
+    return step ? `Step ${step.seq + 1}: ${step.name}` : addr || "not isolated";
+  }, [detail]);
+
+  const traceValue = useCallback((click: ValueClick) => {
+    setProvenance({ data: null, loading: true, error: "" });
+    const query = new URLSearchParams({ addr: click.addr, pointer: click.pointer });
+    api<ValueProvenance>(`/runs/${encodeURIComponent(runId)}/provenance?${query}`)
+      .then((data) => setProvenance({ data, loading: false, error: "" }))
+      .catch((caught) => setProvenance({ data: null, loading: false, error: errorText(caught) }));
+  }, [runId]);
+
+  const jumpTo = useCallback((addr: string, pointer: string | null) => {
+    setSelected(addr);
+    setHighlight(pointer ? { addr, pointer } : null);
+    setForcedTab(pointer ? { addr, tab: tabFor(pointer) } : null);
+  }, []);
+
   if (error && !detail) {
     return <div className="page"><div className="page-inner"><p className="error-box">{error}</p></div></div>;
   }
@@ -180,126 +232,57 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
     return <div className="page"><div className="page-inner"><p className="muted">Loading recorded task…</p></div></div>;
   }
 
-  const currentDetail = detail;
-  const selectedStep = currentDetail.steps.find((step) => step.addr === selected);
-  const labelStep = (addr: string | null) => {
-    const step = currentDetail.steps.find((item) => item.addr === addr);
-    return step ? `Step ${step.seq + 1}: ${step.name}` : "not isolated";
-  };
   const originalTask =
-    currentDetail.run.agent === "tripcrew"
-      ? taskPromptFromInput(currentDetail.steps[0]?.input) || currentDetail.task_text || currentDetail.run.task
-      : currentDetail.task_text || currentDetail.run.task;
-  const proposedEdit = (addr: string) => diagnosis?.proposed_fixes.find((fix) => fix.addr === addr);
-
-  function applySuggestion(addr: string | null) {
-    if (!addr) return;
-    const step = currentDetail.steps.find((item) => item.addr === addr);
-    if (!step) return;
-    const suggestion = proposedEdit(addr);
-    setSelected(addr);
-    if (suggestion) {
-      setKind(suggestion.edit.kind);
-      setValue(editValue(suggestion.edit.value));
-    } else {
-      setKind("override_output");
-      setValue(editValue(step.output));
-    }
-  }
+    detail.run.agent === "tripcrew"
+      ? taskPromptFromInput(detail.steps[0]?.input) || detail.task_text || detail.run.task
+      : detail.task_text || detail.run.task;
+  const likelyCause = diagnosis?.responsible_addr || diagnosis?.ranking[0]?.addr;
+  const likelySuggestion = diagnosis?.proposed_fixes.find((fix) => fix.addr === likelyCause);
+  const staticReason = staticBundle ? "This is the static recorded showcase. Start the local API to replay changes." : null;
+  const verifyReason = staticReason || (mode === "recorded"
+    ? "The API runs in RECORDED mode, which refuses to re-run model steps. Set MODE=offline in .env and restart make dev-api to test fixes."
+    : null);
 
   function openFixDrawer() {
-    const address =
+    setSelected(
       diagnosis?.responsible_addr ||
       diagnosis?.proposed_fixes[0]?.addr ||
       diagnosis?.visible_failure_addr ||
       diagnosis?.ranking[0]?.addr ||
-      currentDetail.steps[0]?.addr;
-    applySuggestion(address || null);
-    setError("");
+      selected ||
+      detail?.steps[0]?.addr ||
+      null,
+    );
     setEditing(true);
   }
 
-  function changeOperation(nextKind: ForkEdit["kind"]) {
-    setKind(nextKind);
-    if (nextKind === "swap_model") {
-      setValue(editValue("tripcrew-fixture-v1"));
-    } else if (nextKind === "patch_prompt") {
-      setValue(editValue(""));
-    } else if (nextKind === "patch_tool_args") {
-      setValue(editValue(selectedStep?.input));
-    } else {
-      setValue(editValue(selectedStep?.output));
-    }
+  function started(created: ForkCreated, request: ForkRequest) {
+    setEditing(false);
+    setFork(null);
+    setForkError("");
+    setVisuals({});
+    setProgress({ ...EMPTY_PROGRESS, k: request.samples ?? 5, control: request.control ?? true });
+    setForkId(created.fork_id);
   }
-
-  async function startFork() {
-    if (!selectedStep || !diagnosis) return;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(value);
-    } catch {
-      setError("Enter a valid JSON value for this correction.");
-      return;
-    }
-    const suggestion = proposedEdit(selectedStep.addr);
-    const edit: ForkEdit = {
-      addr: selectedStep.addr,
-      kind,
-      value: parsed,
-      known_good: suggestion?.edit.known_good,
-    };
-    const request: ForkRequest = {
-      base_run_id: runId,
-      edits: [edit],
-      mode: "cone",
-      samples: 5,
-      control: true,
-    };
-    setError("");
-    setStatus("Starting five paired tests: your correction versus the original run…");
-    try {
-      const created = await api<ForkCreated>("/forks", {
-        method: "POST",
-        body: JSON.stringify(request),
-      });
-      setForkId(created.fork_id);
-      setStatus("Paired test queued…");
-    } catch (caught) {
-      setError((caught as Error).message);
-      setStatus("");
-    }
-  }
-
-  const likelyCause = diagnosis?.responsible_addr || diagnosis?.ranking[0]?.addr;
-  const likelySuggestion = likelyCause ? proposedEdit(likelyCause) : undefined;
-  const correctionLabel: Record<ForkEdit["kind"], string> = {
-    override_output: "Replacement step result · JSON",
-    patch_tool_result: "Replacement tool result · JSON",
-    patch_tool_args: "Updated tool inputs · JSON",
-    patch_prompt: "Updated model prompt · JSON",
-    swap_model: "New model ID · quoted JSON text",
-  };
 
   return (
     <div className="page investigate-page">
       <div className="investigate-top">
         <div className="investigate-heading">
-          <p className="label">{detail.run.agent} · Recorded task</p>
           <h1 className="h1">{detail.run.task}</h1>
           <p className="task-statement"><strong>What the agent was asked:</strong> {originalTask}</p>
           <div className="row muted investigate-meta">
             <span className={`badge ${detail.run.status === "failed" ? "badge-fail" : "badge-pass"}`}>
               {detail.run.status === "failed" ? "Failed" : "Completed"}
             </span>
-            <span>{detail.steps.length} recorded steps</span>
-            <span>{Math.round(detail.run.duration_ms)} ms</span>
-            <span>{detail.run.split || "not labelled"}</span>
+            {detail.run.checker_reason && detail.run.status === "failed" && <span>{detail.run.checker_reason}</span>}
+            <span>{detail.run.origin === "fork" ? "Replayed" : "Recorded"} {detail.run.agent} run, {detail.steps.length} steps, {Math.round(detail.run.duration_ms)} ms</span>
           </div>
         </div>
         <div className="row investigate-actions">
-          <Link className="btn" href={`/report/${encodeURIComponent(runId)}`}>Plain-language report</Link>
+          {detail.run.status === "failed" && <Link className="btn" href={`/report/${encodeURIComponent(runId)}`}>Plain-language report</Link>}
           <Link className="btn" href={`/compare?a=${encodeURIComponent(runId)}`}>Compare with another run</Link>
-          <button className="btn btn-primary" onClick={openFixDrawer} disabled={staticBundle}>Fork and test a fix</button>
+          <button className="btn btn-primary" onClick={openFixDrawer} disabled={staticBundle} title={staticReason || undefined}>Fork and test a fix</button>
         </div>
       </div>
 
@@ -307,52 +290,45 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
         <section className="canvas-pane">
           <div className="canvas-toolbar">
             {diagnosis ? (
-              <>
-                <span className="badge badge-fail">
-                  Failure surfaced at · {labelStep(diagnosis.visible_failure_addr)}
-                </span>
-                <span className={`badge ${diagnosis.abstain ? "badge-neutral" : "badge-accent"}`}>
-                  {diagnosis.abstain
-                    ? `No single likely cause · ${diagnosis.abstain_message || "review the evidence"}`
-                    : `Most likely cause · ${labelStep(diagnosis.responsible_addr)} · ${Math.round((diagnosis.ranking[0]?.probability || 0) * 100)}%`}
-                </span>
-              </>
+              <p className="canvas-summary">
+                It failed at <strong>{stepName(diagnosis.visible_failure_addr)}</strong>.{" "}
+                {diagnosis.abstain ? "Leading candidate" : "Most likely cause"}:{" "}
+                <strong className="cause">{stepName(diagnosis.ranking[0]?.addr ?? null)}</strong>{" "}
+                <span className="faint">({Math.round((diagnosis.ranking[0]?.probability || 0) * 100)}%)</span>
+              </p>
             ) : (
-              <span className="badge badge-pass">Completed successfully · no failure diagnosis</span>
+              <p className="canvas-summary">{detail.run.status === "passed" ? "This run completed successfully." : "No diagnosis is available for this run."}</p>
             )}
-            <span className="faint flow-hint">Read left to right; select a box to inspect its input and result.</span>
           </div>
           <RunGraph
-            layoutKey={runId}
+            layoutKey={detail.run.parent_run_id || runId}
             steps={steps}
             edges={edges}
             selected={selected}
             onSelect={setSelected}
-            highlightPath={diagnosis?.damage_path?.nodes.map((node) => node.addr)}
+            visuals={visuals}
+            highlightPath={Object.keys(visuals).length ? undefined : damagePath}
           />
-          {status && (
-            <div className="floating-card">
-              <div className="spread"><strong>Fix comparison</strong><span className="badge badge-neutral">{fork?.verdict || "running"}</span></div>
-              <p className="muted">{status}</p>
-              {fork?.edited_runs[0] && (
-                <Link className="btn btn-sm" href={`/compare?a=${encodeURIComponent(runId)}&b=${encodeURIComponent(fork.edited_runs[0].run_id)}`}>
-                  See what changed →
-                </Link>
-              )}
-            </div>
+          {forkId && (
+            <ForkResult
+              baseRunId={runId}
+              progress={progress}
+              summary={fork}
+              error={forkError}
+              onClose={() => { setForkId(""); setFork(null); setVisuals({}); }}
+            />
           )}
         </section>
 
         <aside className="thread-pane">
           <div className="thread-header">
-            <div><strong>What happened and why</strong><div className="faint">Select a step below to inspect its inputs, result, and evidence.</div></div>
-            <span className="spacer"/><span className="badge badge-neutral">{detail.steps.length} steps</span>
+            <div><strong>What happened and why</strong><div className="faint">Click any value in a step to see where it came from.</div></div>
           </div>
           <div className="thread-body">
             {diagnosis ? (
               <>
-                {diagnosis.abstain && <div className="notice-box"><strong>No clear cause yet</strong><p>{diagnosis.abstain_message || "The evidence does not point strongly enough to one step. Compare the leading candidates before changing anything."}</p></div>}
-                <div className="rail-title">Investigation progress</div>
+                {diagnosis.abstain && <div className="notice-box"><strong>No single clear cause</strong><p>{diagnosis.abstain_message || "The evidence does not point strongly enough to one step."} The leading candidate is highlighted; compare the candidates before changing anything.</p></div>}
+                <div className="rail-title">Progress</div>
                 <div className="rail">
                   {(["localize", "attribute", "propose", "verify"] as const).map((stage) => (
                     <div key={stage} className={`rail-step ${diagnosis.stages[stage]}`} title={stageLabel(stage)}>
@@ -361,79 +337,58 @@ export function InvestigatePage({ runId, startEditing = false }: { runId: string
                   ))}
                 </div>
                 {diagnosis.reasons.slice(0, 3).map((reason, index) => (
-                  <div className="reason" key={index}>
+                  <button type="button" className="reason" key={index} onClick={() => jumpTo(reason.citation.addr, reason.citation.json_pointer)}>
                     <strong>{reason.text}</strong>
-                    <div className="faint">Evidence · {labelStep(reason.citation.addr)} · {reason.feature.group}</div>
-                  </div>
+                    <div className="faint">{labelStep(reason.citation.addr)}</div>
+                  </button>
                 ))}
                 {likelySuggestion && (
                   <div className="suggested-fix">
                     <strong>Suggested starting point</strong>
                     <p>{likelySuggestion.rationale}</p>
-                    <button className="btn btn-sm" onClick={openFixDrawer}>Review this correction</button>
+                    <button className="btn btn-sm" onClick={openFixDrawer} disabled={staticBundle}>Review this correction</button>
                   </div>
                 )}
+                <DiagnosisDetails
+                  runId={diagnosis.run_id}
+                  diagnosis={diagnosis}
+                  labelStep={labelStep}
+                  onSelect={(addr) => jumpTo(addr, null)}
+                  replayBlocked={verifyReason}
+                  onVerified={load}
+                />
               </>
             ) : (
-              <p className="muted">This task completed successfully, so there is no failure to diagnose.</p>
+              <p className="muted">{detail.run.status === "passed" ? "This task completed successfully, so there is no failure to diagnose. You can still fork it to test a change." : "The diagnoser is unavailable for this run."}</p>
             )}
-            {selectedPointer && (
-              <div className="card card-pad">
-                <span className="label">Selected value · {selectedPointer.addr}</span>
-                <div className="mono">{selectedPointer.pointer}</div>
-                <pre className="json">{JSON.stringify(selectedPointer.value, null, 2)}</pre>
-              </div>
+            <ForkTimeline runId={runId} timeline={timeline} />
+            {provenance && (
+              <ProvenanceCard
+                provenance={provenance.data}
+                loading={provenance.loading}
+                error={provenance.error}
+                labelStep={labelStep}
+                onJump={jumpTo}
+                onClose={() => { setProvenance(null); setHighlight(null); }}
+              />
             )}
-            <div className="timeline-title">Recorded workflow · select a step to see what went in and came out</div>
-            <StepThread steps={steps} selected={selected} onSelect={setSelected} view="pretty" onValueClick={setSelectedPointer}/>
+            <div className="timeline-title">The run, step by step</div>
+            <StepThread steps={steps} selected={selected} onSelect={setSelected} view="pretty" onValueClick={traceValue} highlight={highlight} forcedTab={forcedTab}/>
           </div>
         </aside>
       </div>
 
       {editing && (
-        <div className="drawer-backdrop" onClick={() => setEditing(false)}>
-          <section className="drawer" onClick={(event) => event.stopPropagation()}>
-            <div className="drawer-header">
-              <div><p className="label">Test a change</p><h2 className="h2">{diagnosis?.abstain ? "Start from the leading candidate" : "Start from the suspected step"}</h2></div>
-              <button className="btn btn-sm" onClick={() => setEditing(false)}>Close</button>
-            </div>
-            <div className="drawer-body stack">
-              <p className="muted">{diagnosis?.abstain ? "No single step is certain, so the leading candidate and its suggested correction are filled in." : "The suspected step and suggested correction are filled in for you."} Change the step or edit the value below if you want to test another explanation.</p>
-              <label className="label" htmlFor="fork-step">Step to change</label>
-              <select id="fork-step" className="input" value={selected || ""} onChange={(event) => applySuggestion(event.target.value)}>
-                {detail.steps.map((step) => (
-                    <option value={step.addr} key={step.addr}>
-                    {labelStep(step.addr)}{step.addr === diagnosis?.visible_failure_addr ? " · failure surfaced here" : ""}{step.addr === likelyCause ? ` · ${diagnosis?.abstain ? "leading candidate" : "most likely cause"}` : ""}
-                  </option>
-                ))}
-              </select>
-              <div className="edit-context">
-                <strong>{selectedStep?.name || "Selected step"}</strong>
-                {proposedEdit(selected || "") ? (
-                  <p>{proposedEdit(selected || "")?.rationale}</p>
-                ) : (
-                  <p>No known correction is available for this step. Edit the value yourself to test a different idea.</p>
-                )}
-              </div>
-              <label className="label" htmlFor="fork-operation">What to change</label>
-              <select id="fork-operation" className="input" value={kind} onChange={(event) => changeOperation(event.target.value as ForkEdit["kind"])}>
-                <option value="override_output">Replace this step’s result</option>
-                <option value="patch_tool_result">Replace a tool’s returned data</option>
-                <option value="patch_tool_args">Change the tool’s inputs</option>
-                <option value="patch_prompt">Change the model instruction</option>
-                <option value="swap_model">Try another model</option>
-              </select>
-              <label className="label" htmlFor="fork-value">{correctionLabel[kind]}</label>
-              <textarea id="fork-value" className="input edit-json" value={value} onChange={(event) => setValue(event.target.value)} spellCheck={false}/>
-              {error && <p className="error-box" role="alert">{error}</p>}
-              <div className="edit-context"><strong>How the test works</strong><p>Black Box runs five paired comparisons: the original task and your change. It reuses unaffected recorded steps, then shows whether the change improved the final result.</p></div>
-            </div>
-            <div className="drawer-footer">
-              <span className="muted">5 paired tests · unaffected steps reused</span><span className="spacer"/>
-              <button className="btn btn-primary" onClick={startFork} disabled={!selectedStep || staticBundle}>Run comparison</button>
-            </div>
-          </section>
-        </div>
+        <ForkDrawer
+          detail={detail}
+          diagnosis={diagnosis}
+          selected={selected}
+          onSelect={setSelected}
+          labelStep={labelStep}
+          disabledReason={staticReason}
+          onClose={() => setEditing(false)}
+          onStarted={started}
+        />
       )}
     </div>
   );

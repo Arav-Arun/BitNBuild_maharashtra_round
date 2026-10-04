@@ -32,7 +32,7 @@ blackbox = "blackbox.cli:main"
 blackbox-mcp = "blackbox.mcp_server:main"
 
 [tool.setuptools.packages.find]
-include = ["blackbox*", "agents*"]
+include = ["blackbox*", "agents*", "server*"]
 
 [tool.setuptools.package-data]
 "blackbox.store" = ["schema.sql"]

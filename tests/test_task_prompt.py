@@ -11,7 +11,7 @@ from pathlib import Path
 
 from agents.tripcrew import TravelAPI, TripCrew
 from agents.tripcrew.fixture_client import FixtureClient
-from agents.tripcrew.prompt import parse_trip_prompt
+from agents.tripcrew.prompt import catalog_seed, parse_trip_prompt
 from blackbox.api.agents import TripCrewProfile
 from blackbox.forge.adapters import TripCrewAdapter
 from blackbox.replay import ReplayEngine, patch_tool_args
@@ -67,6 +67,63 @@ class PromptParserTests(unittest.TestCase):
             parse_trip_prompt(
                 PROMPT.replace("Singapore", "Osaka"), scenario_id="PROMPT-TEST123458", seed=7
             )
+        # Words after a valid city are not part of its name, so the real problem is reported.
+        with self.assertRaisesRegex(ValueError, "departure and return dates"):
+            parse_trip_prompt(
+                "from Mumbai to Singapore next Friday for 2 adults budget INR 90000",
+                scenario_id="PROMPT-TEST123459",
+                seed=7,
+            )
+
+    def test_accepts_rupee_formats_and_common_city_names(self):
+        cases = {
+            "from Mumbai to Singapore, 2026-12-12 to 2026-12-15, 2 adults, budget ₹1,00,000": (
+                "Mumbai",
+                "Singapore",
+                100_000,
+            ),
+            "from Bombay to Dubai departing 2026-12-12 returning 2026-12-14 for 2 adults, "
+            "budget 1.5 lakh": ("Mumbai", "Dubai", 150_000),
+            "from Bangalore to London departing 2026-12-12 returning 2026-12-18 for 1 adult, "
+            "Rs. 90,000": ("Bengaluru", "London", 90_000),
+            "from new delhi to Paris 2026-12-12 to 2026-12-20 for 2 travellers, 250000 rupees": (
+                "Delhi",
+                "Paris",
+                250_000,
+            ),
+        }
+        for prompt, (origin, destination, budget) in cases.items():
+            with self.subTest(prompt=prompt):
+                scenario = parse_trip_prompt(prompt, scenario_id="PROMPT-TEST123460", seed=7)
+                self.assertEqual((scenario.origin, scenario.destination), (origin, destination))
+                self.assertEqual(scenario.budget_inr, budget)
+
+
+# The one-click examples on the web "New task" page (web/components/pages/NewRunPage.tsx).
+DEMO_EXAMPLES = [
+    "Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. "
+    "Budget ₹80,000.",
+    "Family holiday from Chennai to Bangkok, 2026-12-20 to 2026-12-24, 3 adults, budget "
+    "₹1,40,000. Vegetarian: yes.",
+    "Weekend from Hyderabad to Dubai departing 2026-12-05, returning 2026-12-08, for 2 adults. "
+    "Budget Rs. 1,00,000. No red-eye: yes.",
+    "Solo trip from Bangalore to London departing 2026-12-01, returning 2026-12-07, for 1 adult. "
+    "Budget ₹80,000. Refundable: yes.",
+]
+
+
+class DemoExampleTests(unittest.TestCase):
+    def test_examples_parse_and_fit_their_budget_with_headroom(self):
+        # With headroom, the only failure an old exchange rate causes is the INR total, so the
+        # suggested fix can be VERIFIED. Prices depend on the exact text: re-run after edits.
+        for prompt in DEMO_EXAMPLES:
+            with self.subTest(prompt=prompt):
+                scenario_id, seed = catalog_seed(prompt)
+                scenario = parse_trip_prompt(prompt, scenario_id=scenario_id, seed=seed)
+                self.assertLessEqual(scenario.expected_total_inr, 0.85 * scenario.budget_inr)
+                self.assertEqual(
+                    catalog_seed(" ".join(prompt.upper().split())), (scenario_id, seed)
+                )
 
 
 class PromptRunTests(unittest.IsolatedAsyncioTestCase):

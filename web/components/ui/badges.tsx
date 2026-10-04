@@ -1,44 +1,16 @@
 import {
   AlertTriangle,
-  Check,
   CircleDot,
   Database,
   Flag,
-  Loader2,
   ShieldCheck,
   ShieldQuestion,
   ShieldX,
   Sparkles,
   Wrench,
-  X,
 } from "lucide-react";
 
 import type { StepKind } from "../types";
-
-export function OutcomeBadge({ status }: { status: string | null | undefined }) {
-  if (status === "passed" || status === "success") {
-    return (
-      <span className="badge badge-pass">
-        <Check size={12} aria-hidden /> Passed
-      </span>
-    );
-  }
-  if (status === "failed" || status === "fail") {
-    return (
-      <span className="badge badge-fail">
-        <X size={12} aria-hidden /> Failed
-      </span>
-    );
-  }
-  if (status === "running") {
-    return (
-      <span className="badge badge-warn">
-        <Loader2 size={12} aria-hidden className="spin" /> Running
-      </span>
-    );
-  }
-  return <span className="badge badge-neutral">{status ?? "Unknown"}</span>;
-}
 
 const VERDICT_HELP: Record<string, string> = {
   VERIFIED: "The fix passed reliably more often than the unchanged control (95% intervals do not overlap).",
@@ -161,9 +133,4 @@ export function kindLabel(kind: StepKind): string {
       final: "Final answer",
     } as const
   )[kind];
-}
-
-export function Percent({ value, digits = 0 }: { value: number | null | undefined; digits?: number }) {
-  if (value == null || Number.isNaN(value)) return <span className="faint">—</span>;
-  return <span className="num">{(value * 100).toFixed(digits)}%</span>;
 }

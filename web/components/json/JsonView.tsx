@@ -138,11 +138,11 @@ function Scalar({
   const text = typeof value === "string" ? JSON.stringify(value) : String(value);
   const color =
     typeof value === "string"
-      ? "#c3e88d"
+      ? "var(--json-string)"
       : typeof value === "number"
-        ? "#f78c6c"
+        ? "var(--json-number)"
         : typeof value === "boolean"
-          ? "#c792ea"
+          ? "var(--json-bool)"
           : "var(--text-3)";
   const isHighlighted = highlight !== null && highlight === pointer;
   if (!onValueClick || value === null) {
@@ -164,19 +164,4 @@ function Scalar({
       {text}
     </button>
   );
-}
-
-/** Resolve an RFC 6901 pointer against a JSON value. */
-export function resolvePointer(doc: unknown, pointer: string): unknown {
-  if (pointer === "" || pointer === "/") return doc;
-  const tokens = pointer
-    .split("/")
-    .slice(1)
-    .map((t) => t.replace(/~1/g, "/").replace(/~0/g, "~"));
-  let current: unknown = doc;
-  for (const token of tokens) {
-    if (current === null || typeof current !== "object") return undefined;
-    current = (current as Record<string, unknown>)[token];
-  }
-  return current;
 }

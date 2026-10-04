@@ -27,6 +27,7 @@ export function TopBar() {
           </Link>
         ))}
       </nav>
+      <div className="topbar-right" />
     </header>
   );
 }

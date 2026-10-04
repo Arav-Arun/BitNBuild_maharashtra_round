@@ -1357,6 +1357,9 @@ export interface VerifyJob {
  */
 export interface VerifyRequest {
   suspects?: [] | [string] | [string, string] | [string, string, string] | null;
+  /**
+   * K paired samples. Below 4, the Wilson intervals of K/K and 0/K always overlap, so no candidate could ever be VERIFIED.
+   */
   samples?: number;
 }
 

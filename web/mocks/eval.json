@@ -6,8 +6,7 @@
     "version": "fixture-0000",
     "frozen_at": null,
     "agents": [
-      "tripcrew",
-      "hoprag"
+      "tripcrew"
     ],
     "held_out_fault_codes": [
       "T2",

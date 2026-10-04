@@ -328,8 +328,6 @@ def replay_fixture(fixture: Path, patch: list[dict[str, Any]]) -> dict[str, Any]
                 argparse.Namespace(
                     **{
                         "stale_fx": False,
-                        "dataset": Path("data/hoprag/musique_ans_v1.0_dev.jsonl"),
-                        "read_k": 1,
                         **manifest["adapter_args"],
                     }
                 ),

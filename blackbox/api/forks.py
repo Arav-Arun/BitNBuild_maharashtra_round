@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("blackbox.api.forks")
 
 MAX_CONCURRENT_FORKS = 2
-STANDIN_PREFIXES = ("tripcrew-fixture-", "hoprag-reader-fixture-", "hoprag-lexical-")
+STANDIN_PREFIXES = ("tripcrew-fixture-",)
 
 
 def _now() -> datetime:
@@ -228,7 +228,7 @@ class ForkManager:
                     )
                     if not has_call and addr not in invalidated:
                         status = "cached"
-                    if addr in edited and has_call and status == "live":
+                    if data["branch"] == "fix" and addr in edited and has_call and status == "live":
                         status = "edited"
                     tokens = 0 if status == "cached" else tokens
                     ms = round(ms, 3) if ms is not None else None

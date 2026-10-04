@@ -1,185 +1,149 @@
 <div align="center">
 
-# 📦 Black Box
+# Black Box
 
 ### A flight recorder and failure debugger for AI agents
 
-**Record every call. Rank the likely culprit. Replay only what changed. Prove the fix.**
+Record a run. Find the suspicious step. Test a targeted fix against a control.
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white)
 ![LightGBM](https://img.shields.io/badge/LightGBM-diagnoser-2E8B57)
-![SQLite](https://img.shields.io/badge/SQLite-store-003B57?logo=sqlite&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-tools-8A2BE2)
+![SQLite](https://img.shields.io/badge/SQLite-trace%20store-003B57?logo=sqlite&logoColor=white)
 
 </div>
 
 ---
 
-## 🤔 The problem
+## The problem
 
-An AI agent run can contain dozens of model calls, tool calls and state changes, and fail because of **one bad intermediate step**. Ordinary traces show *what* happened. They don't tell you *which step caused the failure*, or whether your fix actually works.
+An agent can complete many steps correctly and still fail because of one bad decision along the way. A normal trace records the calls; Black Box connects them, ranks likely failure points, and lets you test a change without replaying unaffected work.
 
-## 💡 What Black Box does
+## Screenshots
 
-Black Box learns from recorded agent runs and answers three questions:
+The interface below is captured from the local demo. TripCrew uses a deterministic synthetic travel catalog.
 
-1. **Where did it go wrong?** It ranks the most likely failure-causing steps, with evidence.
-2. **Why do we think so?** It shows the dependency graph, the rules that fired and the recorded payloads, and lets you follow any value back to its origin.
-3. **Does the fix work?** It edits one step and replays *only the affected part* of the run, side by side with an unchanged control.
+<table>
+  <tr>
+    <td align="center"><strong>New task</strong></td>
+    <td align="center"><strong>Investigate a run</strong></td>
+    <td align="center"><strong>Evaluation results</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/new-task.png" alt="New task page with an editable travel request and reproducible failure option" width="380" /></td>
+    <td><img src="docs/screenshots/investigation.png" alt="Investigation view with the execution graph, ranked candidate and recorded steps" width="380" /></td>
+    <td><img src="docs/screenshots/results.png" alt="Results page with measured failure-localization and replay metrics" width="380" /></td>
+  </tr>
+</table>
 
-## ✨ Features
+## How it works
 
-| | Feature | What you get |
-|---|---|---|
-| 🔎 | **Runs** | Search and filter indexed recordings by agent, outcome, split and origin. |
-| 🕵️ | **Investigate** | Dependency graph, ranked suspects, rule evidence, recorded payloads and value provenance. |
-| 🛠️ | **Fork and fix** | Edit a recorded step and stream a selective *cone replay* next to an unchanged control. |
-| ⚖️ | **Compare** | Align runs by stable step address and inspect changed payloads, state and outcomes. |
-| 📊 | **Results** | Measured evaluation artifacts with intervals, ablations and explicit not-run items. |
-| 🏷️ | **Label** | Review a failed run with model and oracle labels hidden, then store your judgment. |
-| 📝 | **Crash report** | View and download a Markdown incident report. |
-| ✈️ | **New task** | Describe a TripCrew trip in plain language and record it as an inspectable run. |
+1. **Record:** the SDK captures instrumented model, tool and state steps, along with their inputs, outputs and data dependencies.
+2. **Diagnose:** a trained ranker and rule evidence highlight candidate failure steps. The diagnosis can abstain when the evidence is not strong enough.
+3. **Inspect:** follow a value through the run graph and review the recorded step payloads and provenance.
+4. **Test:** edit a candidate step and replay its affected downstream branch. Unaffected outputs are reused, and a paired unchanged control provides a comparison.
+5. **Learn:** compare runs, review evaluation results and add human labels for future training.
 
-Also included: OTLP/HTTP JSON GenAI span import (read-only) and MCP tools for coding agents.
+The app includes **Runs**, **New task**, **Investigate**, **Fork and fix**, **Compare**, **Results**, **Label**, and a downloadable incident report. It also supports OTLP/HTTP JSON trace import and MCP tools for inspecting runs and verifying fixes.
 
-## 🏗️ How it fits together
+### Architecture
 
+```mermaid
+flowchart LR
+    agent["Instrumented agent<br/>model · tool · state"] --> sdk["Black Box SDK<br/>recorder + provenance"]
+    sdk --> store[("SQLite trace store<br/>immutable original runs")]
+    otlp["OTLP/HTTP JSON"] --> api["FastAPI service"]
+    store --> features["Feature and label pipeline"]
+    features --> train["Train and evaluate"]
+    train --> model["LightGBM ranker<br/>+ rule evidence"]
+    store --> service["Diagnosis, inspect<br/>and replay service"]
+    model --> service
+    api --> service
+    mcp["MCP tools"] --> service
+    ui["Next.js interface<br/>Runs · Investigate · Compare · Results"] <--> api
+    service --> replay["Selective cone replay<br/>paired with unchanged control"]
+    replay --> store
 ```
- instrumented agent ──► recorder / SDK ──► SQLite store ──► feature extraction
- (TripCrew)             (calls, state,      (immutable        │
-                         provenance)         runs)            ▼
-                                                       LightGBM diagnoser
-                                                        + rule evidence
-                                                              │
-        Next.js UI  ◄──────────  FastAPI  ◄───────────────────┘
-   graph · fork · compare        service layer ──► selective cone replay
-                                       │
-                                       └──► MCP server (blackbox-mcp)
-```
 
-## 🧰 Tech stack
+## Evaluation
 
-| Layer | Tools |
-|---|---|
-| **Frontend** | Next.js 16, React 19, TypeScript, React Flow + ELK.js (trace graph), TanStack Table/Virtual, Recharts, Monaco editor |
-| **Backend** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2, httpx, SQLite |
-| **ML and retrieval** | LightGBM, scikit-learn, NumPy, BM25 (`rank-bm25`) |
-| **LLMs** | Groq-hosted `gpt-oss-20b` (agent) and `gpt-oss-120b` (judge), optional and only in live mode |
-| **Tooling** | uv, ruff, pytest, Docker Compose, MCP |
-| **Hosting** | Vercel (web), Render (recorded-mode API) |
+These are the current frozen evaluation artifacts shown in the Results page. The primary comparison is on **unseen injected fault types**.
 
-## 🚀 Quick start
+| Evaluation split | Black Box top-1 | Best baseline | Samples |
+|---|---:|---:|---:|
+| Seen faults (S0) | 93.1% | — | 87 |
+| Unseen fault types (S1) | **71.2%** | 58.6% (`anomaly_max`) | 111 |
+| Natural failures (S4) | 100.0% | 100.0% | 80 |
 
-Requirements: Python 3.11+, [`uv`](https://docs.astral.sh/uv/), Node.js 22+ and npm.
+On S1, the ranker is 12.6 percentage points above the best baseline (paired 95% interval: 6.3–19.8 points). The natural-failure split is not evidence of broad generalization: all 80 examples share the same stale-exchange-rate root cause. The current evaluation covers one synthetic TripCrew agent and does not establish performance on other agents. The Results page also reports **55.8% replay calls avoided** and **0.507 ms diagnosis time per trace**.
+
+Regenerate the dataset, model and evaluation with `make dataset`, or run only the evaluation with `make eval`.
+
+## Run locally
+
+Requirements: Python 3.11+, [uv](https://docs.astral.sh/uv/), Node.js 22+ and npm.
 
 ```sh
-cp .env.example .env
-make setup
+uv sync --locked --extra dev --extra ml --extra server
 npm --prefix web ci
 
-# Build the local example recordings and model if data/ is empty
-./scripts/build_dataset.sh --fresh
+# Copy the local offline-demo settings once (keep any existing .env you rely on).
+cp .env.example .env
 
-# Terminal 1
+# If data/ is empty, build the deterministic TripCrew dataset and model.
+make dataset
+```
+
+Start the API and web app in separate terminals:
+
+```sh
 make dev-api
-# Terminal 2
+```
+
+```sh
 make dev-web
 ```
 
-Open <http://localhost:3000>. API docs are at <http://127.0.0.1:8000/docs>.
+Open <http://localhost:3000>. The API and interactive contract are at <http://127.0.0.1:8000/docs>.
 
-### Run modes
+`make dataset` creates the local recordings, labels, trained model and evaluation under `data/`. That directory is ignored by Git. Rebuilding with `./scripts/build_dataset.sh --fresh` clears and rebuilds `data/tripcrew`, `data/eval` and `data/models`, changing demo run IDs. The current diagnoser is TripCrew-only; the demo does not need a separate HOPRAG download.
 
-| `MODE` | Behaviour |
+To run both services in containers, use `docker compose up --build`.
+
+## Demo prompt
+
+The **New task** page accepts a bounded trip request, for example:
+
+> Plan a trip from Delhi to Tokyo departing 2026-12-12, returning 2026-12-17, for 2 adults. Budget ₹80,000.
+
+Supported requests use the listed origin and destination cities, dates in `YYYY-MM-DD` format, 1–6 travellers and a rupee budget. Turn on **Use an old exchange rate** to reproduce a budget failure, then choose **Run and inspect**. The catalog and tool responses are deterministic local stand-ins; this does not book real travel.
+
+See the [demo walkthrough](docs/demo-script.md) for the screen-by-screen pitch.
+
+## Run modes
+
+| Mode | Behaviour |
 |---|---|
-| `recorded` | Reuses stored responses only. No network, no keys. Used in deployment. |
-| `offline` | Deterministic local stand-ins. The **New task** page uses a small synthetic catalog, not live booking inventory. |
-| `live` | Calls the configured OpenAI-compatible endpoint. Put keys in `.env`, never in the browser or a deployment. |
+| `offline` | Selected by the checked-in `.env.example`. Deterministic local stand-ins; no API key or external call is needed. New task, diagnosis, replay and verification are available. |
+| `recorded` | Reads saved responses. New task and operations that need fresh model calls are disabled. |
+| `live` | Uses the configured OpenAI-compatible endpoint. Keep provider keys in the server environment, never in the browser. |
 
-> **No data? No problem.** If you only want the UI, start both servers without `data/`. The API reports degraded health and the browser shows clearly labelled static fixtures from `web/mocks/`.
+Without a generated dataset, the API reports degraded health and the UI can show clearly labelled static fixtures from `web/mocks/`. Those fixtures are for browsing; live diagnosis and replay require the API and local data.
 
-The dataset build includes deterministic recordings, injected and natural failures, a trained diagnoser and evaluation artifacts. Data, model files and reports are intentionally ignored by Git. A fresh build may download the public MuSiQue-Ans dataset.
+## Project details
 
-## 📈 Evaluation, honestly reported
-
-The frozen artifacts contain **615 evaluated traces**.
-
-| Split | Ranker top-1 | n |
-|---|---|---|
-| S0 | **0.88** | 75 |
-| S1 | 0.552 (best baseline: 0.625) | 96 |
-| S4 (natural failures) | 0.247 | 85 |
-
-The current results **do not support a claim that the ranker wins on unseen fault types.** Black Box reports that plainly: the Results page keeps the split and sample size visible next to every number. Regenerate everything with `make eval`.
-
-## 🔌 API
-
-`GET` `/health` · `/agents` · `/runs` · `/failure-groups` · `/runs/{id}` · `/runs/{id}/steps/{addr}` · `/runs/{id}/provenance` · `/runs/{id}/diagnosis` · `/runs/{id}/forks` · `/runs/{id}/twin` · `/runs/{id}/report` · `/runs/{id}/report.md` · `/diff` · `/eval` · `/forks/{id}` · `/forks/{id}/stream` · `/jobs/{id}` · `/labels/queue`
-
-`POST` `/tasks/run` · `/forks` · `/replay/predict` · `/runs/{id}/verify` · `/forks/{id}/export-test` · `/labels` · `/v1/traces`
-
-Every request and response is defined in [server/models.py](server/models.py). The generated TypeScript types live in [web/lib/contract.ts](web/lib/contract.ts), and errors share one JSON envelope.
-
-### MCP for coding agents
-
-```sh
-uv run --project /path/to/DeployForGood_maharashtra_round blackbox-mcp
-```
-
-Configure it as a stdio server and set `DATA_DIR` to your generated data path.
-
-## 🧪 Checks and commands
-
-```sh
-make check                 # lint, format verification, unit tests
-npm --prefix web run check # TypeScript
-npm --prefix web run build # production Next.js build
-make eval                  # regenerate model and evaluation artifacts
-make build                 # Python source and wheel
-make demo-offline          # Docker Compose showcase
-```
-
-## ☁️ Deployment
-
-The public setup is a **Next.js frontend on Vercel** and a **recorded-mode FastAPI service on Render**.
-
-**1. Package the dataset.** `data/` is git-ignored, so host it where the build can download it, for example as a GitHub Release asset:
-
-```sh
-tar -czf blackbox-data.tar.gz --exclude=musique_ans_v1.0_dev.jsonl -C data .
-```
-
-**2. Render (API).** Settings for the Python runtime:
-
-| Setting | Value |
+| Area | Implementation |
 |---|---|
-| Build command | `pip install ".[ml,server]" && python scripts/fetch_data.py "$DATA_URL" data` |
-| Start command | `uvicorn server.app:app --host 0.0.0.0 --port $PORT` |
-| Health check | `/health` |
-| Env | `PYTHON_VERSION=3.12.8`, `MODE=recorded`, `DATA_DIR=data`, `DATA_URL=<archive link>`, `CORS_ORIGINS=<frontend origin>` |
+| Web UI | Next.js 16, React 19, TypeScript, React Flow and ELK.js |
+| API and recorder | Python, FastAPI, Pydantic, SQLite |
+| Diagnosis | LightGBM, scikit-learn, NumPy, BM25 retrieval and rule evidence |
+| Agent demo | TripCrew travel-planning workflow with deterministic tools |
+| Integrations | OTLP/HTTP JSON import; stdio MCP tools |
+| Tests and tooling | uv, Ruff, unittest/pytest, Docker Compose |
 
-A Docker deploy also works: set `DATA_URL` as a build argument and the [Dockerfile](Dockerfile) unpacks the dataset into `/app/data`.
+The SDK records calls routed through it. Imported OTLP traces are read-only. The recorder redacts configured secrets and common key, email and phone patterns; review data handling before instrumenting a production agent.
 
-**3. Vercel (web).** Set **Root Directory** to `web` and add `NEXT_PUBLIC_API_URL` set to the Render URL. This value is baked in at build time.
+## Useful links
 
-**4. CORS.** Set Render's `CORS_ORIGINS` to the exact Vercel origin, with no trailing slash. Separate several origins with commas.
-
-Without the dataset the API starts in degraded mode, and the browser falls back to labelled mocks. **Never add a live provider key to Render or Vercel.**
-
-```sh
-docker compose up --build   # run API and web locally in containers
-```
-
-## 🛡️ Data and safety boundaries
-
-- The SDK sees only calls routed through it, and the included agent tools are local deterministic fixtures.
-- Redaction masks common key, email and phone patterns before persistence.
-- Original runs are immutable.
-- Exported regression artifacts contain recorded outcome and hash assertions. They run without network access and never call a live LLM or external tool.
-
-## 📚 More docs
-
-[Demo script](docs/demo-script.md) · [QA](docs/qa.md) · [Deck outline](docs/deck-outline.md) · [TripCrew](docs/tripcrew.md) · [HopRAG](docs/hoprag.md) · [Problem statement](PROBLEM_STATEMENT.md)
+[Problem statement](PROBLEM_STATEMENT.md) · [TripCrew workflow](docs/tripcrew.md) · [Demo walkthrough](docs/demo-script.md) · [QA notes](docs/qa.md) · [Pitch outline](docs/deck-outline.md) · [API models](server/models.py)

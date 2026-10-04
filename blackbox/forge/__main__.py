@@ -10,8 +10,8 @@ Commands (``inject`` is the default, so ``python -m blackbox.forge --target 360`
 positive forks, walking each operator's own seeded list of sites without repeating one.
 
 Base runs are read from ``--data-dir`` (default ``data/<agent>``, where ``make tripcrew``
-and ``make hoprag`` record them). Replays call the same LLM backend that recorded each
-run: the deterministic test doubles for fixture/heuristic runs, Groq for everything else.
+records them). Replays call the same LLM backend that recorded each
+run: the deterministic test double for fixture runs, Groq for everything else.
 """
 
 from __future__ import annotations
@@ -28,7 +28,6 @@ from blackbox.forge.adapters import (
     ADAPTERS,
     AGENT_ERRORS,
     AgentAdapter,
-    HopRAGAdapter,
     RoutingClient,
     TripCrewAdapter,
     make_adapter,
@@ -43,7 +42,6 @@ __all__ = [
     "ADAPTERS",
     "AGENT_ERRORS",
     "AgentAdapter",
-    "HopRAGAdapter",
     "RoutingClient",
     "TripCrewAdapter",
     "make_adapter",
@@ -137,11 +135,6 @@ def _parser() -> argparse.ArgumentParser:
         default=(),
         help="Comma-separated scenario seeds whose runs used a stale FX cache",
     )
-    hoprag = parser.add_argument_group("hoprag")
-    hoprag.add_argument(
-        "--dataset", type=Path, default=Path("data/hoprag/musique_ans_v1.0_dev.jsonl")
-    )
-    hoprag.add_argument("--read-k", type=int, choices=[1, 2, 3], default=1)
     return parser
 
 
@@ -166,7 +159,7 @@ async def main() -> None:
     )
 
     settings = Settings.load()
-    client = RoutingClient(settings, getattr(args, "dataset", None))
+    client = RoutingClient(settings)
     recorder = Recorder(
         args.data_dir,
         mode="live" if settings.groq_api_key else "offline",

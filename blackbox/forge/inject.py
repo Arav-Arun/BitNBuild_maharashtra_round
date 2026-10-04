@@ -17,7 +17,7 @@ from blackbox.sdk.runtime import RunSession
 logger = logging.getLogger(__name__)
 
 # Deterministic agent test doubles ignore prompts, so a ghost hint would change nothing.
-TEST_DOUBLE_MODEL_PREFIXES = ("tripcrew-fixture-", "hoprag-lexical-")
+TEST_DOUBLE_MODEL_PREFIXES = ("tripcrew-fixture-",)
 
 # How many steps are tried as a distractor before an attempt falls back to a plain fork.
 DISTRACTOR_TRIES = 5
