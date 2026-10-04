@@ -57,7 +57,7 @@ For local Docker Compose, create `data/` first with the dataset script. To expos
 
 ## Deployment
 
-The public path is a static-friendly Next.js frontend on Vercel and a recorded-mode FastAPI service on Render. Set Vercel's `NEXT_PUBLIC_API_URL` to the API URL and set Render's `CORS_ORIGINS` to the frontend origin. The Render image must be built with the ignored `data/` directory present to serve the trained dataset; without those immutable build inputs, it starts in degraded mode and the browser uses the explicitly labelled mock fallback. Never add a live provider key to Render or Vercel.
+The public path is a static-friendly Next.js frontend on Vercel and a recorded-mode FastAPI service on Render. Set Vercel's `NEXT_PUBLIC_API_URL` to the API URL and set Render's `CORS_ORIGINS` to the frontend origin. To serve the trained dataset, archive the ignored `data/` directory (`tar -czf blackbox-data.tar.gz --exclude=musique_ans_v1.0_dev.jsonl -C data .`), host it at a URL the build can fetch (for example a GitHub release asset), and set the Docker build argument `DATA_URL` on Render; the Dockerfile unpacks it into `/app/data`. Without it, the API starts in degraded mode and the browser uses the explicitly labelled mock fallback. Never add a live provider key to Render or Vercel.
 
 ```sh
 docker compose up --build
