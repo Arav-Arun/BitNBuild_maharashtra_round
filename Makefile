@@ -3,7 +3,7 @@ EXTRAS = --extra dev --extra ml --extra server
 RUN = $(UV) run --locked $(EXTRAS)
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval
+.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval diagnose verify-eval regression
 .PHONY: web-build
 
 help:
@@ -85,3 +85,13 @@ eval:
 
 web-build:
 	npm --prefix web run build
+
+
+diagnose:
+	$(RUN) python -m blackbox.explain diagnose $(RUN_ID) --verify --save --data-dir data/$(AGENT)
+
+verify-eval:
+	$(RUN) python -m blackbox.explain verify-eval --n 30 --data-dir data/$(AGENT)
+
+regression:
+	$(RUN) python -m blackbox.explain export $(FORK) --data-dir data/$(AGENT)

@@ -34,6 +34,7 @@ class Edit:
         "swap_model",
         "patch_tool_result",
         "ghost_hint",
+        "rerun",
     ]
     value: Any
     known_good: bool = False
@@ -76,6 +77,11 @@ def ghost_hint(addr: str, hint: str) -> Edit:
     its own style without leaving the instruction in the trace.
     """
     return Edit(addr, "ghost_hint", hint)
+
+
+def rerun(addr: str) -> Edit:
+    """Execute the step live again with its recorded request unchanged."""
+    return Edit(addr, "rerun", None)
 
 
 def wilson_interval(
@@ -319,7 +325,7 @@ class _ReplayPolicy:
         edit = self.edits.get(addr)
         if edit is not None and edit.kind in {"override_output", "patch_tool_result"}:
             return edit.value, "edited"
-        if edit is not None and edit.kind == "ghost_hint":
+        if edit is not None and edit.kind in {"ghost_hint", "rerun"}:
             return await self._live(addr, live), "edited"
 
         base = self.base_steps.get(addr)
@@ -330,12 +336,17 @@ class _ReplayPolicy:
         if self.mode == "prefix" and base is not None and base["seq"] >= self.first_edit_seq:
             return await self._live(addr, live), "live"
         if base is None:
+            cassette_hit, cassette_output = self._load_cassette(addr, request_key)
+            if cassette_hit:
+                return cassette_output, "cached"
             return await self._live(addr, live), "live"
         if base["request_key"] == request_key:
             return self._load_recorded(addr), "cached"
         cassette_hit, cassette_output = self._load_cassette(addr, request_key)
         if cassette_hit:
             return cassette_output, "cached"
+        if base["request_key"] is None and base.get("error_type"):
+            return await self._live(addr, live), "live"
         if base["seq"] < self.first_edit_seq:
             raise ReplayDivergence(addr, "request hash changed before the edit")
         return await self._live(addr, live), "live"
@@ -436,6 +447,7 @@ class ReplayEngine:
         mode: ReplayMode = "cone",
         samples: int = 1,
         control: bool = False,
+        control_scope: Literal["cone", "downstream"] = "cone",
         branch_name: str | None = None,
         event_callback: Callable[[dict[str, Any]], None] | None = None,
         fork_id: str | None = None,
@@ -449,6 +461,8 @@ class ReplayEngine:
         """
         if mode not in {"cone", "prefix", "full"}:
             raise ValueError("mode must be cone, prefix, or full")
+        if control_scope not in {"cone", "downstream"}:
+            raise ValueError("control_scope must be cone or downstream")
         if samples < 1:
             raise ValueError("samples must be positive")
         addresses = [edit.addr for edit in edits]
@@ -470,6 +484,9 @@ class ReplayEngine:
         edit_map = {edit.addr: edit for edit in edits}
         roots = set(addresses) | ({resample_from} if resample_from else set())
         invalidated = self._descendants(base_run_id, roots)
+        control_live = (
+            invalidated - set(addresses) if control_scope == "downstream" else set(invalidated)
+        )
         resampled = set(invalidated) if resample_from else set()
         fork_id = fork_id or uuid.uuid4().hex
         edited_runs: list[ReplayRun] = []
@@ -505,7 +522,7 @@ class ReplayEngine:
                     {},
                     "cone",
                     invalidated,
-                    force_live=set(invalidated),
+                    force_live=set(control_live),
                     event_callback=event_callback,
                 )
                 policies.append(control_policy)
@@ -651,6 +668,7 @@ __all__ = [
     "patch_tool_args",
     "patch_tool_result",
     "replay",
+    "rerun",
     "swap_model",
     "wilson_interval",
 ]

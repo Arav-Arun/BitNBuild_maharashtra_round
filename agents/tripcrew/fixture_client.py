@@ -4,6 +4,29 @@ import asyncio
 import json
 import re
 
+# Like a model shown an error page or an empty catalog, the double still answers; the
+# agent then fails on the reply. Raising inside the call instead would leave the step
+# with no recorded request, which no replay could reproduce.
+NO_MATCH = "none-available"
+
+
+def _mapping(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _cheapest(catalog, price, feasible):
+    """ID of the cheapest feasible option, or NO_MATCH for an error page or drifted schema."""
+    options = catalog.get("options") if isinstance(catalog, dict) else None
+    candidates = [
+        o
+        for o in (options if isinstance(options, list) else [])
+        if isinstance(o, dict)
+        and isinstance(o.get(price), (int, float))
+        and "id" in o
+        and feasible(o)
+    ]
+    return min(candidates, key=lambda o: o[price])["id"] if candidates else NO_MATCH
+
 
 class FixtureClient:
     def __init__(self):
@@ -42,24 +65,33 @@ class FixtureClient:
             elif role in {"flight_query", "hotel_query"}:
                 result = task
             elif role == "flight_select":
-                options = [
-                    f
-                    for f in task["catalog"]["options"]
-                    if (not task["query"]["refundable"] or f["refundable"])
-                    and (not task["query"]["no_red_eye"] or not f["red_eye"])
-                ]
-                result = {"flight_id": min(options, key=lambda f: f["fare_inr_per_adult"])["id"]}
-            elif role == "hotel_select":
-                options = [
-                    h
-                    for h in task["catalog"]["options"]
-                    if (not task["query"]["refundable"] or h["refundable"])
-                    and (not task["query"]["vegetarian"] or h["vegetarian"])
-                ]
-                result = {"hotel_id": min(options, key=lambda h: h["nightly_local_per_room"])["id"]}
-            elif role == "writer":
+                query = _mapping(task.get("query"))
                 result = {
-                    key: task["constraints"][key]
+                    "flight_id": _cheapest(
+                        task.get("catalog"),
+                        "fare_inr_per_adult",
+                        lambda f: (
+                            (not query.get("refundable") or f.get("refundable"))
+                            and (not query.get("no_red_eye") or not f.get("red_eye"))
+                        ),
+                    )
+                }
+            elif role == "hotel_select":
+                query = _mapping(task.get("query"))
+                result = {
+                    "hotel_id": _cheapest(
+                        task.get("catalog"),
+                        "nightly_local_per_room",
+                        lambda h: (
+                            (not query.get("refundable") or h.get("refundable"))
+                            and (not query.get("vegetarian") or h.get("vegetarian"))
+                        ),
+                    )
+                }
+            elif role == "writer":
+                constraints = _mapping(task.get("constraints"))
+                result = {
+                    key: constraints.get(key)
                     for key in (
                         "scenario_id",
                         "origin",
@@ -70,13 +102,13 @@ class FixtureClient:
                     )
                 }
                 result.update(
-                    flight_id=task["flight"]["id"],
-                    hotel_id=task["hotel"]["id"],
-                    total_inr=task["budget"]["total_inr"],
+                    flight_id=_mapping(task.get("flight")).get("id"),
+                    hotel_id=_mapping(task.get("hotel")).get("id"),
+                    total_inr=_mapping(task.get("budget")).get("total_inr"),
                     itinerary="Fly to the destination, check in, explore, and return on the requested date.",
                 )
             elif role == "verifier":
-                result = task["plan"]
+                result = task.get("plan")
             else:
                 raise ValueError(f"Unknown fixture role {role}")
             return {

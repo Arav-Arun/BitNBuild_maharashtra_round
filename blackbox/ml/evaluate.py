@@ -22,6 +22,7 @@ import numpy as np
 from blackbox.eval import baselines
 from blackbox.eval.metrics import auroc, paired_difference, per_run, summarize
 from blackbox.eval.splits import Splits, check_splits, leave_one_agent_out, make_splits
+from blackbox.explain.precedents import Precedents
 from blackbox.ml.dataset import Corpus, Trace, load_corpus
 from blackbox.ml.features import (
     EDGE_VIEWS,
@@ -388,6 +389,10 @@ def run_evaluation(
     # The diagnoser, saved for the API.
     diagnoser = experiment.train()
     diagnoser.save(model_dir, dataset_hash=corpus.dataset_hash)
+    # Similar-past-case index for Task 9: training roots only, never val or test runs.
+    Precedents.fit(experiment.matrix(splits.train), [corpus.labels[r] for r in splits.train]).save(
+        model_dir
+    )
     main = {split: experiment.score(diagnoser, runs) for split, runs in evaluation.items()}
 
     # Latency: featurize + score, per trace, on the test runs.
