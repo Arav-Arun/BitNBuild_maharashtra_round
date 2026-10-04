@@ -315,6 +315,7 @@ def run_level(experiment: Experiment) -> dict[str, Any]:
         "auroc": auroc(test_y, scores),
         "n_failed": sum(test_y),
         "n_healthy": len(test_y) - sum(test_y),
+        "_model": detector,
     }
 
 
@@ -337,6 +338,14 @@ def replay_savings(data_dirs: Sequence[Path]) -> dict[str, Any]:
         reexecuted += row["r"] or 0
     total = cached + reexecuted
     return {"forks": forks, "cached_fraction": cached / total if total else None}
+
+
+def _save_precedents(diagnoser: Diagnoser, corpus: Corpus, splits: Splits, model_dir: Path) -> None:
+    """Root steps of training failures, for the diagnosis panel's "seen before" lookup."""
+    from blackbox.explain.report import PrecedentLibrary
+
+    library = PrecedentLibrary.build(diagnoser, corpus, list(splits.train) + list(splits.val))
+    library.save(model_dir / "precedents.json")
 
 
 # ---------------------------------------------------------------------------
@@ -462,6 +471,11 @@ def run_evaluation(
     }
     savings = replay_savings(data_dirs)
     run_detector = run_level(experiment)
+    detector = run_detector.pop("_model", None)
+    if detector is not None:
+        # The API scores every run's failure risk with it (the Runs table's risk column).
+        detector.booster_.save_model(str(model_dir / "detector.txt"))
+    _save_precedents(diagnoser, corpus, splits, model_dir)
     importance = diagnoser.feature_importance()
 
     headline_split = "S1" if splits.s1 else "S0"

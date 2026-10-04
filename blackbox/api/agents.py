@@ -1,0 +1,93 @@
+"""What the API needs to know about each instrumented agent to present its runs."""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass
+from typing import Any
+
+from blackbox.api.reader import indian_money
+
+
+@dataclass(frozen=True, slots=True)
+class AgentProfile:
+    agent_id: str
+    display_name: str
+    description: str
+    final_answer_key: str
+    replayable: bool = True
+
+    def task(self, task_id: str, first_input: Any) -> tuple[str, str | None]:
+        """A one-line summary for the Runs table and the full task statement."""
+        return task_id, None
+
+
+def _envelope_task(first_input: Any) -> dict[str, Any]:
+    """The JSON task envelope the agents send as their first user message."""
+    if not isinstance(first_input, dict):
+        return {}
+    for message in reversed(first_input.get("messages") or []):
+        if message.get("role") == "user":
+            try:
+                envelope = json.loads(message.get("content") or "")
+            except ValueError:
+                return {}
+            task = envelope.get("task") if isinstance(envelope, dict) else None
+            return task if isinstance(task, dict) else {}
+    return {}
+
+
+TRIP_REQUEST = re.compile(
+    r"travel from (?P<origin>.+?) to (?P<destination>.+?) departing (?P<depart>[\d-]+), "
+    r"returning (?P<ret>[\d-]+), for (?P<adults>\d+) adults\. Budget INR (?P<budget>[\d.]+)"
+)
+
+
+class TripCrewProfile(AgentProfile):
+    def task(self, task_id: str, first_input: Any) -> tuple[str, str | None]:
+        request = _envelope_task(first_input).get("request")
+        if not isinstance(request, str):
+            return task_id, None
+        match = TRIP_REQUEST.search(request)
+        if match is None:
+            return request[:88], request
+        adults = int(match["adults"])
+        summary = (
+            f"{match['origin']} → {match['destination']}, {adults} "
+            f"{'adult' if adults == 1 else 'adults'}, under {indian_money(float(match['budget']))}"
+        )
+        return summary, request
+
+
+class HopRAGProfile(AgentProfile):
+    def task(self, task_id: str, first_input: Any) -> tuple[str, str | None]:
+        question = _envelope_task(first_input).get("question")
+        if not isinstance(question, str):
+            return task_id, None
+        short = question if len(question) <= 88 else question[:85].rstrip() + "..."
+        return short, question
+
+
+PROFILES: dict[str, AgentProfile] = {
+    "tripcrew": TripCrewProfile(
+        "tripcrew",
+        "TripCrew",
+        "Multi-agent travel planner: a planner, four parallel scouts (flights, hotels, "
+        "weather, FX), a budget calculator, a writer and a verifier.",
+        "final_plan",
+    ),
+    "hoprag": HopRAGProfile(
+        "hoprag",
+        "HopRAG",
+        "Sequential multi-hop question answering over MuSiQue: decompose, then search, "
+        "read and answer each hop, then compose the final answer.",
+        "final_answer",
+    ),
+}
+
+
+def profile(agent: str) -> AgentProfile:
+    return PROFILES.get(agent) or AgentProfile(
+        agent, agent, "An instrumented agent.", "final_answer", replayable=False
+    )

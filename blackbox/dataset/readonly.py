@@ -72,7 +72,9 @@ class RecorderView:
         return self.database.query("SELECT * FROM steps WHERE run_id = ? ORDER BY seq", (run_id,))
 
     def step(self, run_id: str, addr: str) -> dict[str, Any] | None:
-        return self.database.one("SELECT * FROM steps WHERE run_id = ? AND addr = ?", (run_id, addr))
+        return self.database.one(
+            "SELECT * FROM steps WHERE run_id = ? AND addr = ?", (run_id, addr)
+        )
 
     def edges(self, run_id: str) -> list[dict[str, Any]]:
         return self.database.query("SELECT * FROM edges WHERE run_id = ?", (run_id,))

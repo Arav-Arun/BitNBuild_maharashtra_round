@@ -12,6 +12,7 @@ import argparse
 import json
 import re
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from blackbox.config import Settings
@@ -20,14 +21,18 @@ from blackbox.sdk import Recorder, RunSession
 # A fault that makes the agent crash is a failure the checker would also reject.
 AGENT_ERRORS = (ValueError, KeyError, TypeError, IndexError, AttributeError, ArithmeticError)
 HOPRAG_HEURISTIC_MODEL = re.compile(r"hoprag-lexical-v1-h(\d)")
+HOPRAG_FIXTURE_MODEL = "hoprag-reader-fixture-v1"
+HOPRAG_DATASET = Path("data/hoprag/musique_ans_v1.0_dev.jsonl")
 
 
 class RoutingClient:
     """Send each chat request to the backend that produced its recorded model name."""
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, hoprag_dataset: Path | None = None) -> None:
         self.settings = settings
+        self.hoprag_dataset = hoprag_dataset or HOPRAG_DATASET
         self._fixture = None
+        self._reader = None
         self._heuristic: dict[int, Any] = {}
         self._live = None
 
@@ -44,6 +49,13 @@ class RoutingClient:
                 # The test double keeps every request it served; a long forge session would
                 # otherwise hold all of them in memory.
                 self._fixture.requests.clear()
+        if model == HOPRAG_FIXTURE_MODEL:
+            if self._reader is None:
+                from agents.hoprag.data import load_examples
+                from agents.hoprag.fixture_client import GoldReaderClient
+
+                self._reader = GoldReaderClient(load_examples(self.hoprag_dataset))
+            return await self._reader.chat(**request)
         match = HOPRAG_HEURISTIC_MODEL.fullmatch(model)
         if match:
             from agents.hoprag.heuristic import HeuristicClient

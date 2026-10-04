@@ -123,3 +123,50 @@ CREATE TABLE IF NOT EXISTS regression_exports (
     fixture_hash TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+
+-- API read model: one row per run, filled by the API's index builder.
+CREATE TABLE IF NOT EXISTS run_index (
+    run_id TEXT PRIMARY KEY REFERENCES runs(run_id) ON DELETE CASCADE,
+    task TEXT NOT NULL,
+    task_text TEXT,
+    origin TEXT NOT NULL,
+    split TEXT,
+    steps INTEGER NOT NULL,
+    duration_ms REAL NOT NULL,
+    llm_calls INTEGER NOT NULL,
+    tokens_in INTEGER NOT NULL,
+    tokens_out INTEGER NOT NULL,
+    tokens_cached INTEGER NOT NULL,
+    risk REAL,
+    top_addr TEXT,
+    top_name TEXT,
+    top_probability REAL,
+    failure_signature TEXT,
+    model_version TEXT
+);
+
+-- Forks started through the API: request, status and the SSE transcript.
+CREATE TABLE IF NOT EXISTS fork_meta (
+    fork_id TEXT PRIMARY KEY,
+    base_run_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    hypothesis TEXT,
+    control INTEGER NOT NULL,
+    request_json TEXT NOT NULL,
+    events_json TEXT,
+    error_json TEXT,
+    created_at TEXT NOT NULL,
+    completed_at TEXT
+);
+
+-- Label mode: blind human root-cause labels, for inter-annotator agreement.
+CREATE TABLE IF NOT EXISTS human_labels (
+    label_id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
+    annotator TEXT NOT NULL,
+    root_addr TEXT,
+    certainty TEXT NOT NULL,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    UNIQUE(run_id, annotator)
+);

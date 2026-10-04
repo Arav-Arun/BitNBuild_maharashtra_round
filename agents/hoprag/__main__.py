@@ -23,6 +23,8 @@ from agents.hoprag.data import (
     load_examples,
     select_examples,
 )
+from agents.hoprag.fixture_client import MODEL as FIXTURE_MODEL
+from agents.hoprag.fixture_client import GoldReaderClient
 from agents.hoprag.heuristic import HeuristicClient
 from agents.hoprag.tools import RetrievalTools
 from blackbox.config import Settings
@@ -50,17 +52,18 @@ async def run_suite(args):
     oracle_payload = {"dataset_sha256": dataset_hash, "questions": oracles}
     oracle_path = args.data_dir / "oracles" / f"{content_hash(oracle_payload)}.json"
     write_report(oracle_path, oracle_payload)
-    client = (
-        HeuristicClient(args.hops)
-        if args.client == "heuristic"
-        else AsyncLLMClient(api_key=settings.groq_api_key, base_url=settings.llm_base_url)
-    )
-    model = (
-        f"hoprag-lexical-v1-h{args.hops}" if args.client == "heuristic" else settings.agent_model
-    )
+    if args.client == "heuristic":
+        client = HeuristicClient(args.hops)
+        model = f"hoprag-lexical-v1-h{args.hops}"
+    elif args.client == "fixture":
+        client = GoldReaderClient(examples)
+        model = FIXTURE_MODEL
+    else:
+        client = AsyncLLMClient(api_key=settings.groq_api_key, base_url=settings.llm_base_url)
+        model = settings.agent_model
     recorder = Recorder(
         args.data_dir,
-        mode="offline" if args.client == "heuristic" else "live",
+        mode="live" if args.client == "groq" else "offline",
         settings=settings,
         llm_client=client,
     )
@@ -178,7 +181,7 @@ def main():
     parser.add_argument("--report", type=Path, default=Path("data/hoprag/report.json"))
     parser.add_argument("--count", type=int, default=50)
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--client", choices=["heuristic", "groq"], default="heuristic")
+    parser.add_argument("--client", choices=["heuristic", "fixture", "groq"], default="heuristic")
     parser.add_argument(
         "--hops",
         type=int,

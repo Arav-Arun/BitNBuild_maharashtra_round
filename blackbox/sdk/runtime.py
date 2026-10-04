@@ -298,7 +298,13 @@ class StepScope:
                     (self.addr, f"/output{pointer if pointer != '/' else ''}")
                 )
         if self.run.replay_policy is not None:
-            self.run.replay_policy.after_step(self.addr, cache_status, state_after)
+            self.run.replay_policy.after_step(
+                self.addr,
+                cache_status,
+                state_after,
+                ms=elapsed_ms,
+                tokens=(tokens_in or 0) + (tokens_out or 0),
+            )
         if self.run.span_exporter is not None:
             self.run.span_exporter(
                 {

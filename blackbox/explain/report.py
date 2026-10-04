@@ -64,6 +64,10 @@ class DiagnosisReport:
     precedents: dict[str, Any] | None
     twin_run_id: str | None
     findings_by_step: dict[str, list[Finding]]
+    # Raw ranker score per step (TreeSHAP contributions plus bias), and the earliest
+    # step the novelty features flag as unusual.
+    scores: dict[str, float] = field(default_factory=dict)
+    first_anomaly: str | None = None
 
     @property
     def top(self) -> Suspect | None:
@@ -293,6 +297,12 @@ def build_report(
     addr_index = {addr: i for i, addr in enumerate(matrix.addrs[0])} if matrix.addrs else {}
     rows = matrix.X[matrix.run_slice(0)] if matrix.addrs else np.zeros((0, len(FEATURE_NAMES)))
 
+    scores = {addr: float(contrib[i].sum()) for addr, i in addr_index.items() if i < len(contrib)}
+    first_flag = FEATURE_NAMES.index("is_first_anomaly")
+    first_anomaly = next(
+        (addr for addr, i in addr_index.items() if i < len(rows) and rows[i][first_flag] >= 0.5),
+        None,
+    )
     suspects = []
     for rank, (addr, probability) in enumerate(ranking[:TOP_SUSPECTS], start=1):
         i = addr_index[addr]
@@ -329,4 +339,6 @@ def build_report(
         precedents=precedent,
         twin_run_id=nearest_passing_twin(trace, corpus, base_run_id),
         findings_by_step=findings,
+        scores=scores,
+        first_anomaly=first_anomaly,
     )

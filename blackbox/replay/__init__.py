@@ -155,6 +155,8 @@ class _ReplayPolicy:
     last_state_after: str | None = None
     base_seed: int | None = None
     sample_seed: int | None = None
+    sample: int = 0
+    branch: str = "fix"
     first_edit_seq: float = field(init=False)
 
     def __post_init__(self) -> None:
@@ -187,11 +189,21 @@ class _ReplayPolicy:
                         "addr": addr,
                         "phase": "queued",
                         "cache_status": "invalidated",
+                        "sample": self.sample,
+                        "branch": self.branch,
                     },
                 }
             )
 
-    def after_step(self, addr: str, cache_status: str, state_after: str) -> None:
+    def after_step(
+        self,
+        addr: str,
+        cache_status: str,
+        state_after: str,
+        *,
+        ms: float | None = None,
+        tokens: int | None = None,
+    ) -> None:
         self.statuses[addr] = cache_status
         self.last_state_after = state_after
         self._emit(
@@ -201,9 +213,28 @@ class _ReplayPolicy:
                     "addr": addr,
                     "phase": "done",
                     "cache_status": cache_status,
+                    "sample": self.sample,
+                    "branch": self.branch,
+                    "ms": ms,
+                    "tokens": tokens,
                 },
             }
         )
+
+    async def _live(self, addr: str, live: Callable[[], Awaitable[Any]]) -> Any:
+        self._emit(
+            {
+                "event": "step",
+                "data": {
+                    "addr": addr,
+                    "phase": "running",
+                    "cache_status": None,
+                    "sample": self.sample,
+                    "branch": self.branch,
+                },
+            }
+        )
+        return await live()
 
     def transform_chat(self, addr: str, request: dict[str, Any]) -> dict[str, Any]:
         edit = self.edits.get(addr)
@@ -289,17 +320,17 @@ class _ReplayPolicy:
         if edit is not None and edit.kind in {"override_output", "patch_tool_result"}:
             return edit.value, "edited"
         if edit is not None and edit.kind == "ghost_hint":
-            return await live(), "edited"
+            return await self._live(addr, live), "edited"
 
         base = self.base_steps.get(addr)
         if addr in self.force_live:
-            return await live(), "live"
+            return await self._live(addr, live), "live"
         if self.mode == "full":
-            return await live(), "live"
+            return await self._live(addr, live), "live"
         if self.mode == "prefix" and base is not None and base["seq"] >= self.first_edit_seq:
-            return await live(), "live"
+            return await self._live(addr, live), "live"
         if base is None:
-            return await live(), "live"
+            return await self._live(addr, live), "live"
         if base["request_key"] == request_key:
             return self._load_recorded(addr), "cached"
         cassette_hit, cassette_output = self._load_cassette(addr, request_key)
@@ -307,7 +338,7 @@ class _ReplayPolicy:
             return cassette_output, "cached"
         if base["seq"] < self.first_edit_seq:
             raise ReplayDivergence(addr, "request hash changed before the edit")
-        return await live(), "live"
+        return await self._live(addr, live), "live"
 
 
 class ReplayEngine:
@@ -357,6 +388,8 @@ class ReplayEngine:
         seed = int(base.get("seed") or 0) + sample_index
         policy.base_seed = int(base.get("seed") or 0)
         policy.sample_seed = seed
+        policy.sample = sample_index
+        policy.branch = branch
         with self.recorder.run(
             base["agent"],
             base["task_id"],
@@ -405,7 +438,15 @@ class ReplayEngine:
         control: bool = False,
         branch_name: str | None = None,
         event_callback: Callable[[dict[str, Any]], None] | None = None,
+        fork_id: str | None = None,
+        resample_from: str | None = None,
     ) -> ReplayBatch:
+        """Replay ``base_run_id`` with ``edits`` applied, ``samples`` times.
+
+        ``control`` adds one unchanged sample per edited sample with the same seed, the
+        cone forced live. ``resample_from`` (no edits) re-runs that step's cone unchanged:
+        the *Re-run unchanged* action, which is a control on its own.
+        """
         if mode not in {"cone", "prefix", "full"}:
             raise ValueError("mode must be cone, prefix, or full")
         if samples < 1:
@@ -421,9 +462,16 @@ class ReplayEngine:
         for edit in edits:
             if edit.kind == "ghost_hint" and base_steps[edit.addr]["kind"] != "llm":
                 raise ValueError(f"ghost hints only apply to LLM steps: {edit.addr}")
+        if resample_from is not None:
+            if edits:
+                raise ValueError("resample_from is only for re-running unchanged")
+            if resample_from not in base_steps:
+                raise ValueError(f"resample_from is absent from the base run: {resample_from}")
         edit_map = {edit.addr: edit for edit in edits}
-        invalidated = self._descendants(base_run_id, set(addresses))
-        fork_id = uuid.uuid4().hex
+        roots = set(addresses) | ({resample_from} if resample_from else set())
+        invalidated = self._descendants(base_run_id, roots)
+        resampled = set(invalidated) if resample_from else set()
+        fork_id = fork_id or uuid.uuid4().hex
         edited_runs: list[ReplayRun] = []
         control_runs: list[ReplayRun] = []
         policies: list[_ReplayPolicy] = []
@@ -435,6 +483,7 @@ class ReplayEngine:
                 edit_map,
                 mode,
                 invalidated,
+                force_live=resampled,
                 event_callback=event_callback,
             )
             policies.append(policy)

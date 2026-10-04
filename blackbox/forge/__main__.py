@@ -166,7 +166,7 @@ async def main() -> None:
     )
 
     settings = Settings.load()
-    client = RoutingClient(settings)
+    client = RoutingClient(settings, getattr(args, "dataset", None))
     recorder = Recorder(
         args.data_dir,
         mode="live" if settings.groq_api_key else "offline",
