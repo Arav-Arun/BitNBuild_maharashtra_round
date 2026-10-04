@@ -1885,11 +1885,15 @@
             "$ref": "#/$defs/FailureGroup"
           },
           "type": "array"
+        },
+        "fixture": {
+          "type": "boolean"
         }
       },
       "required": [
         "total_failed",
-        "items"
+        "items",
+        "fixture"
       ],
       "title": "FailureGroupList",
       "type": "object"
@@ -4687,6 +4691,10 @@
               "type": "null"
             }
           ]
+        },
+        "fixture": {
+          "description": "True when the model-derived run fields are authored.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -4694,7 +4702,8 @@
         "task_text",
         "steps",
         "edges",
-        "final_answer"
+        "final_answer",
+        "fixture"
       ],
       "title": "RunDetail",
       "type": "object"
@@ -4743,6 +4752,7 @@
     },
     "RunList": {
       "additionalProperties": false,
+      "description": "GET /runs. Fork sample runs (`origin: fork`) are left out unless filtered for.",
       "properties": {
         "total": {
           "minimum": 0,
@@ -4777,6 +4787,10 @@
         },
         "facets": {
           "$ref": "#/$defs/RunFacets"
+        },
+        "fixture": {
+          "description": "True when risk, top_suspect and failure_signature are authored illustrations.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -4785,7 +4799,8 @@
         "offset",
         "next_offset",
         "items",
-        "facets"
+        "facets",
+        "fixture"
       ],
       "title": "RunList",
       "type": "object"
@@ -6028,6 +6043,60 @@
       "title": "SuspectBrief",
       "type": "object"
     },
+    "TaskRunRequest": {
+      "additionalProperties": false,
+      "description": "An offline TripCrew task submitted as natural language.",
+      "properties": {
+        "prompt": {
+          "maxLength": 1200,
+          "minLength": 24,
+          "type": "string"
+        },
+        "inject_stale_fx": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "TaskRunRequest",
+      "type": "object"
+    },
+    "TaskRunResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "running"
+          ],
+          "type": "string"
+        },
+        "task": {
+          "type": "string"
+        },
+        "steps": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "status",
+        "task",
+        "steps"
+      ],
+      "title": "TaskRunResponse",
+      "type": "object"
+    },
     "TimelineEntry": {
       "additionalProperties": false,
       "description": "One node of the original -> control -> edited-fork timeline.",
@@ -6983,6 +7052,21 @@
       "extension": true
     },
     {
+      "method": "POST",
+      "path": "/tasks/run",
+      "summary": "Record an offline TripCrew task from a bounded natural-language prompt",
+      "request": "TaskRunRequest",
+      "response": "TaskRunResponse",
+      "statuses": [
+        201,
+        409,
+        422,
+        503
+      ],
+      "query": [],
+      "extension": true
+    },
+    {
       "method": "GET",
       "path": "/runs",
       "summary": "Paged run list",
@@ -7318,6 +7402,8 @@
     "ValidationIssue",
     "AppHealth",
     "AgentList",
+    "TaskRunRequest",
+    "TaskRunResponse",
     "RunListQuery",
     "RunList",
     "RunSummary",

@@ -7,6 +7,7 @@ import logging
 import sqlite3
 import uuid
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -15,6 +16,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
+from agents.tripcrew import TravelAPI, TripCrew
+from agents.tripcrew.prompt import parse_trip_prompt
 from blackbox.api.errors import ApiError
 from blackbox.api.service import BlackBoxService
 from server import models as m
@@ -143,6 +146,79 @@ def agents(request: Request):
     svc = service(request)
     require_recordings(svc)
     return svc.list_agents()
+
+
+@app.post("/tasks/run", response_model=m.TaskRunResponse, status_code=201)
+async def run_task(request: Request, body: m.TaskRunRequest):
+    """Execute a supported natural-language travel task with the local recorded agent."""
+    svc = service(request)
+    require_recordings(svc)
+    if svc.mode != "offline":
+        raise ApiError(
+            "unsupported",
+            "Prompt runs are available in offline mode only.",
+            hint="Set MODE=offline and restart the API to use the deterministic demo runner.",
+        )
+    agent_data = svc.agents.get("tripcrew")
+    if agent_data is None:
+        raise ApiError("unavailable", "The TripCrew recorder is not available.")
+
+    task_id = f"PROMPT-{uuid.uuid4().hex[:12].upper()}"
+    seed = int(uuid.uuid4().hex[:8], 16)
+    try:
+        scenario = parse_trip_prompt(body.prompt, scenario_id=task_id, seed=seed)
+    except ValueError as error:
+        raise ApiError("bad_request", str(error)) from error
+
+    metadata_dir = agent_data.recorder.data_dir / "prompt-scenarios"
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+    metadata_path = metadata_dir / f"{task_id}.json"
+    temporary_path = metadata_path.with_suffix(".json.tmp")
+    temporary_path.write_text(
+        json.dumps(
+            {"scenario": asdict(scenario), "stale_fx": body.inject_stale_fx, "prompt": body.prompt}
+        ),
+        encoding="utf-8",
+    )
+    temporary_path.replace(metadata_path)
+
+    agent = TripCrew(
+        scenario,
+        TravelAPI([scenario], stale_fx=body.inject_stale_fx),
+        model="tripcrew-fixture-v1",
+        task_prompt=body.prompt,
+    )
+    recorded = agent_data.recorder.run(
+        "tripcrew",
+        task_id,
+        seed,
+        model="tripcrew-fixture-v1",
+    )
+    with recorded:
+        try:
+            await agent(recorded)
+        except (
+            ValueError,
+            KeyError,
+            TypeError,
+            IndexError,
+            AttributeError,
+            ArithmeticError,
+        ) as error:
+            recorded.set_outcome(
+                False, score=0, reason=f"Agent raised {type(error).__name__}: {error}"
+            )
+
+    svc.ensure_index()
+    svc.warm(batch=1)
+    svc.cache.details.clear()
+    detail = svc.run_detail(recorded.run_id)
+    return m.TaskRunResponse(
+        run_id=recorded.run_id,
+        status=detail.run.status,
+        task=detail.run.task,
+        steps=len(detail.steps),
+    )
 
 
 @app.get("/runs", response_model=m.RunList)

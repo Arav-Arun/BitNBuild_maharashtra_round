@@ -238,6 +238,20 @@ class AgentList(ContractModel):
     items: list[AgentInfo]
 
 
+class TaskRunRequest(ContractModel):
+    """An offline TripCrew task submitted as natural language."""
+
+    prompt: str = Field(min_length=24, max_length=1200)
+    inject_stale_fx: bool = False
+
+
+class TaskRunResponse(ContractModel):
+    run_id: RunId
+    status: RunStatus
+    task: str
+    steps: Count
+
+
 # ---------------------------------------------------------------------------
 # Runs
 # ---------------------------------------------------------------------------
@@ -1817,6 +1831,16 @@ ENDPOINTS: tuple[Endpoint, ...] = (
     ),
     Endpoint("GET", "/agents", "Agents with run counts", None, "AgentList", (200,), (), True),
     Endpoint(
+        "POST",
+        "/tasks/run",
+        "Record an offline TripCrew task from a bounded natural-language prompt",
+        "TaskRunRequest",
+        "TaskRunResponse",
+        (201, 409, 422, 503),
+        (),
+        True,
+    ),
+    Endpoint(
         "GET",
         "/runs",
         "Paged run list",
@@ -2030,6 +2054,8 @@ EXPORTED_MODELS: tuple[type[BaseModel], ...] = (
     ValidationIssue,
     AppHealth,
     AgentList,
+    TaskRunRequest,
+    TaskRunResponse,
     RunListQuery,
     RunList,
     RunSummary,

@@ -59,7 +59,7 @@ export function StepThread({
           >
             <div className="thread-title">
               <span className="faint num" style={{ fontSize: 11 }}>
-                {String(step.seq).padStart(2, "0")}
+                {String(step.seq + 1).padStart(2, "0")}
               </span>
               <strong>{prettyName(step)}</strong>
               {step.isSuspect && <SuspectBadge probability={step.suspicion} />}

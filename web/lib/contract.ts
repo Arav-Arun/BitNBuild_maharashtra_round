@@ -834,6 +834,7 @@ export interface FailureGroup {
 export interface FailureGroupList {
   total_failed: number;
   items: FailureGroup[];
+  fixture: boolean;
 }
 /**
  * 202 response of POST /forks.
@@ -1164,6 +1165,10 @@ export interface RunDetail {
   steps: StepDetail[];
   edges: Edge[];
   final_answer: unknown;
+  /**
+   * True when the model-derived run fields are authored.
+   */
+  fixture: boolean;
 }
 /**
  * Everything recorded about one step. The same shape serves list and detail views.
@@ -1248,6 +1253,9 @@ export interface RunFacets {
     [k: string]: number;
   };
 }
+/**
+ * GET /runs. Fork sample runs (`origin: fork`) are left out unless filtered for.
+ */
 export interface RunList {
   total: number;
   limit: number;
@@ -1258,6 +1266,10 @@ export interface RunList {
   next_offset: number | null;
   items: RunSummary[];
   facets: RunFacets;
+  /**
+   * True when risk, top_suspect and failure_signature are authored illustrations.
+   */
+  fixture: boolean;
 }
 /**
  * Query parameters of GET /runs.
@@ -1277,6 +1289,19 @@ export interface RunListQuery {
   order?: "asc" | "desc";
   limit?: number;
   offset?: number;
+}
+/**
+ * An offline TripCrew task submitted as natural language.
+ */
+export interface TaskRunRequest {
+  prompt: string;
+  inject_stale_fx?: boolean;
+}
+export interface TaskRunResponse {
+  run_id: string;
+  status: "passed" | "failed" | "running";
+  task: string;
+  steps: number;
 }
 /**
  * GET /runs/{id}/provenance. Never invents a single origin for an ambiguous value.
@@ -1442,6 +1467,21 @@ export const ENDPOINTS: readonly EndpointSpec[] = [
     "response": "AgentList",
     "statuses": [
       200
+    ],
+    "query": [],
+    "extension": true
+  },
+  {
+    "method": "POST",
+    "path": "/tasks/run",
+    "summary": "Record an offline TripCrew task from a bounded natural-language prompt",
+    "request": "TaskRunRequest",
+    "response": "TaskRunResponse",
+    "statuses": [
+      201,
+      409,
+      422,
+      503
     ],
     "query": [],
     "extension": true
@@ -1774,5 +1814,5 @@ export const ENDPOINTS: readonly EndpointSpec[] = [
     ],
     "query": [],
     "extension": false
-  }
+  },
 ];

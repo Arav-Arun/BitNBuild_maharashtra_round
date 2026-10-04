@@ -41,25 +41,28 @@ def _envelope_task(first_input: Any) -> dict[str, Any]:
 TRIP_REQUEST = re.compile(
     r"travel from (?P<origin>.+?) to (?P<destination>.+?) departing (?P<depart>[\d-]+), "
     r"returning (?P<ret>[\d-]+), for (?P<adults>\d+) adults\. Budget INR "
-    r"(?P<budget>[\d,]+(?:\.\d+)?)(?![\d.])"
+    # Permit the sentence-final period after a decimal budget (e.g. ``160000.00.``).
+    r"(?P<budget>[\d,]+(?:\.\d+)?)(?=$|[^\d])"
 )
 
 
 class TripCrewProfile(AgentProfile):
     def task(self, task_id: str, first_input: Any) -> tuple[str, str | None]:
-        request = _envelope_task(first_input).get("request")
+        task = _envelope_task(first_input)
+        request = task.get("request")
         if not isinstance(request, str):
             return task_id, None
         match = TRIP_REQUEST.search(request)
         if match is None:
-            return request[:88], request
+            short = request if len(request) <= 88 else request[:85].rstrip() + "..."
+            return short, task.get("original_prompt") or request
         adults = int(match["adults"])
         summary = (
             f"{match['origin']} → {match['destination']}, {adults} "
             f"{'adult' if adults == 1 else 'adults'}, under "
             f"{indian_money(float(match['budget'].replace(',', '')))}"
         )
-        return summary, request
+        return summary, task.get("original_prompt") or request
 
 
 class HopRAGProfile(AgentProfile):

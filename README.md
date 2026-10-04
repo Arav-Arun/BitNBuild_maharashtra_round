@@ -20,7 +20,7 @@ make dev-api
 make dev-web
 ```
 
-Open <http://localhost:3000>. The API docs are at <http://127.0.0.1:8000/docs>. `MODE=recorded` only reuses stored responses. Use `MODE=offline` for deterministic local stand-ins. `MODE=live` can call the configured OpenAI-compatible endpoint; put any key in `.env`, never in the browser or a deployment. Replaying hosted-model runs in live mode requires the matching provider key.
+Open <http://localhost:3000>. The API docs are at <http://127.0.0.1:8000/docs>. The **New task** page accepts a bounded natural-language TripCrew travel request and records it as an inspectable run in offline mode; it uses a small synthetic catalog, not live booking inventory. `MODE=recorded` only reuses stored responses. Use `MODE=offline` for deterministic local stand-ins. `MODE=live` can call the configured OpenAI-compatible endpoint; put any key in `.env`, never in the browser or a deployment. Replaying hosted-model runs in live mode requires the matching provider key.
 
 The dataset build includes deterministic TripCrew and HopRAG recordings, injected and natural failures, a trained diagnoser, and evaluation artifacts. Data, model files and reports are intentionally ignored by Git. A fresh build may download the public MuSiQue-Ans dataset. If you only need the UI, start both servers without data: the API reports degraded health and the browser can show clearly labelled static fixtures from `web/mocks/`.
 
@@ -38,7 +38,7 @@ The API also accepts OTLP/HTTP JSON GenAI spans as read-only imported runs. MCP 
 
 ## API routes
 
-`GET /health`, `/agents`, `/runs`, `/failure-groups`, `/runs/{id}`, `/runs/{id}/steps/{addr}`, `/runs/{id}/provenance`, `/runs/{id}/diagnosis`, `/runs/{id}/forks`, `/runs/{id}/twin`, `/runs/{id}/report`, `/runs/{id}/report.md`, `/diff`, `/eval`, `/forks/{id}`, `/forks/{id}/stream`, `/jobs/{id}`, `/labels/queue`; `POST /forks`, `/replay/predict`, `/runs/{id}/verify`, `/forks/{id}/export-test`, `/labels`, `/v1/traces`.
+`GET /health`, `/agents`, `/runs`, `/failure-groups`, `/runs/{id}`, `/runs/{id}/steps/{addr}`, `/runs/{id}/provenance`, `/runs/{id}/diagnosis`, `/runs/{id}/forks`, `/runs/{id}/twin`, `/runs/{id}/report`, `/runs/{id}/report.md`, `/diff`, `/eval`, `/forks/{id}`, `/forks/{id}/stream`, `/jobs/{id}`, `/labels/queue`; `POST /tasks/run`, `/forks`, `/replay/predict`, `/runs/{id}/verify`, `/forks/{id}/export-test`, `/labels`, `/v1/traces`.
 
 Every request and response is defined in [server/models.py](server/models.py), and the generated TypeScript types live in [web/lib/contract.ts](web/lib/contract.ts). Errors use the same JSON envelope. Interactive OpenAPI docs are served by FastAPI.
 

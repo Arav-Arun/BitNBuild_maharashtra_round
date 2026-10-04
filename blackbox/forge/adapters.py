@@ -157,7 +157,11 @@ class TripCrewAdapter(AgentAdapter):
 
     def _scenario(self, run_id: str):
         from agents.tripcrew import generate_scenarios
+        from agents.tripcrew.scenarios import Scenario
 
+        task_id = self._run(run_id)["task_id"]
+        if task_id.startswith("PROMPT-"):
+            return Scenario(**self._prompt_metadata(task_id)["scenario"])
         seed, index = self._scenario_key(run_id)
         cached = self.scenarios.get(seed, [])
         if len(cached) < index:
@@ -165,17 +169,43 @@ class TripCrewAdapter(AgentAdapter):
         return cached[index - 1]
 
     def _stale_fx(self, run_id: str) -> bool:
+        task_id = self._run(run_id)["task_id"]
+        if task_id.startswith("PROMPT-"):
+            try:
+                saved = self._prompt_metadata(task_id)
+            except ValueError:
+                return False
+            return bool(saved.get("stale_fx"))
         return bool(self.args.stale_fx) or self._scenario_key(run_id)[0] in self.stale_fx_seeds
+
+    def _prompt_metadata(self, task_id: str) -> dict[str, Any]:
+        path = self.recorder.data_dir / "prompt-scenarios" / f"{task_id}.json"
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise ValueError(f"Prompt-run replay metadata is unavailable for {task_id}") from error
 
     def factory(self, run_id: str) -> Callable[[RunSession], Any]:
         from agents.tripcrew import TravelAPI, TripCrew
 
         row = self._run(run_id)
         scenario = self._scenario(run_id)
+        task_prompt = (
+            self._prompt_metadata(row["task_id"]).get("prompt")
+            if row["task_id"].startswith("PROMPT-")
+            else None
+        )
         # The API must match the one that recorded the base run, or a forced-live
         # control would fetch different data than the recording and stop reproducing.
         api = TravelAPI([scenario], stale_fx=self._stale_fx(run_id))
-        return _scored(TripCrew(scenario, api, model=row.get("model") or "tripcrew-fixture-v1"))
+        return _scored(
+            TripCrew(
+                scenario,
+                api,
+                model=row.get("model") or "tripcrew-fixture-v1",
+                task_prompt=task_prompt,
+            )
+        )
 
     def oracle_fixes(self, run_id: str) -> dict[str, Any]:
         from agents.tripcrew import TravelAPI

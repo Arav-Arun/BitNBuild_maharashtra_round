@@ -76,10 +76,13 @@ async def _wave(run: RunSession, jobs: list[Job]):
 
 
 class TripCrew:
-    def __init__(self, scenario: Scenario, api: TravelAPI, *, model=None):
+    def __init__(
+        self, scenario: Scenario, api: TravelAPI, *, model=None, task_prompt: str | None = None
+    ):
         self.scenario = scenario
         self.api = api
         self.model = model
+        self.task_prompt = task_prompt
 
     async def __call__(self, run: RunSession):
         scenario = self.scenario
@@ -100,9 +103,10 @@ class TripCrew:
                 raise ValueError(f"{role} returned invalid structured output: {error}") from error
 
         with run.step("planner/chat#1", "llm", agent_role="planner"):
-            run.state["constraints"] = await chat(
-                "planner", {"request": scenario.request}, Constraints
-            )
+            request = {"request": scenario.request}
+            if self.task_prompt:
+                request["original_prompt"] = self.task_prompt
+            run.state["constraints"] = await chat("planner", request, Constraints)
         with run.step("planner/state#1", "state", agent_role="planner"):
             constraints = run.state["constraints"]
             for key, schema in (("flight_task", FlightQuery), ("hotel_task", HotelQuery)):

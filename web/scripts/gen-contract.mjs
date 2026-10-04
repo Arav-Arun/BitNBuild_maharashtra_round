@@ -71,7 +71,12 @@ lines.push("}");
 lines.push("");
 lines.push("export const ENDPOINTS: readonly EndpointSpec[] = [");
 for (const endpoint of bundle["x-endpoints"]) {
-  lines.push(`  ${JSON.stringify(endpoint)},`);
+  lines.push(
+    `${JSON.stringify(endpoint, null, 2)
+      .split("\n")
+      .map((line) => `  ${line}`)
+      .join("\n")},`,
+  );
 }
 lines.push("];");
 lines.push("");

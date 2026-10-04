@@ -13,5 +13,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ? "Static recorded showcase · writes disabled"
       : `${h.counts.runs.toLocaleString()} runs · ${h.counts.steps.toLocaleString()} recorded steps`); })
     .catch(() => setStatus("API unavailable · start with make dev-api")); }, []);
-  return <AppContext.Provider value={{staticBundle}}><div className="shell"><TopBar mode={mode}/><main className="main">{children}</main><footer className="statusbar"><span><i className={`dot ${mode ? "online" : "offline"}`} />{status}</span><span className="spacer"/><span>Black Box · local recorder</span></footer></div></AppContext.Provider>;
+  return <AppContext.Provider value={{staticBundle,mode}}><div className="shell"><TopBar mode={mode}/><main className="main">{children}</main><footer className="statusbar"><span><i className={`dot ${mode ? "online" : "offline"}`} />{status}</span><span className="spacer"/><span>Black Box · local recorder</span></footer></div></AppContext.Provider>;
 }
