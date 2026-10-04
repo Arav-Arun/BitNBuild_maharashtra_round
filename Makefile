@@ -1,8 +1,8 @@
 UV ?= uv
-RUN = $(UV) run --locked --extra dev
+RUN = $(UV) run --locked --extra dev --extra ml
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web web-install web-check tripcrew tripcrew-demo
-.PHONY: hoprag-data hoprag forge forge-natural forge-freeze
+.PHONY: hoprag-data hoprag forge forge-natural forge-freeze eval
 
 help:
 	@echo "setup   Install the locked development environment"
@@ -19,9 +19,10 @@ help:
 	@echo "forge   Inject faults into passing AGENT=tripcrew|hoprag runs (resumes automatically)"
 	@echo "forge-natural Attribute naturally failed AGENT runs with oracle fixes (test-only)"
 	@echo "forge-freeze  Export AGENT labels and write DATASET_VERSION"
+	@echo "eval    Train the diagnoser, run baselines/ablations/integrity checks into data/eval"
 
 setup:
-	$(UV) sync --locked --extra dev
+	$(UV) sync --locked --extra dev --extra ml
 
 check: lint test
 
@@ -76,4 +77,7 @@ forge-natural:
 
 forge-freeze:
 	$(RUN) python -m blackbox.forge freeze --agent $(AGENT)
+
+eval:
+	$(RUN) python -m blackbox.ml eval
 

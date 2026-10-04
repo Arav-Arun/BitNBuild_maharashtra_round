@@ -15,7 +15,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ml = ["scikit-learn>=1.5,<2"]
+ml = [
+    "lightgbm>=4.5,<5",
+    "numpy>=2,<3",
+    "scikit-learn>=1.5,<2",
+]
 dev = ["ruff>=0.9,<1"]
 
 [project.scripts]

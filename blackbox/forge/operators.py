@@ -494,7 +494,7 @@ class D1WrongArguments(FaultOperator):
                             data[key] = int(data[key])
                     elif isinstance(val, str) and len(val) > 3:
                         data[key] = val[::-1]  # Reverse the string
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
         except (json.JSONDecodeError, TypeError, KeyError):
             # If not parseable, just corrupt the raw content
             msg["content"] = content[: len(content) // 2]
@@ -565,7 +565,7 @@ class D2WrongTool(FaultOperator):
                         data[key] = 0
                     elif isinstance(val, list):
                         data[key] = []
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
         except (json.JSONDecodeError, TypeError, KeyError):
             msg["content"] = '{"error": "wrong tool called"}'
         return override_output(step["addr"], perturbed)
@@ -636,7 +636,7 @@ class D3HallucinatedValue(FaultOperator):
                 elif numeric_keys:
                     key = rng.choice(numeric_keys)
                     data[key] = rng.randint(900000, 999999)
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
         except (json.JSONDecodeError, TypeError, KeyError):
             msg["content"] = '{"hallucinated": "value_from_nowhere"}'
         return override_output(step["addr"], perturbed)
@@ -770,7 +770,7 @@ class C1InstructionMisread(FaultOperator):
                         data[key] = data[key] * rng.choice([2, 3])
                         if isinstance(data[key], float):
                             data[key] = round(data[key], 2)
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
         except (json.JSONDecodeError, TypeError, KeyError):
             pass
         return override_output(step["addr"], perturbed)
@@ -838,7 +838,7 @@ class C2ConstraintDropped(FaultOperator):
                 if droppable:
                     key = rng.choice(droppable)
                     del data[key]
-            msg["content"] = json.dumps(data, sort_keys=True)
+            msg["content"] = json.dumps(data)
         elif isinstance(perturbed, dict) and len(perturbed) > 2:
             droppable = list(perturbed.keys())
             key = rng.choice(droppable)
@@ -919,7 +919,7 @@ class C3StateCorruption(FaultOperator):
                     if len(keys) >= 2:
                         a, b = rng.sample(keys, 2)
                         data[a], data[b] = data[b], data[a]
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
             except (json.JSONDecodeError, TypeError, KeyError, IndexError):
                 pass
         else:
@@ -989,7 +989,7 @@ class C4RepeatedLoop(FaultOperator):
                                 data[key] = val + val
                     else:
                         data["questions"] = ["repeat_action_1", "repeat_action_2"]
-                msg["content"] = json.dumps(data, sort_keys=True)
+                msg["content"] = json.dumps(data)
             except (json.JSONDecodeError, TypeError, KeyError, IndexError):
                 pass
         else:

@@ -31,7 +31,8 @@ from blackbox.sdk import Recorder, RunSession
 
 logger = logging.getLogger("blackbox.forge")
 
-AGENT_ERRORS = (ValueError, KeyError, TypeError, IndexError)
+# ArithmeticError covers decimal.InvalidOperation: a corrupted amount crashing a calculator.
+AGENT_ERRORS = (ValueError, KeyError, TypeError, IndexError, ArithmeticError)
 HOPRAG_HEURISTIC_MODEL = re.compile(r"hoprag-lexical-v1-h(\d)")
 
 
