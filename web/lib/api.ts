@@ -10,7 +10,10 @@ import runsFixture from "../mocks/runs.json";
 import detailFixture from "../mocks/run-detail.json";
 import hopragFixture from "../mocks/run-detail-hoprag.json";
 
-export const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+// In local development, the Next app and FastAPI run on separate ports. Keep
+// the demo connected even when NEXT_PUBLIC_API_URL was not set in the shell.
+const DEFAULT_DEV_API = process.env.NODE_ENV === "development" ? "http://127.0.0.1:8000" : "";
+export const API = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_DEV_API).replace(/\/$/, "");
 function recordedFallback(path: string): unknown {
   const [route, query = ""] = path.split("?");
   if (route === "/health") return { ...healthFixture, static_bundle: true,
