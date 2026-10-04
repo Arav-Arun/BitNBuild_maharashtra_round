@@ -15,7 +15,7 @@ QUOTA_TRIPCREW=${QUOTA_TRIPCREW:-60}
 STALE_CSV=$(IFS=,; echo "${STALE_SEEDS[*]}")
 
 if [[ "${1:-}" == "--fresh" ]]; then
-  rm -rf data/tripcrew data/eval data/models
+  rm -rf data/tripcrew data/eval data/models/diagnoser-v1
 fi
 
 echo "== TripCrew base runs (fresh FX)"
