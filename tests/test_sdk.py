@@ -151,3 +151,62 @@ class RecorderSDKTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def catalog_tool(destination):
+    return {"currency": "SGD", "nights": 3, "refundable": False, "fare_inr": 24000}
+
+
+def rate_tool(destination):
+    return {"currency": "SGD", "refundable": False, "rate": 64.25}
+
+
+def total_tool(fare_inr, rate, refundable, currency):
+    return {"total": fare_inr + rate}
+
+
+class InferredProvenanceTests(unittest.TestCase):
+    def test_only_distinctive_values_create_inferred_edges(self):
+        from blackbox.sdk.runtime import is_informative
+
+        self.assertFalse(is_informative(True))
+        self.assertFalse(is_informative(None))
+        self.assertFalse(is_informative(3))
+        self.assertFalse(is_informative("SGD"))
+        self.assertTrue(is_informative(24000))
+        self.assertTrue(is_informative(64.25))
+        self.assertTrue(is_informative("Singapore"))
+
+        async def scenario(recorder):
+            with recorder.run("toy", "trip-2", 7, run_id="inferred") as run:
+                with run.step("catalog/tool#1", "tool", "catalog"):
+                    catalog = await run.tool(catalog_tool, destination="Singapore")
+                with run.step("fx/tool#1", "tool", "fx"):
+                    fx = await run.tool(rate_tool, destination="Singapore")
+                with run.step("total/tool#1", "tool", "total"):
+                    await run.tool(
+                        total_tool,
+                        fare_inr=catalog["fare_inr"],
+                        rate=fx["rate"],
+                        refundable=fx["refundable"],
+                        currency=fx["currency"],
+                    )
+                run.set_outcome(True)
+
+        with tempfile.TemporaryDirectory() as directory:
+            recorder = Recorder(directory, mode="offline")
+            try:
+                asyncio.run(scenario(recorder))
+                edges = recorder.database.query(
+                    "SELECT src_addr, src_pointer, dst_pointer FROM edges "
+                    "WHERE run_id = 'inferred' AND kind = 'inferred' ORDER BY dst_pointer"
+                )
+            finally:
+                recorder.close()
+        self.assertEqual(
+            [(e["src_addr"], e["src_pointer"], e["dst_pointer"]) for e in edges],
+            [
+                ("catalog/tool#1", "/output/fare_inr", "/input/args/fare_inr"),
+                ("fx/tool#1", "/output/rate", "/input/args/rate"),
+            ],
+        )

@@ -50,6 +50,27 @@ def iter_scalar_pointers(value: Any, pointer: str = "") -> Iterator[tuple[str, A
         yield pointer or "/", value
 
 
+def is_informative(value: Any) -> bool:
+    """Whether a scalar is distinctive enough to infer provenance from value equality.
+
+    Booleans, nulls, small integers and very short strings (``true``, ``4``, ``"INR"``)
+    recur everywhere, so matching them would link unrelated steps.
+    """
+    if value is None or isinstance(value, bool):
+        return False
+    if isinstance(value, int):
+        return abs(value) >= 10
+    if isinstance(value, float):
+        return abs(value) >= 10 or not value.is_integer()
+    if isinstance(value, str):
+        return len(value.strip()) >= 4
+    return False
+
+
+def _leaf(pointer: str) -> str:
+    return pointer.rsplit("/", 1)[-1]
+
+
 class Redactor:
     _patterns = (
         re.compile(r"\b(?:gsk_|sk-)[A-Za-z0-9_-]{12,}\b"),
@@ -151,10 +172,19 @@ class StepScope:
     def capture(self, call: CallCapture) -> None:
         self.calls.append(call)
         for pointer, value in iter_scalar_pointers(call.input):
-            value_ref = content_hash(self.run.redactor(value))
-            for producer_addr, producer_pointer in self.run.value_producers.get(value_ref, []):
-                if producer_addr == self.addr:
-                    continue
+            value = self.run.redactor(value)
+            if not is_informative(value):
+                continue
+            value_ref = content_hash(value)
+            candidates = [
+                producer
+                for producer in self.run.value_producers.get(value_ref, [])
+                if producer[0] != self.addr
+            ]
+            # When several steps emitted the same value, prefer producers whose field
+            # name matches the consuming field; keep all of them only if none does.
+            same_field = [p for p in candidates if _leaf(p[1]) == _leaf(pointer)]
+            for producer_addr, producer_pointer in same_field or candidates:
                 self.edges.append(
                     EdgeCapture(
                         src_addr=producer_addr,
@@ -261,6 +291,8 @@ class StepScope:
             )
         if self.calls:
             for pointer, value in iter_scalar_pointers(redacted_output):
+                if not is_informative(value):
+                    continue
                 value_ref = content_hash(value)
                 self.run.value_producers.setdefault(value_ref, []).append(
                     (self.addr, f"/output{pointer if pointer != '/' else ''}")
