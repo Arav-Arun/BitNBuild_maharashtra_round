@@ -22,14 +22,16 @@ web app can build without a running API.
 
 ## Data and models
 
-`make dataset` generates deterministic TripCrew recordings, injects faults, freezes
-labels, trains the LightGBM diagnoser, and writes evaluation artifacts. It uses local
-stand-ins and needs no model-provider key. `make eval` retrains and evaluates the
-existing dataset.
+`make dataset` generates a smaller deterministic TripCrew corpus, injects faults,
+freezes labels, trains the LightGBM diagnoser, and writes evaluation artifacts.
+`make dataset-expanded` adds the route-diverse corpus used for the published travel
+evaluation without overwriting the original corpus. Both use local stand-ins and need
+no model-provider key. `make eval` retrains and evaluates the existing dataset.
 
 | Local path | Contents |
 |---|---|
-| `data/tripcrew/` | SQLite recordings, content blobs, labels and replay metadata |
+| `data/tripcrew/` | Base SQLite recordings, content blobs, labels and replay metadata |
+| `data/expanded/tripcrew/` | Additional route-diverse travel recordings for the full benchmark |
 | `data/tripcrew/prompt-scenarios/` | Constraints and catalog seed for user-entered requests |
 | `data/models/` | Trained diagnoser, references and related model artifacts |
 | `data/eval/` | Measured evaluation results |

@@ -458,6 +458,7 @@ button.badge:hover { border-color: var(--ink-3); color: var(--ink); }
 .results-headline { font-family: var(--display); font-size: clamp(24px, 2.6vw, 32px); font-weight: 340; letter-spacing: -.03em; line-height: 1.25; margin: 18px 0 30px; max-width: 30ch; }
 .results-headline strong { color: var(--ink); font-weight: 500; }
 .results-intro { margin: 10px 0 0; }
+.results-unavailable { margin-top: 20px; max-width: 680px; }
 .results-metrics { margin: 0 0 30px; }
 .evaluation-details { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 16px; }
 .evaluation-details > summary { color: var(--ink-2); cursor: pointer; font-weight: 500; padding: 4px 0; width: max-content; }

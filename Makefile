@@ -3,7 +3,7 @@ EXTRAS = --extra dev --extra ml --extra server
 RUN = $(UV) run --locked $(EXTRAS)
 
 .PHONY: help setup check lint format test build db-init dev-api dev-web dev-web-remote web-install web-check tripcrew tripcrew-demo contract demo-offline mcp data-archive
-.PHONY: dataset forge forge-natural forge-freeze eval
+.PHONY: dataset dataset-expanded forge forge-natural forge-freeze eval
 .PHONY: web-build diagnose verify-eval regression
 
 help:
@@ -21,6 +21,7 @@ help:
 	@echo "tripcrew Run 20 offline TripCrew scenarios"
 	@echo "tripcrew-demo Demonstrate stale-FX repair with selective replay"
 	@echo "dataset Rebuild the TripCrew dataset, train and evaluate (scripts/build_dataset.sh)"
+	@echo "dataset-expanded Rebuild the route-diverse travel corpus used for the published evaluation"
 	@echo "forge   Inject faults into passing TripCrew runs (resumes automatically)"
 	@echo "forge-natural Attribute naturally failed AGENT runs with oracle fixes (test-only)"
 	@echo "forge-freeze  Export AGENT labels and write DATASET_VERSION"
@@ -88,6 +89,9 @@ tripcrew-demo:
 
 dataset:
 	./scripts/build_dataset.sh
+
+dataset-expanded:
+	DATA_DIR=data/expanded/tripcrew TRAIN_DATA_DIRS=data/tripcrew,data/expanded/tripcrew FRESH_SEEDS='41 43 47 53 59' STALE_SEEDS='61 67 71' FRESH_COUNT=300 STALE_COUNT=80 FAULT_QUOTA=100 FAULT_SAMPLES=3 ./scripts/build_dataset.sh --fresh
 
 AGENT ?= tripcrew
 

@@ -13,7 +13,6 @@ from blackbox.store import SQLiteDatabase
 from server.models import (
     Diagnosis,
     DiffResponse,
-    EvalResponse,
     RunDetail,
     RunList,
 )
@@ -61,7 +60,7 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(Diagnosis.model_validate(load("diagnosis")).run_id)
         self.assertTrue(RunDetail.model_validate(load("run-detail")).steps)
         self.assertTrue(DiffResponse.model_validate(load("diff")).first_divergence)
-        self.assertTrue(EvalResponse.model_validate(load("eval")).model_dump())
+        self.assertFalse((root / "eval.json").exists())
         events = load("fork-events-verified")["events"]
         self.assertEqual(events[-1]["event"], "summary")
 

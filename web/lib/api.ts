@@ -1,7 +1,6 @@
 import agentsFixture from "../mocks/agents.json";
 import diagnosisFixture from "../mocks/diagnosis.json";
 import diffFixture from "../mocks/diff.json";
-import evalFixture from "../mocks/eval.json";
 import groupsFixture from "../mocks/failure-groups.json";
 import healthFixture from "../mocks/health.json";
 import labelFixture from "../mocks/label-queue.json";
@@ -25,7 +24,6 @@ function recordedFallback(path: string): unknown {
   if (route === "/agents") return agentsFixture;
   if (route === "/runs") return runsFixture;
   if (route === "/failure-groups") return groupsFixture;
-  if (route === "/eval") return evalFixture;
   if (route === "/labels/queue") return labelFixture;
   if (route === "/diff") {
     const params = new URLSearchParams(query);

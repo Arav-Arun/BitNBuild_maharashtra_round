@@ -102,6 +102,11 @@ class ApiTests(unittest.TestCase):
         self.error(self.client.get("/no-such-route"), 404, "not_found")
         self.error(self.client.delete("/health"), 405, "unsupported")
 
+    def test_eval_requires_measured_artifacts(self):
+        response = self.client.get("/eval")
+        self.error(response, 503, "unavailable")
+        self.assertIn("make dataset-expanded", response.json()["error"]["hint"])
+
     def test_cors_allows_the_configured_origin(self):
         response = self.client.get("/health", headers={"Origin": "http://localhost:3000"})
         self.assertEqual(

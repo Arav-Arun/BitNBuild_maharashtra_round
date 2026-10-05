@@ -33,6 +33,7 @@ test("the static showcase serves only its exact run and comparison", async () =>
   const { api } = client(() => { throw new Error("a static build must not fetch"); }, "");
   assert.equal((await api("/runs/tc-0001")).run.run_id, "tc-0001");
   assert.equal((await api("/diff?a=tc-0001&b=fk-0001-fix-0")).right_run_id, "fk-0001-fix-0");
+  await assert.rejects(api("/eval"), (error) => error.code === "unavailable");
   await assert.rejects(api("/runs/tc-9999"), (error) => error.code === "unavailable");
 });
 

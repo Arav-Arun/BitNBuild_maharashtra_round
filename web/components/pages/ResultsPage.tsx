@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, STATIC_BUILD } from "../../lib/api";
 import type { EvalResponse } from "../../lib/contract";
 
 export function ResultsPage() {
@@ -9,6 +9,7 @@ export function ResultsPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    if (STATIC_BUILD) return;
     api<EvalResponse>("/eval").then(setData).catch((error) => setErr(error.message));
   }, []);
 
@@ -17,8 +18,14 @@ export function ResultsPage() {
       <div className="page-inner results-page">
         <h1 className="h1">How well does it find the failing step?</h1>
         <p className="faint">Travel evaluation · synthetic catalog. Research has no independent test score yet.</p>
+        {STATIC_BUILD && (
+          <section className="notice-box results-unavailable" aria-label="Evaluation data unavailable">
+            <strong>Measured results need the API data bundle.</strong>
+            <p>Build it with <code>make dataset-expanded</code>, deploy the API with that data, and set <code>NEXT_PUBLIC_API_URL</code> when building the web app.</p>
+          </section>
+        )}
         {data && !data.fixture && headline(data) && <p className="results-headline">{headline(data)}</p>}
-        {!data && !err && <p className="muted results-intro">Loading the evaluation…</p>}
+        {!STATIC_BUILD && !data && !err && <p className="muted results-intro">Loading the evaluation…</p>}
         {err && <p className="error-box" role="alert">{err}</p>}
         {data && (
           <>

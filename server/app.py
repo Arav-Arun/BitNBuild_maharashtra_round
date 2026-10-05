@@ -443,11 +443,11 @@ def evaluation(request: Request):
 
         return build_eval(svc)
     except FileNotFoundError:
-        pass
-    fixture = Path(__file__).parent.parent / "web" / "mocks" / "eval.json"
-    if fixture.is_file():
-        return m.EvalResponse.model_validate_json(fixture.read_text(encoding="utf-8"))
-    raise ApiError("unavailable", "Evaluation report has not been generated.")
+        raise ApiError(
+            "unavailable",
+            "Evaluation report has not been generated.",
+            hint="Run `make dataset-expanded` to build the measured travel evaluation, then restart the API.",
+        ) from None
 
 
 @app.get("/runs/{run_id}/report", response_model=m.CrashReport)
