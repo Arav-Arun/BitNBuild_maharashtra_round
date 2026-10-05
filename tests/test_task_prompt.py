@@ -92,6 +92,8 @@ class PromptParserTests(unittest.TestCase):
                 "Paris",
                 250_000,
             ),
+            "from Pune to Auckland departing 2027-02-12 returning 2027-02-18 for 2 adults, "
+            "budget ₹2,50,000": ("Pune", "Auckland", 250_000),
         }
         for prompt, (origin, destination, budget) in cases.items():
             with self.subTest(prompt=prompt):

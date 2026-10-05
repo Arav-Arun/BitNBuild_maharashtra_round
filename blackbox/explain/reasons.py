@@ -337,6 +337,23 @@ TEMPLATES: dict[str, Callable[[float], str]] = {
     "later_overwritten": lambda v: (
         "A later step overwrites what it wrote." if v else "Nothing later overwrites what it wrote."
     ),
+    "travel_constraint_mismatch_count": lambda v: (
+        f"It conflicts with {_count('requested trip constraint')(v)}."
+    ),
+    "travel_constraint_mismatch_frac": lambda v: (
+        f"It conflicts with {v:.0%} of the trip constraints checked."
+    ),
+    "travel_budget_math_error": lambda v: (
+        f"Its travel budget differs from the visible fare, hotel, and visa inputs by up to {v:.0%}."
+    ),
+    "travel_quote_age_days": lambda v: (
+        f"Its travel quote is {v:.0f} days older than the freshest quote in this run."
+    ),
+    "travel_currency_conflict": lambda v: (
+        "Its FX currency does not match the travel quote currency."
+        if v
+        else "Its travel quote currencies agree."
+    ),
 }
 
 # Which evidence lines measure the same thing as a feature (for citations).

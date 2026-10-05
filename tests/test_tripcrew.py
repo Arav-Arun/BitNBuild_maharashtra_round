@@ -105,6 +105,29 @@ class ScenarioTests(unittest.TestCase):
             self.assertIn("as_of", result)
             self.assertEqual(len(result["options"]), 3)
 
+    def test_budget_rejects_an_fx_quote_for_the_wrong_hotel_currency(self):
+        from agents.tripcrew.mock_apis import calculate_budget
+
+        with self.assertRaisesRegex(ValueError, "does not match hotel quote currency"):
+            calculate_budget(
+                {"fare_inr_per_adult": 100},
+                {"nightly_local_per_room": 10},
+                {"rate": 2, "currency": "USD", "as_of": "2026-10-03"},
+                {"fee_inr_per_adult": 5},
+                adults=2,
+                nights=2,
+                rooms=1,
+                hotel_currency="GBP",
+            )
+
+    def test_expanded_dataset_covers_more_indian_origins_and_destinations(self):
+        from agents.tripcrew.scenarios import ORIGINS
+
+        scenarios = generate_scenarios(300, seed=13)
+        self.assertGreaterEqual(len({scenario.origin for scenario in scenarios}), 10)
+        self.assertGreaterEqual(len({scenario.destination for scenario in scenarios}), 15)
+        self.assertIn("Kolkata", ORIGINS)
+
 
 class TripCrewTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):

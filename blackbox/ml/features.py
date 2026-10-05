@@ -98,6 +98,12 @@ FEATURE_GROUPS: dict[str, str] = {
     "reaches_last": "H",
     "depth": "H",
     "later_overwritten": "H",
+    # T. travel task consistency (computed from visible request and trace payloads)
+    "travel_constraint_mismatch_count": "T",
+    "travel_constraint_mismatch_frac": "T",
+    "travel_budget_math_error": "T",
+    "travel_quote_age_days": "T",
+    "travel_currency_conflict": "T",
 }
 FEATURE_NAMES: tuple[str, ...] = tuple(FEATURE_GROUPS)
 GROUPS = tuple(sorted(set(FEATURE_GROUPS.values())))
@@ -215,6 +221,191 @@ def is_error_payload(value: Any) -> bool:
         return False
     status = value.get("status")
     return "error" in value or (_is_number(status) and status >= 400)
+
+
+TRAVEL_CONSTRAINTS = (
+    "origin",
+    "destination",
+    "departure",
+    "return_date",
+    "adults",
+    "budget_inr",
+    "vegetarian",
+    "refundable",
+    "no_red_eye",
+)
+
+
+def _travel_request(trace: Trace) -> dict[str, Any]:
+    """Read explicit trip constraints from the recorded user request, never from labels."""
+    request = None
+    for step in trace.steps:
+        if step.role != "planner" or not isinstance(step.input, dict):
+            continue
+        for message in step.input.get("messages") or []:
+            if not isinstance(message, dict) or message.get("role") != "user":
+                continue
+            content = _maybe_json(message.get("content"))
+            if isinstance(content, dict):
+                task = content.get("task")
+                if isinstance(task, dict) and isinstance(task.get("request"), str):
+                    request = task["request"]
+                    break
+                if isinstance(content.get("request"), str):
+                    request = content["request"]
+                    break
+            if isinstance(content, str):
+                request = content
+                break
+        if request:
+            break
+    if not request:
+        return {}
+
+    result: dict[str, Any] = {}
+    route = re.search(
+        r"\bfrom\s+(.+?)\s+to\s+(.+?)\s+departing\s+(\d{4}-\d{2}-\d{2})",
+        request,
+        re.IGNORECASE,
+    )
+    if route:
+        result["origin"] = route.group(1).strip().casefold()
+        result["destination"] = route.group(2).strip().casefold()
+        result["departure"] = route.group(3)
+    returned = re.search(r"\breturning\s+(\d{4}-\d{2}-\d{2})", request, re.IGNORECASE)
+    if returned:
+        result["return_date"] = returned.group(1)
+    adults = re.search(r"\bfor\s+(\d+)\s+adults?\b", request, re.IGNORECASE)
+    if adults:
+        result["adults"] = int(adults.group(1))
+    budget = re.search(r"\bbudget\s+(?:INR|Rs\.?|₹)?\s*([\d,]+(?:\.\d+)?)", request, re.I)
+    if budget:
+        result["budget_inr"] = float(budget.group(1).replace(",", ""))
+    for key, phrase in (
+        ("vegetarian", "vegetarian"),
+        ("refundable", "refundable"),
+        ("no_red_eye", "no-red-eye"),
+    ):
+        match = re.search(rf"\b{re.escape(phrase)}\s*:\s*(true|false|yes|no)\b", request, re.I)
+        if match:
+            result[key] = match.group(1).casefold() in {"true", "yes"}
+    return result
+
+
+def _same_constraint(actual: Any, expected: Any) -> bool:
+    if isinstance(expected, bool):
+        if isinstance(actual, bool):
+            return actual == expected
+        if isinstance(actual, str) and actual.casefold() in {"true", "false", "yes", "no"}:
+            return (actual.casefold() in {"true", "yes"}) == expected
+        return False
+    if _is_number(expected):
+        return _is_number(actual) and math.isclose(float(actual), float(expected), abs_tol=0.01)
+    if isinstance(expected, str):
+        return isinstance(actual, str) and actual.strip().casefold() == expected.casefold()
+    return actual == expected
+
+
+def _travel_semantics(trace: Trace, constraints: dict[str, Any]) -> dict[str, dict[str, float]]:
+    """Travel-only consistency signals, indexed by step address."""
+    nan = math.nan
+    values = {
+        step.addr: {
+            "travel_constraint_mismatch_count": nan,
+            "travel_constraint_mismatch_frac": nan,
+            "travel_budget_math_error": nan,
+            "travel_quote_age_days": nan,
+            "travel_currency_conflict": nan,
+        }
+        for step in trace.steps
+    }
+    if not constraints:
+        return values
+
+    quote_dates: list[tuple[str, int]] = []
+    currencies: list[tuple[str, str]] = []
+    for step in trace.steps:
+        payload, _ = output_payload(step)
+        if isinstance(payload, dict):
+            quote_day = _date(payload.get("as_of"))
+            if quote_day is not None and step.kind == "tool":
+                quote_dates.append((step.addr, quote_day))
+            currency = payload.get("currency")
+            if isinstance(currency, str) and step.kind == "tool":
+                currencies.append((step.addr, currency.strip().upper()))
+
+        if isinstance(payload, dict):
+            candidates = [
+                (name, value)
+                for path, value in flatten(payload)
+                if (name := _leaf_name(path)) in constraints
+            ]
+            if candidates:
+                mismatches = sum(
+                    not _same_constraint(value, constraints[name]) for name, value in candidates
+                )
+                values[step.addr]["travel_constraint_mismatch_count"] = float(mismatches)
+                values[step.addr]["travel_constraint_mismatch_frac"] = mismatches / len(candidates)
+
+        if step.role == "budget" and isinstance(payload, dict):
+            args = step.input.get("args") if isinstance(step.input, dict) else None
+            if isinstance(args, dict):
+                flight, hotel = args.get("flight"), args.get("hotel")
+                fx, visa = args.get("fx"), args.get("visa")
+                adults, nights, rooms = args.get("adults"), args.get("nights"), args.get("rooms")
+                try:
+                    expected_parts = {
+                        "flights_inr": float(flight["fare_inr_per_adult"]) * int(adults),
+                        "hotels_inr": (
+                            float(hotel["nightly_local_per_room"])
+                            * int(nights)
+                            * int(rooms)
+                            * float(fx["rate"])
+                        ),
+                        "visa_inr": float(visa["fee_inr_per_adult"]) * int(adults),
+                    }
+                    expected_parts = {
+                        key: round(value + 1e-9, 2) for key, value in expected_parts.items()
+                    }
+                    expected_parts["total_inr"] = round(sum(expected_parts.values()), 2)
+                    errors = [
+                        abs(float(payload[key]) - expected) / max(abs(expected), 1.0)
+                        if _is_number(payload.get(key))
+                        else 1.0
+                        for key, expected in expected_parts.items()
+                    ]
+                    values[step.addr]["travel_budget_math_error"] = min(
+                        max(errors, default=0.0), 10.0
+                    )
+                except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                    values[step.addr]["travel_budget_math_error"] = 1.0
+
+        if step.role == "budget" and isinstance(step.input, dict):
+            args = step.input.get("args")
+            if isinstance(args, dict):
+                fx = args.get("fx")
+                hotel_currency = args.get("hotel_currency")
+                fx_currency = fx.get("currency") if isinstance(fx, dict) else None
+                if (
+                    isinstance(hotel_currency, str)
+                    and isinstance(fx_currency, str)
+                    and hotel_currency.strip().upper() != fx_currency.strip().upper()
+                ):
+                    values[step.addr]["travel_currency_conflict"] = 1.0
+
+    if quote_dates:
+        latest = max(day for _, day in quote_dates)
+        for addr, day in quote_dates:
+            values[addr]["travel_quote_age_days"] = float(max(latest - day, 0))
+    if len({currency for _, currency in currencies}) > 1:
+        counts = Counter(currency for _, currency in currencies)
+        highest = counts.most_common(1)[0][1]
+        leaders = {currency for currency, count in counts.items() if count == highest}
+        for addr, currency in currencies:
+            values[addr]["travel_currency_conflict"] = float(
+                len(leaders) > 1 or currency not in leaders
+            )
+    return values
 
 
 def _conflicts(trace: Trace) -> dict[str, tuple[int, int]]:
@@ -574,6 +765,10 @@ def _anomaly(row: dict[str, float]) -> float:
         + clip(max(row["earlier_conflicts"], 0.0), 1.0)
         + clip(row["dup_list_items"], 1.0)
         + clip(row["bad_numbers"], 1.0)
+        + clip(row["travel_constraint_mismatch_count"], 1.0)
+        + clip(row["travel_budget_math_error"], 0.1)
+        + clip(row["travel_quote_age_days"], 90.0)
+        + clip(row["travel_currency_conflict"], 1.0)
     )
 
 
@@ -592,10 +787,12 @@ class FeatureBuilder:
         last = steps[-1].addr if steps else None
         rows: list[dict[str, float]] = []
         conflicts = _conflicts(trace)
+        travel = _travel_semantics(trace, _travel_request(trace))
         depth: dict[str, int] = {}
         for index, step in enumerate(steps):
             profile = self.reference.profiles.get(step.addr)
             row = _step_signals(step, profile)
+            row.update(travel[step.addr])
             io, earlier = conflicts[step.addr]
             row["io_conflicts"] = io - (profile.baseline_io_conflicts if profile else 0.0)
             row["earlier_conflicts"] = earlier - (

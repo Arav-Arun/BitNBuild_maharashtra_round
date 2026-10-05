@@ -27,7 +27,7 @@ def main() -> None:
     parser.add_argument("run_id", nargs="?")
     parser.add_argument("--data-dir", type=Path, action="append", dest="data_dirs")
     parser.add_argument("--out-dir", type=Path, default=Path("data/eval"))
-    parser.add_argument("--model-dir", type=Path, default=Path("data/models/diagnoser-v1"))
+    parser.add_argument("--model-dir", type=Path, default=Path("data/models/diagnoser-v2"))
     parser.add_argument("--no-ablations", action="store_true")
     args = parser.parse_args()
     data_dirs = args.data_dirs or DEFAULT_DATA_DIRS

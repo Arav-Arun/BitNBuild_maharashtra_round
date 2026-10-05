@@ -35,6 +35,7 @@ from blackbox.forge.operators import (
     T3Empty404,
     T4Timeout500,
     T5SchemaDrift,
+    T6CurrencyMismatch,
     all_operators,
     held_out_operators,
     seen_operators,
@@ -218,6 +219,23 @@ class TestT4Timeout500(unittest.TestCase):
         edit = op.apply(_tool_step(), _fx_output(), random.Random(42))
         self.assertEqual(edit.value["status"], 500)
 
+
+class TestT6CurrencyMismatch(unittest.TestCase):
+    def test_corrupts_only_currency_on_the_fx_tool(self):
+        operator = T6CurrencyMismatch()
+        original = _fx_output()
+        step = _tool_step("fx/tool#1")
+        self.assertTrue(operator.applicable(step, original))
+        edited = operator.apply(step, original, random.Random(42))
+        self.assertNotEqual(edited.value["currency"], original["currency"])
+        self.assertEqual(
+            {key for key in original if original[key] != edited.value.get(key)}, {"currency"}
+        )
+        self.assertTrue(operator.spec.held_out)
+
+    def test_does_not_apply_to_hotel_currency(self):
+        self.assertFalse(T6CurrencyMismatch().applicable(_tool_step("hotel/tool#1"), _fx_output()))
+
     def test_not_held_out(self):
         self.assertFalse(T4Timeout500().spec.held_out)
 
@@ -386,7 +404,7 @@ class TestC4RepeatedLoop(unittest.TestCase):
 
 class TestOperatorRegistry(unittest.TestCase):
     def test_all_operators_count(self):
-        self.assertEqual(len(all_operators()), 15)
+        self.assertEqual(len(all_operators()), 16)
 
     def test_seen_plus_held_out_equals_all(self):
         self.assertEqual(
@@ -400,7 +418,7 @@ class TestOperatorRegistry(unittest.TestCase):
 
     def test_held_out_operators(self):
         held_out_codes = {op.spec.code for op in held_out_operators()}
-        expected = {"T2", "T5", "R2", "D3", "C2", "C3"}
+        expected = {"T2", "T5", "T6", "R2", "D3", "C2", "C3"}
         self.assertEqual(held_out_codes, expected)
 
     def test_seen_operators(self):
@@ -811,12 +829,12 @@ class TestForgeProgress(unittest.TestCase):
 
 
 class TestAntiCheatingAllOperators(unittest.TestCase):
-    """Verify anti-cheating assertions across all 15 operators."""
+    """Verify anti-cheating assertions across all 16 operators."""
 
     def test_all_15_operators_only_change_declared_fields(self):
         rng = random.Random(42)
         operators = all_operators()
-        self.assertEqual(len(operators), 15)
+        self.assertEqual(len(operators), 16)
 
         for op in operators:
             code = op.spec.code
@@ -1165,8 +1183,8 @@ class Test20ForksPerOperatorSimulation(unittest.IsolatedAsyncioTestCase):
             print(f"{code:<10} {pos:<10} {rec:<10} {flk:<10}")
         print("=" * 50 + "\n")
 
-        self.assertEqual(summary["total_attempts"], 20 * 15)  # 15 operators * 20 = 300
-        self.assertEqual(len(summary["per_operator"]), 15)
+        self.assertEqual(summary["total_attempts"], 20 * 16)  # 16 operators * 20 = 320
+        self.assertEqual(len(summary["per_operator"]), 16)
         for code, counts in summary["per_operator"].items():
             self.assertEqual(sum(counts.values()), 20)
         self.assertLess(progress.flaky_rate, 0.10)

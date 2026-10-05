@@ -72,13 +72,23 @@ These are the frozen **synthetic TripCrew** evaluation artifacts shown in Result
 
 | Evaluation split | Black Box top-1 | Best baseline | Samples |
 |---|---:|---:|---:|
-| Seen faults (S0) | 93.1% | — | 87 |
-| Unseen fault types (S1) | **71.2%** | 58.6% (`anomaly_max`) | 111 |
-| Natural failures (S4) | 100.0% | 100.0% | 80 |
+| Seen faults (S0) | 95.6% | — | 250 |
+| Unseen fault types (S1) | **67.2%** | 62.1% (`position_only`) | 351 |
+| Natural failures (S4) | 100.0% | 100.0% | 320 |
 
-On S1, the ranker is 12.6 percentage points above the best baseline (paired 95% interval: 6.3–19.8 points). The natural-failure split is not evidence of broad generalization: all 80 examples share the same stale-exchange-rate root cause. The current evaluation covers one synthetic TripCrew agent and does not establish performance on other agents. The Results page also reports **55.8% replay calls avoided** and **0.507 ms diagnosis time per trace**.
+On S1, the ranker is 5.1 percentage points above the position-only baseline. The natural-failure split is not evidence of broad generalization: all 320 examples share the stale-exchange-rate root cause. The benchmark uses synthetic TripCrew data across 15 Indian origins and 19 international destinations; it does not establish performance on live travel providers or other agents. The Results page also reports **56.2% replay calls avoided** and **0.551 ms diagnosis time per trace**.
 
-Regenerate the dataset, model and evaluation with `make dataset`, or run only the evaluation with `make eval`.
+The expanded local corpus combines the original `data/tripcrew` recordings with a route-diverse corpus under `data/expanded/tripcrew`. To rebuild the expanded corpus without removing the original, run:
+
+```bash
+DATA_DIR=data/expanded/tripcrew \
+TRAIN_DATA_DIRS=data/tripcrew,data/expanded/tripcrew \
+FRESH_SEEDS='41 43 47 53 59' STALE_SEEDS='61 67 71' \
+FRESH_COUNT=300 STALE_COUNT=80 FAULT_QUOTA=100 FAULT_SAMPLES=3 \
+./scripts/build_dataset.sh --fresh
+```
+
+This trains the local v2 model and writes evaluation artifacts to ignored `data/eval/`. `--fresh` removes only the configured expanded corpus, evaluation output, and v2 model. The checked-in screenshots show an earlier frozen evaluation; regenerate them after rebuilding if the metrics change.
 
 ## Run locally
 
@@ -114,7 +124,11 @@ Open <http://localhost:3000>. The API and interactive contract are at <http://12
 
 `data/` is local and ignored by Git. Research downloads and immutable task snapshots live in `data/research/`; its pilot ranker lives in `data/models/research-pilot-v1/`. The API automatically chooses that ranker for research runs after restarting. Without it, an installed travel ranker is a transfer baseline, unvalidated on research.
 
-For the optional deterministic travel benchmark, use `MODE=offline` and `make dataset`. `./scripts/build_dataset.sh --fresh` rebuilds only the TripCrew recordings, evaluation and `diagnoser-v1` model; it preserves research data and models.
+For the travel benchmark, use `MODE=offline` and `make dataset`. The dataset script
+injects travel-relevant faults and trains the travel diagnoser. To add another corpus
+without replacing saved runs, set `DATA_DIR=data/expanded/tripcrew` and
+`TRAIN_DATA_DIRS=data/tripcrew,data/expanded/tripcrew`; research recordings and models
+remain separate.
 
 To run both services in containers, use `docker compose up --build`.
 

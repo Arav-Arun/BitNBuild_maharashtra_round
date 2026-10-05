@@ -36,7 +36,7 @@ from blackbox.ml.features import (
     build_matrix,
 )
 
-MODEL_FORMAT = "blackbox-diagnoser-v1"
+MODEL_FORMAT = "blackbox-diagnoser-v2"
 
 
 @dataclass(slots=True)
@@ -369,6 +369,10 @@ RUN_AGGREGATES = (
     ("keys_missing_frac", "max"),
     ("io_conflicts", "max"),
     ("earlier_conflicts", "max"),
+    ("travel_constraint_mismatch_count", "max"),
+    ("travel_budget_math_error", "max"),
+    ("travel_quote_age_days", "max"),
+    ("travel_currency_conflict", "max"),
     ("n_steps", "max"),
 )
 

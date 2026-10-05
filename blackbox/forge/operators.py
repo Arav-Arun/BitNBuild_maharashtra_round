@@ -397,6 +397,36 @@ class T5SchemaDrift(FaultOperator):
         return override_output(step["addr"], perturbed)
 
 
+class T6CurrencyMismatch(FaultOperator):
+    """Keep the FX number but report a currency different from the hotel quote."""
+
+    spec = FaultSpec(
+        code="T6",
+        family="tool",
+        name="currency_mismatch",
+        description="Return an FX quote tagged with the wrong travel currency",
+        held_out=True,
+        step_kinds=frozenset({"tool"}),
+        changed_fields=("currency",),
+    )
+
+    _currencies = ("SGD", "THB", "AED", "GBP", "JPY", "EUR", "MYR", "LKR", "NPR", "IDR", "KRW")
+
+    def applicable(self, step: dict[str, Any], output: Any) -> bool:
+        return (
+            step.get("kind") == "tool"
+            and str(step.get("addr", "")).startswith("fx/tool")
+            and isinstance(output, dict)
+            and isinstance(output.get("currency"), str)
+        )
+
+    def apply(self, step: dict[str, Any], output: Any, rng: random_module.Random) -> Edit:
+        perturbed = copy.deepcopy(output)
+        choices = [currency for currency in self._currencies if currency != output["currency"]]
+        perturbed["currency"] = rng.choice(choices)
+        return override_output(step["addr"], perturbed)
+
+
 # ---------------------------------------------------------------------------
 # Retrieval faults
 # ---------------------------------------------------------------------------
@@ -1118,6 +1148,7 @@ _ALL: list[FaultOperator] = [
     T3Empty404(),
     T4Timeout500(),
     T5SchemaDrift(),
+    T6CurrencyMismatch(),
     R1IrrelevantDocuments(),
     R2PoisonedFact(),
     D1WrongArguments(),

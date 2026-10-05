@@ -17,8 +17,35 @@ DESTINATIONS = {
     "London": ("GBP", 112.0),
     "Tokyo": ("JPY", 0.58),
     "Paris": ("EUR", 96.0),
+    "Kuala Lumpur": ("MYR", 19.0),
+    "Colombo": ("LKR", 0.28),
+    "Kathmandu": ("NPR", 0.63),
+    "Bali": ("IDR", 0.0052),
+    "Seoul": ("KRW", 0.063),
+    "Rome": ("EUR", 96.0),
+    "Amsterdam": ("EUR", 96.0),
+    "New York": ("USD", 84.0),
+    "Toronto": ("CAD", 62.0),
+    "Sydney": ("AUD", 55.0),
+    "Istanbul": ("TRY", 2.2),
+    "Hong Kong": ("HKD", 10.8),
+    "Auckland": ("NZD", 50.0),
 }
-ORIGINS = ("Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad")
+LEGACY_DESTINATIONS = ("Singapore", "Bangkok", "Dubai", "London", "Tokyo", "Paris")
+LEGACY_ORIGINS = ("Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad")
+ORIGINS = (
+    *LEGACY_ORIGINS,
+    "Kolkata",
+    "Pune",
+    "Ahmedabad",
+    "Kochi",
+    "Jaipur",
+    "Lucknow",
+    "Goa",
+    "Indore",
+    "Guwahati",
+    "Bhubaneswar",
+)
 
 
 def money(value):
@@ -143,13 +170,23 @@ def generate_scenarios(count=300, seed=7):
     scenarios = []
     from dataclasses import replace
 
+    destinations = tuple(DESTINATIONS)
     for index in range(count):
         departure = date(2026, 11, 1) + timedelta(days=rng.randrange(120))
+        if seed == 7 and index < 300:
+            # Keep the original benchmark fixtures byte-for-byte reproducible.
+            origin = LEGACY_ORIGINS[index % len(LEGACY_ORIGINS)]
+            destination = LEGACY_DESTINATIONS[index % len(LEGACY_DESTINATIONS)]
+        else:
+            # New training scenarios cover the expanded India-to-world route grid evenly.
+            expanded_index = index if seed != 7 else index - 300
+            origin = ORIGINS[expanded_index % len(ORIGINS)]
+            destination = destinations[(expanded_index // len(ORIGINS)) % len(destinations)]
         scenario = Scenario(
             f"TC-{seed}-{index + 1:04}",
             seed,
-            ORIGINS[index % len(ORIGINS)],
-            tuple(DESTINATIONS)[index % len(DESTINATIONS)],
+            origin,
+            destination,
             departure.isoformat(),
             (departure + timedelta(days=rng.randrange(2, 8))).isoformat(),
             rng.randrange(1, 5),

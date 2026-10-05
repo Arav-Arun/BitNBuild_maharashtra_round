@@ -1,7 +1,7 @@
 """`make eval`: train, compare against baselines, ablate, and run integrity checks (Task 8).
 
 Writes ``data/eval/*.json`` (read by ``GET /eval`` and the Results page) and saves the
-model trained on the train split to ``data/models/diagnoser-v1``. Every number carries
+model trained on the train split to ``data/models/diagnoser-v2``. Every number carries
 its sample size and a 95% bootstrap interval; ablations report paired differences.
 """
 
@@ -50,6 +50,7 @@ GROUP_NAMES = {
     "F": "novelty",
     "G": "context",
     "H": "lineage",
+    "T": "travel semantics",
 }
 
 
@@ -357,7 +358,7 @@ def _save_precedents(diagnoser: Diagnoser, corpus: Corpus, splits: Splits, model
 def run_evaluation(
     data_dirs: Sequence[Path],
     out_dir: Path = Path("data/eval"),
-    model_dir: Path = Path("data/models/diagnoser-v1"),
+    model_dir: Path = Path("data/models/diagnoser-v2"),
     *,
     ablations: bool = True,
     base: DiagnoserConfig | None = None,

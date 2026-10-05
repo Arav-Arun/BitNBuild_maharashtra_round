@@ -109,7 +109,7 @@ class BlackBoxService:
         self.settings = settings or Settings.load()
         self.mode: m.Mode = self.settings.mode  # type: ignore[assignment]
         self.data_root = Path(data_root)
-        self.model_dir = model_dir or self.data_root / "models" / "diagnoser-v1"
+        self.model_dir = model_dir or self.data_root / "models" / "diagnoser-v2"
         self.eval_dir = eval_dir or self.data_root / "eval"
         self.static_bundle = static_bundle
         self.started_at = datetime.now(UTC)
@@ -205,7 +205,7 @@ class BlackBoxService:
         meta = json.loads(meta_bytes)
         trained = meta.get("trained_at")
         # Cached diagnoses and index scores are keyed by this version, so it must change on
-        # every retrain; the directory name alone (diagnoser-v1) stays the same.
+        # every retrain; the directory name stays stable for this format version.
         name = str(diagnoser.metadata.get("model_version", directory.name))
         return ModelBundle(
             diagnoser=diagnoser,

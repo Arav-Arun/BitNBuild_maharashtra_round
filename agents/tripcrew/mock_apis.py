@@ -78,8 +78,12 @@ class TravelAPI:
         }
 
 
-def calculate_budget(flight, hotel, fx, visa, adults, nights, rooms):
+def calculate_budget(flight, hotel, fx, visa, adults, nights, rooms, hotel_currency=None):
     """Agent calculator uses observed FX; it has no access to the oracle."""
+    if hotel_currency and fx.get("currency") != hotel_currency:
+        raise ValueError(
+            f"FX currency {fx.get('currency')} does not match hotel quote currency {hotel_currency}"
+        )
     airfare = Decimal(str(flight["fare_inr_per_adult"])) * adults
     lodging = (
         Decimal(str(hotel["nightly_local_per_room"])) * nights * rooms * Decimal(str(fx["rate"]))

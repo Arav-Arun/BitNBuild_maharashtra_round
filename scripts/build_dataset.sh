@@ -1,47 +1,59 @@
 #!/usr/bin/env bash
-# Rebuild the offline TripCrew dataset end to end: base runs, injected faults, natural
-# failures, frozen labels, then train and evaluate the diagnoser. Deterministic and
-# network-free. The diagnoser is trained on TripCrew only.
+# Build a travel-only corpus with independent tasks, replay-labelled faults and evaluation.
 set -euo pipefail
 
 RUN=(uv run --locked --extra dev --extra ml --extra server python)
-# Fresh-FX scenario seeds give passing base runs (Fault Forge injection sites); stale-FX
-# seeds give natural budget failures. Scenario IDs are TC-<seed>-<n>, so seeds never collide.
-FRESH_SEEDS=(7 13 17)
-STALE_SEEDS=(11 19)
-FRESH_COUNT=${FRESH_COUNT:-120}
-STALE_COUNT=${STALE_COUNT:-40}
-QUOTA_TRIPCREW=${QUOTA_TRIPCREW:-60}
+DATA_DIR=${DATA_DIR:-data/tripcrew}
+EVAL_DIR=${EVAL_DIR:-data/eval}
+MODEL_DIR=${MODEL_DIR:-data/models/diagnoser-v2}
+TRAIN_DATA_DIRS=${TRAIN_DATA_DIRS:-$DATA_DIR}
+FRESH_SEEDS=(${FRESH_SEEDS:-7 13 17 23 29})
+STALE_SEEDS=(${STALE_SEEDS:-11 19 31})
+FRESH_COUNT=${FRESH_COUNT:-300}
+STALE_COUNT=${STALE_COUNT:-80}
+FAULT_QUOTA=${FAULT_QUOTA:-100}
+FAULT_SAMPLES=${FAULT_SAMPLES:-3}
+TRAVEL_OPERATORS=${TRAVEL_OPERATORS:-T1,T2,T3,T4,T5,T6,D1,D2,D3,D4,C1,C2,C3,C4}
 STALE_CSV=$(IFS=,; echo "${STALE_SEEDS[*]}")
 
 if [[ "${1:-}" == "--fresh" ]]; then
-  rm -rf data/tripcrew data/eval data/models/diagnoser-v1
+  # DATA_DIR is explicit and configurable; use a new directory to preserve a prior corpus.
+  rm -rf "$DATA_DIR" "$EVAL_DIR" "$MODEL_DIR"
 fi
 
-echo "== TripCrew base runs (fresh FX)"
+echo "== TripCrew base runs (fresh FX) -> $DATA_DIR"
 for seed in "${FRESH_SEEDS[@]}"; do
   "${RUN[@]}" -m agents.tripcrew run --count "$FRESH_COUNT" --seed "$seed" \
-    --report "data/tripcrew/report-$seed.json"
+    --data-dir "$DATA_DIR" --report "$DATA_DIR/report-$seed.json"
 done
 
 echo "== TripCrew natural stale-FX failures"
 for seed in "${STALE_SEEDS[@]}"; do
   "${RUN[@]}" -m agents.tripcrew run --count "$STALE_COUNT" --seed "$seed" --stale-fx \
-    --report "data/tripcrew/report-stale-$seed.json"
+    --data-dir "$DATA_DIR" --report "$DATA_DIR/report-stale-$seed.json"
 done
 
-echo "== Fault Forge: injected faults"
-"${RUN[@]}" -m blackbox.forge inject --agent tripcrew --quota "$QUOTA_TRIPCREW" \
+echo "== Fault Forge: travel-relevant operators only"
+"${RUN[@]}" -m blackbox.forge inject --agent tripcrew --data-dir "$DATA_DIR" \
+  --quota "$FAULT_QUOTA" --operators "$TRAVEL_OPERATORS" --samples "$FAULT_SAMPLES" \
   --concurrency 4 --stale-fx-seeds "$STALE_CSV"
 
-echo "== Natural failures (test-only, labelled by oracle counterfactual replay)"
-"${RUN[@]}" -m blackbox.forge natural --agent tripcrew --stale-fx-seeds "$STALE_CSV"
+echo "== Attribute natural failures (test-only oracle replay)"
+"${RUN[@]}" -m blackbox.forge natural --agent tripcrew --data-dir "$DATA_DIR" \
+  --stale-fx-seeds "$STALE_CSV"
 
-echo "== Freeze"
-"${RUN[@]}" -m blackbox.forge freeze --agent tripcrew
+echo "== Freeze travel corpus"
+"${RUN[@]}" -m blackbox.forge freeze --agent tripcrew --data-dir "$DATA_DIR"
 
-echo "== Replay settings the API needs to rebuild the agent"
-echo "{\"stale_fx_seeds\": [$STALE_CSV]}" > data/tripcrew/replay.json
+echo "== Replay settings for the API"
+mkdir -p "$DATA_DIR"
+echo "{\"stale_fx_seeds\": [$STALE_CSV]}" > "$DATA_DIR/replay.json"
 
-echo "== Train and evaluate"
-"${RUN[@]}" -m blackbox.ml eval
+echo "== Train and evaluate over: $TRAIN_DATA_DIRS"
+IFS=, read -r -a TRAIN_DIR_ARRAY <<< "$TRAIN_DATA_DIRS"
+DATA_ARGS=()
+for directory in "${TRAIN_DIR_ARRAY[@]}"; do
+  DATA_ARGS+=(--data-dir "$directory")
+done
+"${RUN[@]}" -m blackbox.ml eval "${DATA_ARGS[@]}" --out-dir "$EVAL_DIR" \
+  --model-dir "$MODEL_DIR"

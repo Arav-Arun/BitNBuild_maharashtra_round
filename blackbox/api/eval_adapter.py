@@ -380,6 +380,7 @@ def build_eval(service):
         "F": "Novelty",
         "G": "Context",
         "H": "Lineage",
+        "T": "Travel semantics",
     }
     feature_groups = [
         m.FeatureGroupInfo(

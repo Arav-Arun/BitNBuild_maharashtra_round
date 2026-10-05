@@ -154,6 +154,90 @@ class FeatureTests(unittest.TestCase):
             self.assertTrue(np.isnan(matrix.X[:, FEATURE_NAMES.index(name)]).all())
         self.assertFalse(np.isnan(matrix.X[:, FEATURE_NAMES.index("rel_pos")]).any())
 
+    def test_travel_features_find_prompt_drift_math_and_quote_conflicts(self):
+        request = (
+            "Trip T1: travel from Mumbai to London departing 2027-01-01, returning 2027-01-05, "
+            "for 2 adults. Budget INR 80000. Vegetarian: true; refundable: false; no red-eye: true."
+        )
+        planner_output = {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {
+                                "origin": "Mumbai",
+                                "destination": "Paris",
+                                "departure": "2027-01-01",
+                                "return_date": "2027-01-05",
+                                "adults": 2,
+                                "budget_inr": 90000,
+                                "vegetarian": True,
+                                "refundable": False,
+                                "no_red_eye": True,
+                            }
+                        )
+                    }
+                }
+            ]
+        }
+        trace = Trace(
+            run_id="travel-features",
+            agent="tripcrew",
+            task_id="trip-1",
+            outcome="failed",
+            steps=[
+                _step(
+                    "planner/chat#1",
+                    0,
+                    kind="llm",
+                    input={
+                        "messages": [
+                            {"role": "user", "content": json.dumps({"task": {"request": request}})}
+                        ]
+                    },
+                    output=planner_output,
+                ),
+                _step(
+                    "fx/tool#1",
+                    1,
+                    output={"currency": "USD", "rate": 2.0, "as_of": "2026-03-03"},
+                ),
+                _step(
+                    "hotel/tool#1",
+                    2,
+                    output={"currency": "GBP", "as_of": "2026-10-03", "options": []},
+                ),
+                _step(
+                    "budget/tool#1",
+                    3,
+                    input={
+                        "args": {
+                            "flight": {"fare_inr_per_adult": 100},
+                            "hotel": {"nightly_local_per_room": 10},
+                            "fx": {"rate": 2.0},
+                            "visa": {"fee_inr_per_adult": 5},
+                            "adults": 2,
+                            "nights": 2,
+                            "rooms": 1,
+                        }
+                    },
+                    output={
+                        "flights_inr": 200,
+                        "hotels_inr": 40,
+                        "visa_inr": 10,
+                        "total_inr": 300,
+                    },
+                ),
+            ],
+        )
+        rows = FeatureBuilder(Reference()).trace_rows(trace)
+        by_addr = {step.addr: rows[i] for i, step in enumerate(trace.steps)}
+        self.assertEqual(by_addr["planner/chat#1"]["travel_constraint_mismatch_count"], 2.0)
+        self.assertAlmostEqual(by_addr["budget/tool#1"]["travel_budget_math_error"], 0.2)
+        self.assertGreater(by_addr["fx/tool#1"]["travel_quote_age_days"], 200)
+        self.assertEqual(by_addr["fx/tool#1"]["travel_currency_conflict"], 1.0)
+        self.assertEqual(by_addr["hotel/tool#1"]["travel_currency_conflict"], 1.0)
+
 
 class RelevanceTests(unittest.TestCase):
     def test_graded_by_causal_hops_with_distractor_zeroed(self):

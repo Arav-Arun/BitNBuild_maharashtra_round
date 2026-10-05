@@ -230,7 +230,7 @@ def main() -> None:
     parser.add_argument("command", choices=["diagnose", "diff", "export", "verify-eval"])
     parser.add_argument("ids", nargs="*")
     parser.add_argument("--data-dir", type=Path, default=Path("data/tripcrew"))
-    parser.add_argument("--model-dir", type=Path, default=Path("data/models/diagnoser-v1"))
+    parser.add_argument("--model-dir", type=Path, default=Path("data/models/diagnoser-v2"))
     parser.add_argument("--samples", "-k", type=int, default=5)
     parser.add_argument("--verify", action="store_true")
     parser.add_argument("--narrate", choices=["template", "llm"], default="template")

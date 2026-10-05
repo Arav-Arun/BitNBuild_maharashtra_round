@@ -10,7 +10,7 @@ catalog; they do not book travel or query external travel services.
 make tripcrew
 make tripcrew-demo
 uv run --locked --extra dev python -m agents.tripcrew scenarios \
-  --count 300 --seed 7 --report data/tripcrew/scenarios.json
+  --count 600 --seed 41 --report data/tripcrew/scenarios.json
 ```
 
 `run` defaults to 20 scenarios, seed 7, and the deterministic fixture client.
@@ -43,10 +43,11 @@ the command with a nonzero exit status.
 
 ## Implementation
 
-- `scenarios.py`: 300 seeded templates across five Indian origins, six destinations,
+- `scenarios.py`: seeded templates across 15 Indian origins and 19 destinations,
   dates, adult counts, budgets and combinations of vegetarian/refundable/no-red-eye
-  constraints. Every scenario has a feasible cheapest solution and a precomputed
-  fresh-catalog total. Catalog prices use a stable per-scenario seed.
+  constraints. New seeds cover the full route grid; the original seed-7 examples remain
+  unchanged for regression checks. Every task has a feasible cheapest solution and a
+  precomputed fresh-catalog total. Catalog prices use a stable per-scenario seed.
 - `mock_apis.py`: flight/hotel search, weather, FX and visa rules, each with `as_of`;
   `fresh=True` bypasses the optional synthetic stale quote. Normal runs use fresh
   data; `--stale-fx` explicitly opts into the stale fixture.
@@ -58,6 +59,8 @@ the command with a nonzero exit status.
   Prices and flags are taken from the catalog, not trusted from model output.
 - `fixture_client.py`: an explicitly named deterministic test double, with no
   hidden calls or fallback to a live model.
+- `T6 currency mismatch`: a held-out travel fault that changes the FX quote's currency
+  while keeping the hotel quote unchanged. The budget tool now rejects mismatched units.
 
 The 16 recorded steps are:
 
@@ -117,7 +120,8 @@ The stale-FX demo reports 130,949.18 INR, fails the checker, and repairs to
 
 ## Scope
 
-The New task page parses requests for the supported synthetic catalog. In `MODE=live`
+The New task page parses requests for the supported synthetic catalog (15 origins,
+19 destinations). In `MODE=live`
 it makes hosted model calls; in `MODE=offline` it uses the fixture client. Neither
 mode queries real travel inventory. Changing only a request's
 budget preserves its generated catalog. Unsupported cities and incomplete requests

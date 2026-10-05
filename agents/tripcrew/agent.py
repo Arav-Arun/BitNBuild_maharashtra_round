@@ -205,6 +205,7 @@ class TripCrew:
                 hotel=run.state["hotel"],
                 fx=run.state["fx"],
                 visa=run.state["visa"],
+                hotel_currency=run.state["hotel_catalog"]["currency"],
                 adults=run.state["constraints"]["adults"],
                 nights=run.state["hotel_catalog"]["nights"],
                 rooms=run.state["hotel_catalog"]["rooms"],
