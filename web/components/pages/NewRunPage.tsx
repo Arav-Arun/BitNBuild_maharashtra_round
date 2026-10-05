@@ -81,12 +81,12 @@ export function NewRunPage() {
   return (
     <div className="page">
       <div className="page-inner new-run-page">
-        <h1 className="h1">New task</h1>
-        <div className="row" role="group" aria-label="Workflow">
+        <h1 className="h1 new-run-title">New task</h1>
+        <div className="row workflow-tabs" role="group" aria-label="Workflow">
           <button className={`btn${workflow === "research" ? " btn-primary" : ""}`} type="button" onClick={() => chooseWorkflow("research")}>Research</button>
           <button className={`btn${workflow === "tripcrew" ? " btn-primary" : ""}`} type="button" onClick={() => chooseWorkflow("tripcrew")}>Travel demo</button>
         </div>
-        <p className="faint">{workflow === "research" ? "Groq · HotpotQA / Wikipedia" : mode === "live" ? "Live LLM · synthetic travel catalog" : "Test runner · synthetic travel catalog"}</p>
+        <p className="faint workflow-summary">{workflow === "research" ? "Research · HotpotQA" : "Travel · synthetic catalog"}</p>
 
         <form className="new-run-form card card-pad" onSubmit={submit}>
           <label className="label" htmlFor="task-prompt">Your request</label>

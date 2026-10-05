@@ -408,8 +408,11 @@ button.badge:hover { border-color: var(--ink-3); color: var(--ink); }
 
 /* ---------- New task ---------- */
 
-.new-run-page { max-width: 860px; }
-.new-run-page > .faint { margin: 0 0 12px; }
+.new-run-page { max-width: 800px; }
+.new-run-title { font-size: clamp(32px, 4vw, 40px); margin-bottom: 12px; }
+.workflow-tabs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr)); width: 100%; }
+.workflow-tabs .btn { border-color: var(--line); height: auto; line-height: 1.25; min-height: 42px; min-width: 0; padding: 10px 16px; white-space: normal; }
+.workflow-summary { font-size: 13px; margin: 8px 0 16px; }
 .new-run-form { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
 .prompt-input { font-family: var(--sans); font-size: 15px; line-height: 1.6; min-height: 200px; padding: 14px 16px; resize: vertical; width: 100%; }
 .prompt-meta { flex-wrap: wrap; }
